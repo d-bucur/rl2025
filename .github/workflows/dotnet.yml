@@ -9,6 +9,7 @@ on:
       - '*'
 
 env:
+  project_name: rl2025
   itch_target: sirdorius/raylike-2025
 
 jobs:
@@ -22,22 +23,26 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
+    - name: Install wasm-tools
+      run: dotnet workload install wasm-tools wasm-tools-net8
+    - name: Install wasm-tools
+      run: dotnet workload restore
+    # - name: Restore dependencies
+    #   run: dotnet restore
+    # - name: Build
+    #   run: dotnet build --no-restore
     - name: Publish
       run: dotnet publish RayLikeWasm -c Release
 
     - name: Package as a zip
-      working-directory: ./RayLikeWasm/bin/Debug/net8.0/browser-wasm/AppBundle
+      working-directory: RayLikeWasm/bin/Release/net8.0/browser-wasm/AppBundle
       run: |
-        zip --recurse-paths ../${{ env.binary }}.zip .
+        zip --recurse-paths ${{ env.project_name }}.zip .
 
     - name: Upload binaries to artifacts
       uses: actions/upload-artifact@v4
       with:
-        path: ${{ env.binary }}.zip
+        path: ${{ env.project_name }}.zip
         name: wasm
         retention-days: 1
 
