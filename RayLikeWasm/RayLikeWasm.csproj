@@ -25,7 +25,7 @@
     <WasmExtraFilesToDeploy Include="index.html" />
     <WasmExtraFilesToDeploy Include="main.js" />
     <NativeFileReference Include="raylib.a" />
-    <WasmFilesToIncludeInFileSystem Include="Resources/**/*.*" TargetPath="Resources/%(RecursiveDir)/%(Filename)%(Extension)" />
+    <WasmFilesToIncludeInFileSystem Include="../Resources/**/*.*" TargetPath="Resources/%(RecursiveDir)/%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
