@@ -11,5 +11,11 @@
     <PackageReference Include="Raylib-cs" Version="7.0.0" />
     <ProjectReference Include="../RayLikeShared/RayLikeShared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../Resources/*.*" Link="Resources/%(RecursiveDir)%(Filename)%(Extension)">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   
 </Project>
