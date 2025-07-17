@@ -9,9 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Raylib-cs" Version="7.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="../RayLikeShared/RayLikeShared.csproj" />
   </ItemGroup>
+  
 </Project>
