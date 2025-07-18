@@ -20,24 +20,24 @@ class ActionsModule {
 		world.CreateEntity(
 			new ActionBuffer()
 		);
-	}
 
-	internal static void Update(EntityStore world) {
-		world.Query<ActionBuffer>().ForEachEntity((ref ActionBuffer buffer, Entity e) => {
-			if (Raylib.IsKeyPressed(KeyboardKey.Left))
-				buffer.Value.Enqueue(new MovementAction(-1, 0));
-			if (Raylib.IsKeyPressed(KeyboardKey.Right))
-				buffer.Value.Enqueue(new MovementAction(1, 0));
-			if (Raylib.IsKeyPressed(KeyboardKey.Down))
-				buffer.Value.Enqueue(new MovementAction(0, 1));
-			if (Raylib.IsKeyPressed(KeyboardKey.Up))
-				buffer.Value.Enqueue(new MovementAction(0, -1));
+		UpdatePhases.Input.Add(
+			LambdaSystems.New((ref ActionBuffer buffer, Entity e) => {
+				if (Raylib.IsKeyPressed(KeyboardKey.Left))
+					buffer.Value.Enqueue(new MovementAction(-1, 0));
+				if (Raylib.IsKeyPressed(KeyboardKey.Right))
+					buffer.Value.Enqueue(new MovementAction(1, 0));
+				if (Raylib.IsKeyPressed(KeyboardKey.Down))
+					buffer.Value.Enqueue(new MovementAction(0, 1));
+				if (Raylib.IsKeyPressed(KeyboardKey.Up))
+					buffer.Value.Enqueue(new MovementAction(0, -1));
 
-			if (Raylib.IsMouseButtonPressed(MouseButton.Left))
-				Console.WriteLine($"Mouse press");
+				if (Raylib.IsMouseButtonPressed(MouseButton.Left))
+					Console.WriteLine($"Mouse press");
 
-			if (Raylib.IsKeyDown(KeyboardKey.Backspace))
-				buffer.Value.Enqueue(new EscapeAction());
-		});
+				if (Raylib.IsKeyDown(KeyboardKey.Backspace))
+					buffer.Value.Enqueue(new EscapeAction());
+			})
+		);
 	}
 }

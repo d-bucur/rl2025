@@ -1,29 +1,17 @@
 using System.Numerics;
 using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 using Raylib_cs;
 
 namespace RayLikeShared;
 
 class Render {
-	private static Camera3D camera;
+	// TODO move to component
+	internal static Camera3D camera;
 
 	internal static void Init(EntityStore world) {
 		InitCamera();
-	}
-
-	internal static void Draw(EntityStore world) {
-		Raylib.BeginMode3D(camera);
-		
-		world.Query<Position, Cube>().ForEachEntity((ref Position position, ref Cube cube, Entity e) => {
-			const float size = 1.0f;
-			Raylib.DrawCube(Helpers.ToVec3(position), size, size, size, Color.Red);
-			Raylib.DrawCubeWires(Helpers.ToVec3(position), size, size, size, Color.Maroon);
-		});
-
-		Raylib.DrawGrid(30, Movement.GRID_SIZE);
-		Raylib.EndMode3D();
-
-		DebugStuff();
+		RenderPhases.Render.Add(new RenderCubes());
 	}
 
 	private static void InitCamera() {
@@ -34,6 +22,23 @@ class Render {
 			45.0f,
 			CameraProjection.Perspective
 		);
+	}
+}
+
+internal class RenderCubes : QuerySystem<Position, Cube> {
+	protected override void OnUpdate() {
+		Raylib.BeginMode3D(Render.camera);
+		
+		Query.ForEachEntity((ref Position position, ref Cube cube, Entity e) => {
+			const float size = 1.0f;
+			Raylib.DrawCube(Helpers.ToVec3(position), size, size, size, Color.Red);
+			Raylib.DrawCubeWires(Helpers.ToVec3(position), size, size, size, Color.Maroon);
+		});
+
+		Raylib.DrawGrid(30, Movement.GRID_SIZE);
+		Raylib.EndMode3D();
+
+		DebugStuff();
 	}
 
 	private static void DebugStuff() {

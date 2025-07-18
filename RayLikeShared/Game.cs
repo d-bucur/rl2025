@@ -1,4 +1,5 @@
 ﻿using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 using Raylib_cs;
 
 namespace RayLikeShared;
@@ -6,20 +7,33 @@ namespace RayLikeShared;
 public struct Cube : IComponent { };
 
 public class Game {
-	private static EntityStore world;
+	private static EntityStore World;
+	private static SystemRoot UpdateRootSystems;
+	private static SystemRoot RenderRootSystems;
 
 	public static void Init() {
 		Raylib.SetTargetFPS(60);
 		Raylib.InitWindow(1024, 600, "RayLike Challenge");
 		RegisterComponentsForNativeAot();
 
-		world = new EntityStore();
+		World = new EntityStore();
 
-		ActionsModule.Init(world);
-		Assets.Init(world);
-		Render.Init(world);
+		UpdateRootSystems = new SystemRoot(World) {
+			UpdatePhases.Input,
+			UpdatePhases.ApplyActions,
+		};
 
-		world.CreateEntity(
+		RenderRootSystems = new SystemRoot(World) {
+			RenderPhases.Render,
+		};
+
+		// TODO interface for modules
+		ActionsModule.Init(World);
+		Movement.Init(World);
+		Assets.Init(World);
+		Render.Init(World);
+
+		World.CreateEntity(
 			new InputReceiver(),
 			new Position(0, 0, 0),
 			new Cube()
@@ -27,16 +41,18 @@ public class Game {
 	}
 
 	public static void Update() {
-		ActionsModule.Update(world);
-		Movement.Update(world);
+		UpdateRootSystems.Update(GetUpdateTick());
 	}
 
 	public static void Draw() {
-		// Console.WriteLine("Draw");
 		Raylib.BeginDrawing();
-		Raylib.ClearBackground(Color.SkyBlue);
-		Render.Draw(world);
+		Raylib.ClearBackground(Color.DarkGray);
+		RenderRootSystems.Update(GetUpdateTick());
 		Raylib.EndDrawing();
+	}
+
+	private static UpdateTick GetUpdateTick() {
+		return new UpdateTick(Raylib.GetFrameTime(), (float)Raylib.GetTime());
 	}
 
 	private static void RegisterComponentsForNativeAot() {
@@ -44,6 +60,7 @@ public class Game {
 		// can maybe move to wasm project?
 		var aot = new NativeAOT();
 		// TODO register new component here
+		// would be cool to have this codegened from interfaces
 		aot.RegisterComponent<Position>();
 		aot.RegisterComponent<Cube>();
 		aot.RegisterComponent<ActionBuffer>();
