@@ -1,21 +1,34 @@
 using System.Numerics;
 using Friflo.Engine.ECS;
-using Raylib_cs;
 
-public struct Velocity : IComponent { public Vector3 value; };
+namespace RayLikeShared;
 
-public static class Helpers {
+internal struct InputReceiver : IComponent;
+
+internal static class Helpers {
     // Easy way to do this with an implicit cast?
-    public static Vector3 ToVec3(Position p) => new Vector3(p.x, p.y, p.z);
+    internal static Vector3 ToVec3(Position p) => new Vector3(p.x, p.y, p.z);
 }
 
-public class Movement {
-	internal static void Update(EntityStore world) {
-		if (Raylib.IsMouseButtonPressed(MouseButton.Left)) { Console.WriteLine($"Mouse down"); }
-		if (Raylib.IsKeyDown(KeyboardKey.Space)) { Console.WriteLine($"KeyDown"); }
+internal class Movement {
+    internal const float GRID_SIZE = 1;
 
-		world.Query<Position, Velocity>().ForEachEntity((ref Position position, ref Velocity velocity, Entity entity) => {
-			position.value += velocity.value * (float)Math.Sin(Raylib.GetTime() * 5);
-		});
-	}
+    internal static void Update(EntityStore world) {
+        // TODO need more flexible dispatch between modules
+        world.Query<ActionBuffer>().ForEachEntity((ref ActionBuffer buffer, Entity e) => {
+            while (buffer.Value.Count > 0) {
+                var action = buffer.Value.Dequeue();
+                switch (action) {
+                    case MovementAction movement:
+                        world.Query<Position>()
+                            .AllComponents(ComponentTypes.Get<InputReceiver>())
+                            .ForEachEntity((ref Position pos, Entity e) => {
+                                pos.x += movement.Dx * GRID_SIZE;
+                                pos.z += movement.Dy * GRID_SIZE;
+                            });
+                        break;
+                }
+            }
+        });
+    }
 }

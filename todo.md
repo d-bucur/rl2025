@@ -1,1 +1,3 @@
+- replace raw queries with systems https://friflo.gitbook.io/friflo.engine.ecs/documentation/systems#update-execution
 - probably need flexible modules and phases since no pipelines
+- support WASD

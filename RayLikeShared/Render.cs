@@ -14,12 +14,13 @@ class Render {
 	internal static void Draw(EntityStore world) {
 		Raylib.BeginMode3D(camera);
 		
-		world.Query<Position, Cube>().ForEachEntity((ref Position position, ref Cube cube, Entity entity) => {
-			Raylib.DrawCube(Helpers.ToVec3(position), 2.0f, 2.0f, 2.0f, Color.Red);
-			Raylib.DrawCubeWires(Helpers.ToVec3(position), 2.0f, 2.0f, 2.0f, Color.Maroon);
+		world.Query<Position, Cube>().ForEachEntity((ref Position position, ref Cube cube, Entity e) => {
+			const float size = 1.0f;
+			Raylib.DrawCube(Helpers.ToVec3(position), size, size, size, Color.Red);
+			Raylib.DrawCubeWires(Helpers.ToVec3(position), size, size, size, Color.Maroon);
 		});
 
-		Raylib.DrawGrid(10, 1.0f);
+		Raylib.DrawGrid(30, Movement.GRID_SIZE);
 		Raylib.EndMode3D();
 
 		DebugStuff();
