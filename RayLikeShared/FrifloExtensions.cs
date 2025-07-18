@@ -17,6 +17,10 @@ class LambdaSystems {
 }
 
 internal static class Helpers {
-    // Easy way to do this with an implicit cast?
-    internal static Vector3 ToVec3(Position p) => new Vector3(p.x, p.y, p.z);
+	// Easy way to do this with an implicit cast?
+	internal static Vector3 ToVec3(Position p) => new Vector3(p.x, p.y, p.z);
+}
+
+interface IModule {
+	public void Init(EntityStore world);
 }

@@ -5,11 +5,11 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-class Render {
+class Render : IModule {
 	// TODO move to component
 	internal static Camera3D camera;
 
-	internal static void Init(EntityStore world) {
+	public void Init(EntityStore world) {
 		InitCamera();
 		RenderPhases.Render.Add(new RenderCubes());
 	}

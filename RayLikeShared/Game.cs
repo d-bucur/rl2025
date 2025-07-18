@@ -1,4 +1,5 @@
-﻿using Friflo.Engine.ECS;
+﻿using System.Reflection;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Raylib_cs;
 
@@ -10,6 +11,7 @@ public class Game {
 	private static EntityStore World;
 	private static SystemRoot UpdateRootSystems;
 	private static SystemRoot RenderRootSystems;
+	private static List<IModule> Modules;
 
 	public static void Init() {
 		Raylib.SetTargetFPS(60);
@@ -27,12 +29,15 @@ public class Game {
 			RenderPhases.Render,
 		};
 
-		// TODO interface for modules
-		ActionsModule.Init(World);
-		Movement.Init(World);
-		Assets.Init(World);
-		Render.Init(World);
+		Modules = [
+			new Assets(),
+			new Render(),
+			new ActionsModule(),
+			new Movement(),
+		];
+		Modules.ForEach(m => m.Init(World));
 
+		// TODO move
 		World.CreateEntity(
 			new InputReceiver(),
 			new Position(0, 0, 0),

@@ -13,8 +13,8 @@ internal record struct MovementAction(int Dx, int Dy) : IAction;
 
 internal struct EscapeAction : IAction;
 
-class ActionsModule {
-	internal static void Init(EntityStore world) {
+class ActionsModule : IModule {
+	public void Init(EntityStore world) {
 		// Can probably use singleton
 		// https://friflo.gitbook.io/friflo.engine.ecs/documentation/entity#unique-entity
 		world.CreateEntity(

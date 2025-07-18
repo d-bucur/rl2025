@@ -3,10 +3,10 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-class Assets {
+class Assets: IModule {
 	internal static Texture2D logo;
 
-	internal static void Init(EntityStore world) {
+	public void Init(EntityStore world) {
 		logo = Raylib.LoadTexture("Resources/raylib_logo.png");
 	}
 }

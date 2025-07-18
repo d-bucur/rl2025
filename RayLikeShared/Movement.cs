@@ -5,10 +5,10 @@ namespace RayLikeShared;
 
 internal struct InputReceiver : IComponent;
 
-internal class Movement {
+internal class Movement : IModule {
     internal const float GRID_SIZE = 1;
 
-    internal static void Init(EntityStore world) {
+    public void Init(EntityStore world) {
         UpdatePhases.ApplyActions.Add(
             LambdaSystems.New((ref ActionBuffer buffer, Entity e) => {
                 // TODO need more flexible dispatch between modules
