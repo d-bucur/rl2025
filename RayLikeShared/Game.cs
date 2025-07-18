@@ -8,12 +8,12 @@ namespace RayLikeShared;
 public struct Cube : IComponent { };
 
 public class Game {
-	private static EntityStore World;
-	private static SystemRoot UpdateRootSystems;
-	private static SystemRoot RenderRootSystems;
-	private static List<IModule> Modules;
+	private EntityStore World;
+	private SystemRoot UpdateRootSystems;
+	private SystemRoot RenderRootSystems;
+	private List<IModule> Modules;
 
-	public static void Init() {
+	public Game() {
 		Raylib.SetTargetFPS(60);
 		Raylib.InitWindow(1024, 600, "RayLike Challenge");
 		RegisterComponentsForNativeAot();
@@ -45,11 +45,11 @@ public class Game {
 		);
 	}
 
-	public static void Update() {
+	public void Update() {
 		UpdateRootSystems.Update(GetUpdateTick());
 	}
 
-	public static void Draw() {
+	public void Draw() {
 		Raylib.BeginDrawing();
 		Raylib.ClearBackground(Color.DarkGray);
 		RenderRootSystems.Update(GetUpdateTick());

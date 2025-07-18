@@ -9,12 +9,12 @@ class DesktopEntry
     [STAThread]
     public static void Main()
     {
-        Game.Init();
+        Game game = new();
 
         while (!Raylib.WindowShouldClose())
         {
-            Game.Update();
-            Game.Draw();
+            game.Update();
+            game.Draw();
         }
 
         Raylib.CloseWindow();

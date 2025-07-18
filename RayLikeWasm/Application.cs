@@ -5,12 +5,13 @@ namespace RayLikeWasm
 {
     public partial class Application
     {
+        static Game game;
+
         /// <summary>
         /// Application entry point
         /// </summary>
-        public static void Main()
-        {
-            Game.Init();
+        public static void Main() {
+            game = new();
         }
 
         /// <summary>
@@ -19,8 +20,8 @@ namespace RayLikeWasm
         [JSExport]
         public static void UpdateFrame()
         {
-            Game.Update();
-            Game.Draw();
+            game.Update();
+            game.Draw();
         }
     }
 }
