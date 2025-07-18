@@ -5,30 +5,33 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-class Render : IModule {
-	// TODO move to component
-	internal static Camera3D camera;
+struct Camera() : IComponent {
+	public required Camera3D Value;
+}
 
+class Render : IModule {
 	public void Init(EntityStore world) {
-		InitCamera();
+		InitCamera(world);
 		RenderPhases.Render.Add(new RenderCubes());
 	}
 
-	private static void InitCamera() {
-		camera = new Camera3D(
-			new Vector3(0.0f, 10.0f, 10.0f),
-			new Vector3(0.0f, 0.0f, 0.0f),
-			new Vector3(0.0f, 1.0f, 0.0f),
-			45.0f,
-			CameraProjection.Perspective
-		);
+	private static void InitCamera(EntityStore world) {
+		Singleton.Entity.AddComponent(new Camera() {
+			Value = new Camera3D(
+				new Vector3(0.0f, 10.0f, 10.0f),
+				new Vector3(0.0f, 0.0f, 0.0f),
+				new Vector3(0.0f, 1.0f, 0.0f),
+				45.0f,
+				CameraProjection.Perspective
+			)
+		});
 	}
 }
 
 internal class RenderCubes : QuerySystem<Position, Cube> {
 	protected override void OnUpdate() {
-		Raylib.BeginMode3D(Render.camera);
-		
+		Raylib.BeginMode3D(Singleton.Entity.GetComponent<Camera>().Value);
+
 		Query.ForEachEntity((ref Position position, ref Cube cube, Entity e) => {
 			const float size = 1.0f;
 			Raylib.DrawCube(Helpers.ToVec3(position), size, size, size, Color.Red);

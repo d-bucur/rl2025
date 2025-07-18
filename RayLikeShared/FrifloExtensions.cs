@@ -24,3 +24,25 @@ internal static class Helpers {
 interface IModule {
 	public void Init(EntityStore world);
 }
+
+class Singleton {
+	internal static Entity Entity;
+
+	struct SingletonEntity() : IIndexedComponent<int> {
+		int Id = 0;
+		public int GetIndexedValue() => Id;
+	}
+
+	internal static void Init(EntityStore world) {
+		Entity = world.CreateEntity(new SingletonEntity());
+	}
+
+	// these are kind of useless?
+	private static void Set<T>(T t) where T : struct, IComponent {
+		Entity.AddComponent(t);
+	}
+
+	private static ref T Get<T>() where T : struct, IComponent {
+		return ref Entity.GetComponent<T>();
+	}
+}

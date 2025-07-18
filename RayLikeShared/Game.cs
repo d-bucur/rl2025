@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Raylib_cs;
 
@@ -19,6 +18,7 @@ public class Game {
 		RegisterComponentsForNativeAot();
 
 		World = new EntityStore();
+		Singleton.Init(World);
 
 		UpdateRootSystems = new SystemRoot(World) {
 			UpdatePhases.Input,
