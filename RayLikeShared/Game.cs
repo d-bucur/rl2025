@@ -41,6 +41,7 @@ public class Game {
 		World.CreateEntity(
 			new InputReceiver(),
 			new Position(0, 0, 0),
+			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			new Cube()
 		);
 	}

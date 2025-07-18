@@ -28,17 +28,19 @@ class Render : IModule {
 	}
 }
 
-internal class RenderCubes : QuerySystem<Position, Cube> {
+internal class RenderCubes : QuerySystem<Position, Scale3> {
+	public RenderCubes() => Filter.AllComponents(ComponentTypes.Get<Cube>());
+
 	protected override void OnUpdate() {
 		Raylib.BeginMode3D(Singleton.Entity.GetComponent<Camera>().Value);
 
-		Query.ForEachEntity((ref Position position, ref Cube cube, Entity e) => {
-			const float size = 1.0f;
-			Raylib.DrawCube(Helpers.ToVec3(position), size, size, size, Color.Red);
-			Raylib.DrawCubeWires(Helpers.ToVec3(position), size, size, size, Color.Maroon);
+		Query.ForEachEntity((ref Position pos, ref Scale3 scale, Entity e) => {
+			var posWithOffset = pos.ToVec3() + new Vector3(Config.GRID_SIZE) / 2;
+			Raylib.DrawCubeV(posWithOffset, scale.ToVec3(), Color.Red);
+			Raylib.DrawCubeWiresV(posWithOffset, scale.ToVec3(), Color.Maroon);
 		});
 
-		Raylib.DrawGrid(30, Movement.GRID_SIZE);
+		Raylib.DrawGrid(30, Config.GRID_SIZE);
 		Raylib.EndMode3D();
 
 		DebugStuff();
