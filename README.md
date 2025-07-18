@@ -1,4 +1,6 @@
 #
+![](/Resources//challenge_logo.png)
+
 WIP project for the r/roguelikedev 2025 complete tutorial
 
 https://old.reddit.com/r/roguelikedev/wiki/python_tutorial_series
