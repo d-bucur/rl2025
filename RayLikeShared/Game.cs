@@ -22,6 +22,16 @@ public class Game {
 		InitCamera();
 		cubePosition = new(0.0f, 0.0f, 0.0f);
 
+		// Need to register schema for AOT (wasm)
+		// can maybe do it in the other project?
+		var aot = new NativeAOT();
+		aot.RegisterComponent<Position>();
+		aot.RegisterComponent<Velocity>();
+		aot.RegisterComponent<Cube>();
+		// aot.RegisterTag      <MyTag1>();
+		// aot.RegisterScript   <MyScript>();
+		var schema = aot.CreateSchema();
+
 		world = new EntityStore();
 		world.CreateEntity(
 			new Position(0, 0, 0),
