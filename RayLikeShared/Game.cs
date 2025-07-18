@@ -1,31 +1,48 @@
 ﻿using System.Numerics;
+using Friflo.Engine.ECS;
 using Raylib_cs;
 
 namespace RayLikeShared;
 
-public class Game
-{
+public struct Cube : IComponent { };
+
+public class Game {
 	private static Texture2D logo;
 	private static Vector3 cubePosition;
 	private static Camera3D camera;
 
-	public static void Init()
-	{
+	private static EntityStore world;
+	private static ArchetypeQuery<Position, Velocity> query;
+
+	public static void Init() {
 		// Console.WriteLine("Init");
 		Raylib.SetTargetFPS(60);
 		Raylib.InitWindow(800, 480, "RayLike");
 		logo = Raylib.LoadTexture("Resources/raylib_logo.png");
 		InitCamera();
 		cubePosition = new(0.0f, 0.0f, 0.0f);
+
+		world = new EntityStore();
+		world.CreateEntity(
+			new Position(0, 0, 0),
+			new Velocity { value = new Vector3(0.1f, 0, 0) },
+			new Cube()
+		);
+
+		query = world.Query<Position, Velocity>();
 	}
-	public static void Update()
-	{
+
+	public static void Update() {
 		// Console.WriteLine("Update");
 		if (Raylib.IsMouseButtonPressed(MouseButton.Left)) { Console.WriteLine($"Mouse down"); }
 		if (Raylib.IsKeyDown(KeyboardKey.Space)) { Console.WriteLine($"KeyDown"); }
+
+		query.ForEachEntity((ref Position position, ref Velocity velocity, Entity entity) => {
+			position.value += velocity.value * (float)Math.Sin(Raylib.GetTime() * 5);
+		});
 	}
-	public static void Draw()
-	{
+
+	public static void Draw() {
 		// Console.WriteLine("Draw");
 		Raylib.BeginDrawing();
 		Raylib.ClearBackground(Color.SkyBlue);
@@ -36,8 +53,13 @@ public class Game
 
 		Raylib.BeginMode3D(camera);
 
-		Raylib.DrawCube(cubePosition, 2.0f, 2.0f, 2.0f, Color.Red);
-		Raylib.DrawCubeWires(cubePosition, 2.0f, 2.0f, 2.0f, Color.Maroon);
+
+		world.Query<Position, Cube>().ForEachEntity((ref Position position, ref Cube cube, Entity entity) => {
+			// position.value += velocity.value;
+			Raylib.DrawCube(Helpers.ToVec3(position), 2.0f, 2.0f, 2.0f, Color.Red);
+			Raylib.DrawCubeWires(Helpers.ToVec3(position), 2.0f, 2.0f, 2.0f, Color.Maroon);
+		});
+
 
 		Raylib.DrawGrid(10, 1.0f);
 
@@ -45,13 +67,12 @@ public class Game
 
 		Raylib.EndDrawing();
 	}
-	private static string Test()
-	{
+
+	private static string Test() {
 		return "Test from class library";
 	}
 
-	private static void InitCamera()
-	{
+	private static void InitCamera() {
 		camera = new Camera3D(
 		new Vector3(0.0f, 10.0f, 10.0f),
 		new Vector3(0.0f, 0.0f, 0.0f),
