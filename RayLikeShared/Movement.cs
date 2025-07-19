@@ -1,4 +1,3 @@
-using System.Numerics;
 using Friflo.Engine.ECS;
 
 namespace RayLikeShared;

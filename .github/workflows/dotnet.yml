@@ -11,6 +11,7 @@ on:
 env:
   project_name: rl2025
   itch_target: sirdorius/raylike-2025
+  dotnet_config: Debug
 
 jobs:
   publish-wasm:
@@ -27,15 +28,11 @@ jobs:
       run: dotnet workload install wasm-tools wasm-tools-net8
     - name: Install wasm-tools
       run: dotnet workload restore
-    # - name: Restore dependencies
-    #   run: dotnet restore
-    # - name: Build
-    #   run: dotnet build --no-restore
     - name: Publish
-      run: dotnet publish RayLikeWasm -c Release
+      run: dotnet publish RayLikeWasm -c ${{ env.dotnet_config }}
 
     - name: Package as a zip
-      working-directory: RayLikeWasm/bin/Release/net8.0/browser-wasm/AppBundle
+      working-directory: RayLikeWasm/bin/${{ env.dotnet_config }}/net8.0/browser-wasm/AppBundle
       run: |
         zip --recurse-paths ${{ env.project_name }}.zip .
     - name: Install butler
@@ -53,5 +50,5 @@ jobs:
         ./butler push \
             --fix-permissions \
             --userversion="${{ steps.get_version.outputs.tag }}" \
-            RayLikeWasm/bin/Release/net8.0/browser-wasm/AppBundle/${{ env.project_name }}.zip \
+            RayLikeWasm/bin/${{ env.dotnet_config }}/net8.0/browser-wasm/AppBundle/${{ env.project_name }}.zip \
             ${{ env.itch_target }}:wasm
