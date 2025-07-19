@@ -5,6 +5,8 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
+public struct Cube : IComponent { };
+
 struct Camera() : IComponent {
 	public required Camera3D Value;
 }

@@ -4,8 +4,6 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-public struct Cube : IComponent { };
-
 public class Game {
 	private EntityStore World;
 	private SystemRoot UpdateRootSystems;
