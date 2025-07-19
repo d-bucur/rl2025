@@ -12,15 +12,16 @@ class Main : IModule {
 internal class PrgressTweens : QuerySystem<Tween> {
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref Tween tween, Entity e) => {
-			// TODO
-			// if (!tween.target.IsAlive()) {
-			// 	e.Destruct();
-			// 	return;
-			// }
+			if (tween.target.IsNull) {
+				e.DeleteEntity();
+				// not sure if this works
+				Console.WriteLine("Deleting Tween because target is dead");
+				return;
+			}
 			tween.Tick(Tick.deltaTime);
 			if (tween.IsFinished()) {
 				tween.Cleanup();
-				// e.DeleteEntity();
+				e.DeleteEntity();
 			}
 		});
 	}

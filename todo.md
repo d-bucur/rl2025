@@ -1,4 +1,5 @@
 - support WASD
+- will need proper turn resolution at some point
 
 ## action dispatch attempts
 - simple one calling Execute(EntityStore) on each actions

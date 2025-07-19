@@ -1,3 +1,5 @@
+// copied with minor modifications from https://github.com/d-bucur/flecs-survivors/blob/main/src/Tween.cs
+
 using Friflo.Engine.ECS;
 
 interface IPropertyTween {
@@ -53,7 +55,6 @@ record struct PropertyTween<C, P> (
 	}
 
 	public bool IsFinished() {
-		// TODO cache finish and stop if multiple properties on same tween
 		return !ShouldRepeat();
 	}
 
@@ -121,7 +122,6 @@ record struct Tween(Entity target) : IComponent {
 	public float LerpFloat(float v0, float v1, float t) {
 		return v0 + t * (v1 - v0);
 	}
-	// TODO Repetition is kind of error prone. Better way to fix one generic without repeating everything else?
 	public Tween With<C>(
 		ComponentSetter<C, float> Setter,
 		float From,
