@@ -66,6 +66,8 @@ public class Game {
 		aot.RegisterComponent<InputReceiver>();
 		aot.RegisterComponent<Camera>();
 		aot.RegisterComponent<Tween>();
+		aot.RegisterComponent<Grid>();
+		aot.RegisterComponent<GridPosition>();
 		// aot.RegisterTag      <MyTag1>();
 		// aot.RegisterScript   <MyScript>();
 		var schema = aot.CreateSchema();

@@ -6,6 +6,8 @@ namespace RayLikeShared;
 class Main : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.Animations.Add(new PrgressTweens());
+
+		Singleton.Entity.AddComponent(new Grid(Config.MAP_SIZE_X, Config.MAP_SIZE_Y));
 	}
 }
 

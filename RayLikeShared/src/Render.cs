@@ -18,11 +18,11 @@ class Render : IModule {
 	private static void InitCamera(EntityStore world) {
 		Singleton.Entity.AddComponent(new Camera() {
 			Value = new Camera3D(
-				new Vector3(0.0f, 10.0f, 10.0f),
+				new Vector3(0.0f, 15.0f, 10.0f),
 				new Vector3(0.0f, 0.0f, 0.0f),
 				new Vector3(0.0f, 1.0f, 0.0f),
-				45.0f,
-				CameraProjection.Perspective
+				15.0f,
+				CameraProjection.Orthographic
 			)
 		});
 	}

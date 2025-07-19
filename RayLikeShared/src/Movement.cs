@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 using Friflo.Engine.ECS;
 using Raylib_cs;
@@ -13,10 +14,21 @@ internal record class MovementAction(Entity Entity, int Dx, int Dy, bool IsBlock
     public bool Finished => _isFinished;
 
     public void Execute(EntityStore world) {
-        // TODO only doing animations now, no grid logic
-        var pos = Entity.GetComponent<Position>();
+        // TODO check destination
+        // TODO finish logic
+        // var grid = Singleton.Entity.GetComponent<Grid>();
+        // var gridPos = Entity.GetComponent<GridPosition>();
+        // var newPos = gridPos.Value += new Vec2I(Dx, Dy);
+
+        // grid.Value[gridPos.Value.X, gridPos.Value.Y] = default;
+        // Debug.Assert(grid.Value[gridPos.Value.X, gridPos.Value.Y].IsNull);
+
+        // gridPos.Value.X += Dx;
+        // gridPos.Value.Y += Dy;
+        // grid.Value[gridPos.Value.X, gridPos.Value.Y] = Entity;
 
         // Add movement animations
+        var pos = Entity.GetComponent<Position>();
         // xz anim
         new Tween(Entity).With(
             (ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
@@ -57,13 +69,13 @@ internal class Movement : IModule {
         UpdatePhases.Input.Add(
             LambdaSystems.New((ref ActionBuffer buffer, Entity e) => {
                 (int, int)? action = null;
-                if (Raylib.IsKeyPressed(KeyboardKey.Left))
+                if (Raylib.IsKeyPressed(KeyboardKey.A))
                     action = (-1, 0);
-                if (Raylib.IsKeyPressed(KeyboardKey.Right))
+                if (Raylib.IsKeyPressed(KeyboardKey.D))
                     action = (1, 0);
-                if (Raylib.IsKeyPressed(KeyboardKey.Down))
+                if (Raylib.IsKeyPressed(KeyboardKey.S))
                     action = (0, 1);
-                if (Raylib.IsKeyPressed(KeyboardKey.Up))
+                if (Raylib.IsKeyPressed(KeyboardKey.W))
                     action = (0, -1);
 
                 if (action.HasValue) {

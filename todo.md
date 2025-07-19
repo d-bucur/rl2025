@@ -1,5 +1,4 @@
-- support WASD
-- will need proper turn resolution at some point
+- will need proper turn resolution at some point: https://journal.stuffwithstuff.com/2014/07/15/a-turn-based-game-loop/
 
 ## action dispatch attempts
 - simple one calling Execute(EntityStore) on each actions
