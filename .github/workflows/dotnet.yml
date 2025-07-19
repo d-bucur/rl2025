@@ -4,9 +4,15 @@
 name: .NET Publish
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
+    inputs:
+      deploy_ref:
+        description: 'ref to deploy'
+        required: true
+        default: 'main'
+  # push:
+  #   tags:
+  #     - '*'
 
 env:
   project_name: rl2025
@@ -20,6 +26,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.deploy_ref }}
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
