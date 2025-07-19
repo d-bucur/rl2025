@@ -32,18 +32,11 @@ public class Game {
 		Modules = [
 			new Assets(),
 			new Render(),
+			new Level(),
 			new ActionsModule(),
 			new Movement(),
 		];
 		Modules.ForEach(m => m.Init(World));
-
-		// TODO move
-		World.CreateEntity(
-			new InputReceiver(),
-			new Position(0, 0, 0),
-			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			new Cube()
-		);
 	}
 
 	public void Update() {
@@ -68,6 +61,7 @@ public class Game {
 		// TODO register new component here
 		// would be cool to have this codegened from interfaces
 		aot.RegisterComponent<Position>();
+		aot.RegisterComponent<Scale3>();
 		aot.RegisterComponent<Cube>();
 		aot.RegisterComponent<ActionBuffer>();
 		aot.RegisterComponent<InputReceiver>();
