@@ -49,7 +49,7 @@ public class Game {
 		Raylib.EndDrawing();
 	}
 
-	private static UpdateTick GetUpdateTick() {
+	public static UpdateTick GetUpdateTick() {
 		return new UpdateTick(Raylib.GetFrameTime(), (float)Raylib.GetTime());
 	}
 

@@ -145,7 +145,6 @@ record struct Tween(Entity target) : IComponent {
 		));
 		return this;
 	}
-	// TODO add Color and Vector2
 	#endregion
 }
 

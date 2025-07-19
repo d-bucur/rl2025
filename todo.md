@@ -1,3 +1,6 @@
-- replace raw queries with systems https://friflo.gitbook.io/friflo.engine.ecs/documentation/systems#update-execution
-- probably need flexible modules and phases since no pipelines
 - support WASD
+
+action dispatch attempts:
+- simple one calling Execute(EntityStore) on each actions
+- attempt a more complicated one where Tags/Components are added to execute actions and dumb systems listen for these all the time (overengineered for ecs?)
+- attempted one where action dispatcher calls systems directly through an action->system dictionary, but friflo systems are more limited than bevy: can't pass around parameters or pipe data between them, so can't actually pass around the action to execute. If I have to add components so they can be picked up by systems later I can just do the above approach and avoid custom scheduling of systems
