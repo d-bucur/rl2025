@@ -20,10 +20,8 @@ public class Game {
 		World = new EntityStore();
 		Singleton.Init(World);
 
-		UpdateRootSystems = new SystemRoot(World) {
-			UpdatePhases.Input,
-			UpdatePhases.ApplyActions,
-		};
+		UpdateRootSystems = new SystemRoot(World);
+		UpdatePhases.All.ForEach(p => UpdateRootSystems.Add(p));
 
 		RenderRootSystems = new SystemRoot(World) {
 			RenderPhases.Render,
@@ -33,6 +31,7 @@ public class Game {
 			new Assets(),
 			new Render(),
 			new Level(),
+			new Main(),
 			new ActionsModule(),
 			new Movement(),
 		];

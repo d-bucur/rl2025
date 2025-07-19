@@ -35,9 +35,9 @@ internal class RenderCubes : QuerySystem<Position, Scale3> {
 		Raylib.BeginMode3D(Singleton.Entity.GetComponent<Camera>().Value);
 
 		Query.ForEachEntity((ref Position pos, ref Scale3 scale, Entity e) => {
-			var posWithOffset = pos.ToVec3() + new Vector3(Config.GRID_SIZE) / 2;
-			Raylib.DrawCubeV(posWithOffset, scale.ToVec3(), Color.Red);
-			Raylib.DrawCubeWiresV(posWithOffset, scale.ToVec3(), Color.Maroon);
+			var posWithOffset = pos.value + new Vector3(Config.GRID_SIZE) / 2;
+			Raylib.DrawCubeV(posWithOffset, scale.value, Color.Red);
+			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Color.Maroon);
 		});
 
 		Raylib.DrawGrid(30, Config.GRID_SIZE);
