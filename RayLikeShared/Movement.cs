@@ -6,7 +6,12 @@ namespace RayLikeShared;
 
 internal struct InputReceiver : IComponent;
 
-internal record struct MovementAction(int Dx, int Dy) : IAction {
+internal record class MovementAction(int Dx, int Dy) : IAction {
+    private bool _isFinished = false;
+
+	public bool IsBlocking => true;
+    public bool IsFinished => _isFinished;
+    
     public void Execute(EntityStore world) {
         // need to copy for lambda to work...
         var self = this;
@@ -17,7 +22,7 @@ internal record struct MovementAction(int Dx, int Dy) : IAction {
                 new Tween(e).With(
                     (ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
                     pos.value, pos.value + new Vector3(self.Dx * Config.GRID_SIZE, 0, self.Dy * Config.GRID_SIZE),
-                    0.2f, Ease.SineOut, Vector3.Lerp
+                    0.2f, Ease.SineOut, Vector3.Lerp, OnEnd: (ref Position p) => { _isFinished = true; }
                 ).RegisterEcs();
                 // y anim
                 const float jumpHeight = 0.3f;

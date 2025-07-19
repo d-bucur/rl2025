@@ -48,7 +48,7 @@ internal class RenderCubes : QuerySystem<Position, Scale3> {
 
 	private static void DebugStuff() {
 		Raylib.DrawFPS(4, 4);
-		Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
-		Raylib.DrawTexture(Assets.logo, 4, 64, Color.White);
+		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
+		Raylib.DrawTexture(Assets.logo, 4, 30, Color.White);
 	}
 }
