@@ -6,11 +6,11 @@ namespace RayLikeShared;
 
 internal struct InputReceiver : IComponent;
 
-internal record class MovementAction(Entity Entity, int Dx, int Dy) : IAction {
+internal record class MovementAction(Entity Entity, int Dx, int Dy, bool IsBlocking = true) : IAction {
     private bool _isFinished = false;
 
-    public bool IsBlocking => true;
-    public bool IsFinished => _isFinished;
+    public bool Blocking => IsBlocking;
+    public bool Finished => _isFinished;
 
     public void Execute(EntityStore world) {
         // TODO only doing animations now, no grid logic

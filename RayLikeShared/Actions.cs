@@ -8,8 +8,8 @@ internal struct ActionBuffer() : IComponent {
 }
 
 internal interface IAction {
-	public bool IsBlocking => false;
-	public bool IsFinished => true;
+	public bool Blocking { get => false; }
+	public bool Finished { get => true; }
 	public void Execute(EntityStore world);
 }
 
@@ -29,9 +29,9 @@ class ActionsModule : IModule {
 			var newInExecution = new List<IAction>();
 			bool isBlockingInExecution = false;
 			foreach (var action in buffer.InExecution) {
-				if (!action.IsFinished) {
+				if (!action.Finished) {
 					newInExecution.Add(action);
-					isBlockingInExecution |= action.IsBlocking;
+					isBlockingInExecution |= action.Blocking;
 				}
 			}
 			buffer.InExecution = newInExecution;
@@ -43,7 +43,7 @@ class ActionsModule : IModule {
 				var action = buffer.Value.Dequeue();
 				buffer.InExecution.Add(action);
 				action.Execute(world);
-				if (action.IsBlocking) {
+				if (action.Blocking) {
 					break;
 				}
 			}
