@@ -37,7 +37,7 @@ internal record class MovementAction(Entity Entity, int Dx, int Dy, bool IsBlock
         ).RegisterEcs();
 
         // y anim
-        const float jumpHeight = 0.3f;
+        const float jumpHeight = 0.2f;
         new Tween(Entity).With(
             (ref Position p, float v) => { p.y = v; },
             0, jumpHeight,
