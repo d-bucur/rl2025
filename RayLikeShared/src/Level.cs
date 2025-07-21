@@ -9,7 +9,7 @@ class Level : IModule {
 
 		world.OnComponentAdded += (change) => {
 			if (change.Action == ComponentChangedAction.Add && change.Type == typeof(GridPosition)) {
-        		var grid = Singleton.Entity.GetComponent<Grid>();
+				var grid = Singleton.Entity.GetComponent<Grid>();
 				var pos = change.Component<GridPosition>();
 				grid.Value[pos.Value.X, pos.Value.Y] = change.Entity;
 			}
@@ -25,28 +25,31 @@ class Level : IModule {
 			Tags.Get<Character, BlocksPathing>()
 		);
 
-		// world.CreateEntity(
-		// 	new GridPosition(2, 2),
-		// 	new InputReceiver(),
-		// 	new Position(2, 0, 2),
-		// 	new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-		// 	new Cube()
-		// );
+		world.CreateEntity(
+			new GridPosition(1, 1),
+			new InputReceiver(),
+			new Position(1, 0, 1),
+			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+			new Cube(),
+			Tags.Get<Character, BlocksPathing>()
+		);
 
-		// world.CreateEntity(
-		// 	new GridPosition(-2, -2),
-		// 	new InputReceiver(),
-		// 	new Position(-2, 0, -2),
-		// 	new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-		// 	new Cube()
-		// );
+		world.CreateEntity(
+			new GridPosition(3, 3),
+			new InputReceiver(),
+			new Position(3, 0, 3),
+			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+			new Cube(),
+			Tags.Get<Character, BlocksPathing>()
+		);
 
 		// world.CreateEntity(
 		// 	new GridPosition(-3, 3),
 		// 	new InputReceiver(),
 		// 	new Position(-3, 0, 3),
 		// 	new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-		// 	new Cube()
+		// 	new Cube(),
+		// Tags.Get<Character, BlocksPathing>()
 		// );
 
 		InitWalls(world);

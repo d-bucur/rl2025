@@ -24,7 +24,7 @@ class ActionsModule : IModule {
 		Singleton.Entity.AddComponent(new ActionBuffer());
 
 		UpdatePhases.ApplyActions.Add(LambdaSystems.New((ref ActionBuffer buffer, Entity e) => {
-			// todo this executing/blocking part could be done using ECS components
+			// TODO this executing/blocking part could be done using ECS components
 			// iterate over executing actions and remove finished ones
 			var newInExecution = new List<IAction>();
 			bool isBlockingInExecution = false;
