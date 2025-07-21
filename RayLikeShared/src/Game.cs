@@ -12,7 +12,7 @@ public class Game {
 
 	public Game() {
 		Raylib.SetTargetFPS(60);
-		Raylib.InitWindow(1024, 600, "RayLike Challenge");
+		Raylib.InitWindow(1024, 600, "RaygueLike Challenge");
 		RegisterComponentsForNativeAot();
 
 		World = new EntityStore();
@@ -22,6 +22,7 @@ public class Game {
 		UpdatePhases.All.ForEach(p => UpdateRootSystems.Add(p));
 
 		RenderRootSystems = new SystemRoot(World) {
+			RenderPhases.PreRender,
 			RenderPhases.Render,
 		};
 
@@ -66,8 +67,11 @@ public class Game {
 		aot.RegisterComponent<Tween>();
 		aot.RegisterComponent<Grid>();
 		aot.RegisterComponent<GridPosition>();
+		aot.RegisterComponent<CameraFollowTarget>();
 		
 		aot.RegisterTag<Character>();
+		aot.RegisterTag<Player>();
+		aot.RegisterTag<Enemy>();
 		aot.RegisterTag<BlocksFOV>();
 		aot.RegisterTag<BlocksPathing>();
 		// aot.RegisterScript   <MyScript>();

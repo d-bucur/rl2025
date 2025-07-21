@@ -1,15 +1,34 @@
+using System.Numerics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
 struct Character : ITag; // Entity in tutorial, but name would conflict with ECS
+struct Player : ITag;
+struct Enemy : ITag;
+
 struct BlocksPathing : ITag; // walkable in tutorial
 struct BlocksFOV : ITag; // transparent in tutorial
+
+record struct CameraFollowTarget(Entity target, Vector3 Offset = default, float Speed = 0.03f) : IComponent;
 
 class Main : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.Animations.Add(new PrgressTweens());
+
+		// Add camera following player
+		Singleton.Camera.AddComponent(
+			new CameraFollowTarget(Singleton.Player,
+			new Vector3(0f, 10f, 10f)
+			// Singleton.Camera.GetComponent<Camera>().Value.Position - Singleton.Player.GetComponent<Position>().value
+		));
+		UpdatePhases.Animations.Add(LambdaSystems.New((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+			var targetPos = follow.target.GetComponent<Position>();
+			Vector3 endPos = targetPos.value + follow.Offset;
+			cam.Value.Position = Vector3.Lerp(cam.Value.Position, endPos, follow.Speed);
+			cam.Value.Target = Vector3.Lerp(cam.Value.Target, targetPos.value, follow.Speed);
+		}));
 	}
 }
 

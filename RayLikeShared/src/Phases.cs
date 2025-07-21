@@ -9,5 +9,6 @@ class UpdatePhases {
 }
 
 class RenderPhases {
+	static internal SystemGroup PreRender = new("PreRenderPhase");
 	static internal SystemGroup Render = new("RenderPhase");
 }

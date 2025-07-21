@@ -16,13 +16,13 @@ class Level : IModule {
 		};
 
 		// player
-		world.CreateEntity(
+		Singleton.Player = world.CreateEntity(
 			new InputReceiver(),
 			new GridPosition(2, 2),
 			new Position(2, 0, 2), // TODO should automatically be Set by grid
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			new Cube(),
-			Tags.Get<Character, BlocksPathing>()
+			new Cube() { Color = Color.Green},
+			Tags.Get<Player, Character, BlocksPathing>()
 		);
 
 		world.CreateEntity(
@@ -31,7 +31,7 @@ class Level : IModule {
 			new Position(1, 0, 1),
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			new Cube(),
-			Tags.Get<Character, BlocksPathing>()
+			Tags.Get<Enemy, Character, BlocksPathing>()
 		);
 
 		world.CreateEntity(
@@ -40,7 +40,7 @@ class Level : IModule {
 			new Position(3, 0, 3),
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			new Cube(),
-			Tags.Get<Character, BlocksPathing>()
+			Tags.Get<Enemy, Character, BlocksPathing>()
 		);
 
 		// world.CreateEntity(

@@ -20,22 +20,22 @@ class Render : IModule {
 	}
 
 	private static void InitCamera(EntityStore world) {
-		Singleton.Entity.AddComponent(new Camera() {
-			Value = new Camera3D(
-				new Vector3(2.5f, 10.0f, 10.0f),
-				new Vector3(2.5f, 0.0f, 2.5f),
-				new Vector3(0.0f, 1.0f, 0.0f),
-				35.0f,
-				CameraProjection.Perspective
-			)
-		});
+		Singleton.Camera = world.CreateEntity(
+			new Camera() {
+				Value = new Camera3D(
+					new Vector3(2, 10.0f, 2f),
+					new Vector3(2.5f, 0.0f, 2.5f),
+					new Vector3(0.0f, 1.0f, 0.0f),
+					35.0f,
+					CameraProjection.Perspective
+				)
+			});
 	}
 }
 
 internal class RenderCubes : QuerySystem<Position, Scale3, Cube> {
-
 	protected override void OnUpdate() {
-		Raylib.BeginMode3D(Singleton.Entity.GetComponent<Camera>().Value);
+		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
 		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Cube cube, Entity e) => {
 			var posWithOffset = pos.value + new Vector3(Config.GRID_SIZE) / 2;

@@ -14,6 +14,16 @@ class LambdaSystems {
 			Query.ForEachEntity(lambda);
 		}
 	}
+
+	static internal LambdaSystem2<T1, T2> New<T1, T2>(ForEachEntity<T1, T2> lambda) where T1 : struct, IComponent where T2 : struct, IComponent {
+		return new LambdaSystem2<T1, T2>(lambda);
+	}
+
+	internal class LambdaSystem2<T1, T2>(ForEachEntity<T1, T2> lambda) : QuerySystem<T1, T2> where T1 : struct, IComponent where T2 : struct, IComponent {
+		protected override void OnUpdate() {
+			Query.ForEachEntity(lambda);
+		}
+	}
 }
 
 interface IModule {
@@ -22,6 +32,8 @@ interface IModule {
 
 class Singleton {
 	internal static Entity Entity;
+	internal static Entity Camera;
+	internal static Entity Player;
 
 	// Old method breaking wasm. Need to register to AOT maybe?
 	// struct SingletonEntity() : IIndexedComponent<int> {
