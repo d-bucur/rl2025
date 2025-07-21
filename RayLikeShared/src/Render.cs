@@ -5,7 +5,9 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-public struct Cube : IComponent { };
+public struct Cube() : IComponent {
+	public Color Color = Color.Red;
+};
 
 struct Camera() : IComponent {
 	public required Camera3D Value;
@@ -20,26 +22,25 @@ class Render : IModule {
 	private static void InitCamera(EntityStore world) {
 		Singleton.Entity.AddComponent(new Camera() {
 			Value = new Camera3D(
-				new Vector3(0.0f, 15.0f, 10.0f),
+				new Vector3(0.0f, 10.0f, 10.0f),
 				new Vector3(0.0f, 0.0f, 0.0f),
 				new Vector3(0.0f, 1.0f, 0.0f),
-				15.0f,
-				CameraProjection.Orthographic
+				35.0f,
+				CameraProjection.Perspective
 			)
 		});
 	}
 }
 
-internal class RenderCubes : QuerySystem<Position, Scale3> {
-	public RenderCubes() => Filter.AllComponents(ComponentTypes.Get<Cube>());
+internal class RenderCubes : QuerySystem<Position, Scale3, Cube> {
 
 	protected override void OnUpdate() {
 		Raylib.BeginMode3D(Singleton.Entity.GetComponent<Camera>().Value);
 
-		Query.ForEachEntity((ref Position pos, ref Scale3 scale, Entity e) => {
+		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Cube cube, Entity e) => {
 			var posWithOffset = pos.value + new Vector3(Config.GRID_SIZE) / 2;
-			Raylib.DrawCubeV(posWithOffset, scale.value, Color.Red);
-			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Color.Maroon);
+			Raylib.DrawCubeV(posWithOffset, scale.value, cube.Color);
+			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Raylib.Fade(Color.Black, 0.2f));
 		});
 
 		Raylib.DrawGrid(30, Config.GRID_SIZE);
