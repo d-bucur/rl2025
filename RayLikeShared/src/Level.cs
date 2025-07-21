@@ -5,12 +5,24 @@ namespace RayLikeShared;
 
 class Level : IModule {
 	public void Init(EntityStore world) {
+		Singleton.Entity.AddComponent(new Grid(Config.MAP_SIZE_X, Config.MAP_SIZE_Y));
+
+		world.OnComponentAdded += (change) => {
+			if (change.Action == ComponentChangedAction.Add && change.Type == typeof(GridPosition)) {
+        		var grid = Singleton.Entity.GetComponent<Grid>();
+				var pos = change.Component<GridPosition>();
+				grid.Value[pos.Value.X, pos.Value.Y] = change.Entity;
+			}
+		};
+
+		// player
 		world.CreateEntity(
-			new GridPosition(0, 0),
 			new InputReceiver(),
-			new Position(0, 0, 0),
+			new GridPosition(2, 2),
+			new Position(2, 0, 2), // TODO should automatically be Set by grid
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			new Cube()
+			new Cube(),
+			Tags.Get<Character, BlocksPathing>()
 		);
 
 		// world.CreateEntity(
@@ -41,19 +53,23 @@ class Level : IModule {
 	}
 
 	private void InitWalls(EntityStore world) {
-		for (int i = -5; i < 5; i++) {
+		for (int i = 0; i < 10; i++) {
 			world.CreateEntity(
-				new Position(i, 0, -2),
+				new GridPosition(i, 0),
+				new Position(i, 0, 0),
 				new Scale3(Config.GRID_SIZE, Config.GRID_SIZE, Config.GRID_SIZE),
-				new Cube() { Color = Color.DarkBlue }
+				new Cube() { Color = Color.DarkBlue },
+				Tags.Get<BlocksPathing, BlocksFOV>()
 			);
 		}
 
-		for (int i = -5; i < 5; i++) {
+		for (int i = 0; i < 10; i++) {
 			world.CreateEntity(
-				new Position(i, 0, 3),
+				new GridPosition(i, 4),
+				new Position(i, 0, 4),
 				new Scale3(Config.GRID_SIZE, Config.GRID_SIZE, Config.GRID_SIZE),
-				new Cube() { Color = Raylib.Fade(Color.DarkBlue, 0.3f) }
+				new Cube() { Color = Raylib.Fade(Color.DarkBlue, 0.3f) },
+				Tags.Get<BlocksPathing, BlocksFOV>()
 			);
 		}
 	}

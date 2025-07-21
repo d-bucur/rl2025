@@ -3,11 +3,13 @@ using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
+struct Character : ITag; // Entity in tutorial, but name would conflict with ECS
+struct BlocksPathing : ITag; // walkable in tutorial
+struct BlocksFOV : ITag; // transparent in tutorial
+
 class Main : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.Animations.Add(new PrgressTweens());
-
-		Singleton.Entity.AddComponent(new Grid(Config.MAP_SIZE_X, Config.MAP_SIZE_Y));
 	}
 }
 

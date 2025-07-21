@@ -55,7 +55,7 @@ public class Game {
 		// Need to register schema for AOT (wasm)
 		// can maybe move to wasm project?
 		var aot = new NativeAOT();
-		// TODO register new component here
+		// TODO register new components here
 		// would be cool to have this codegened from interfaces
 		aot.RegisterComponent<Position>();
 		aot.RegisterComponent<Scale3>();
@@ -66,7 +66,10 @@ public class Game {
 		aot.RegisterComponent<Tween>();
 		aot.RegisterComponent<Grid>();
 		aot.RegisterComponent<GridPosition>();
-		// aot.RegisterTag      <MyTag1>();
+		
+		aot.RegisterTag<Character>();
+		aot.RegisterTag<BlocksFOV>();
+		aot.RegisterTag<BlocksPathing>();
 		// aot.RegisterScript   <MyScript>();
 		var schema = aot.CreateSchema();
 	}

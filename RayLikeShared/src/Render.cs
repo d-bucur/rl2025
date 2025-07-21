@@ -22,8 +22,8 @@ class Render : IModule {
 	private static void InitCamera(EntityStore world) {
 		Singleton.Entity.AddComponent(new Camera() {
 			Value = new Camera3D(
-				new Vector3(0.0f, 10.0f, 10.0f),
-				new Vector3(0.0f, 0.0f, 0.0f),
+				new Vector3(2.5f, 10.0f, 10.0f),
+				new Vector3(2.5f, 0.0f, 2.5f),
 				new Vector3(0.0f, 1.0f, 0.0f),
 				35.0f,
 				CameraProjection.Perspective

@@ -1,9 +1,30 @@
+using System.Diagnostics;
 using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
 
+// Similar to GameMap in tutorial
 struct Grid(int sizeX, int sizeY) : IComponent {
 	internal Entity[,] Value = new Entity[sizeX, sizeY];
+
+	public bool IsInsideGrid(Vec2I pos) {
+		return pos.X < sizeX && pos.X >= 0
+			&& pos.Y < sizeY && pos.Y >= 0;
+	}
+
+	public bool TrySetPos(Vec2I oldPos, Vec2I newPos) {
+		if (!IsInsideGrid(newPos))
+			return false;
+		SetPos(oldPos, newPos);
+		return true;
+	}
+
+	public void SetPos(Vec2I oldPos, Vec2I newPos) {
+		var entity = Value[oldPos.X, oldPos.Y];
+		Value[oldPos.X, oldPos.Y] = default;
+		Debug.Assert(Value[oldPos.X, oldPos.Y].IsNull);
+		Value[newPos.X, newPos.Y] = entity;
+	}
 }
 
 struct GridPosition(int x, int y) : IComponent {
