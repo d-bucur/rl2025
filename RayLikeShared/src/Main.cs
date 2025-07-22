@@ -11,7 +11,7 @@ struct Enemy : ITag;
 struct BlocksPathing : ITag; // walkable in tutorial
 struct BlocksFOV : ITag; // transparent in tutorial
 
-record struct CameraFollowTarget(Entity target, Vector3 Offset = default, float Speed = 0.03f) : IComponent;
+record struct CameraFollowTarget(Entity target, Vector3 Offset = default, float Speed = 0.02f) : IComponent;
 
 class Main : IModule {
 	public void Init(EntityStore world) {
@@ -21,13 +21,13 @@ class Main : IModule {
 		Singleton.Camera.AddComponent(
 			new CameraFollowTarget(Singleton.Player,
 			new Vector3(0f, 10f, 10f)
-			// Singleton.Camera.GetComponent<Camera>().Value.Position - Singleton.Player.GetComponent<Position>().value
 		));
 		UpdatePhases.Animations.Add(LambdaSystems.New((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
 			var targetPos = follow.target.GetComponent<Position>();
 			Vector3 endPos = targetPos.value + follow.Offset;
+			endPos.Y = follow.Offset.Y;
 			cam.Value.Position = Vector3.Lerp(cam.Value.Position, endPos, follow.Speed);
-			cam.Value.Target = Vector3.Lerp(cam.Value.Target, targetPos.value, follow.Speed);
+			cam.Value.Target = Vector3.Lerp(cam.Value.Target, targetPos.value, follow.Speed * 2);
 		}));
 	}
 }

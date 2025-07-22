@@ -16,7 +16,7 @@ on:
 
 env:
   project_name: rl2025
-  itch_target: sirdorius/raylike-2025
+  itch_target: sirdorius/rayguelike-2025
   dotnet_config: Debug
 
 jobs:
