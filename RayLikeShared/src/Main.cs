@@ -11,7 +11,7 @@ struct Enemy : ITag;
 struct BlocksPathing : ITag; // walkable in tutorial
 struct BlocksFOV : ITag; // transparent in tutorial
 
-record struct CameraFollowTarget(Entity target, Vector3 Offset = default, float Speed = 0.02f) : IComponent;
+record struct CameraFollowTarget(Entity target, Vector3 Offset = default, float Speed = 0.03f) : IComponent;
 
 class Main : IModule {
 	public void Init(EntityStore world) {
@@ -20,7 +20,7 @@ class Main : IModule {
 		// Add camera following player
 		Singleton.Camera.AddComponent(
 			new CameraFollowTarget(Singleton.Player,
-			new Vector3(0f, 10f, 10f)
+			new Vector3(0f, 15f, 10f)
 		));
 		UpdatePhases.Animations.Add(LambdaSystems.New((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
 			var targetPos = follow.target.GetComponent<Position>();

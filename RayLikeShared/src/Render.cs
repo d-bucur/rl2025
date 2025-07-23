@@ -43,7 +43,7 @@ internal class RenderCubes : QuerySystem<Position, Scale3, Cube> {
 			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Raylib.Fade(Color.Black, 0.2f));
 		});
 
-		Raylib.DrawGrid(30, Config.GRID_SIZE);
+		// Raylib.DrawGrid(30, Config.GRID_SIZE);
 		Raylib.EndMode3D();
 
 		DebugStuff();
