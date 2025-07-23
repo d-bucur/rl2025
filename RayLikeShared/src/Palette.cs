@@ -37,7 +37,7 @@ class Palette {
 
 	// https://lospec.com/palette-list/midnight-ablaze
 
-	public static Color[] Colors = Palette2;
+	public static Color[] Colors = Palette3;
 
 	Color Background;
 	Color Wall;
