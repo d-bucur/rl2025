@@ -6,7 +6,7 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 public struct Cube() : IComponent {
-	public Color Color = Color.Red;
+	public Color Color = Palette.Colors[0];
 };
 
 struct Camera() : IComponent {

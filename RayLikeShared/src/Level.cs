@@ -27,7 +27,7 @@ class Level : IModule {
 			new GridPosition(center.X, center.Y),
 			new Position(center.X, 0, center.Y), // TODO should automatically be Set by grid
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			new Cube() { Color = Color.Green },
+			new Cube() { Color = Palette.Colors[0] },
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
@@ -95,7 +95,7 @@ class Level : IModule {
 						new GridPosition(i, j),
 						new Position(i, 0, j),
 						new Scale3(Config.GRID_SIZE, Config.GRID_SIZE, Config.GRID_SIZE),
-						new Cube() { Color = Color.DarkBlue },
+						new Cube() { Color = Palette.Colors[2] },
 						Tags.Get<BlocksPathing, BlocksFOV>()
 					);
 			}

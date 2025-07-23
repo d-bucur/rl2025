@@ -43,7 +43,7 @@ public class Game {
 
 	public void Draw() {
 		Raylib.BeginDrawing();
-		Raylib.ClearBackground(Color.DarkGray);
+		Raylib.ClearBackground(Palette.Colors[3]);
 		RenderRootSystems.Update(GetUpdateTick());
 		Raylib.EndDrawing();
 	}
