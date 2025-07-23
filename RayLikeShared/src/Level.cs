@@ -1,13 +1,12 @@
 using System.Numerics;
 using Friflo.Engine.ECS;
-using Friflo.Json.Fliox.Mapper.Map;
-using Friflo.Json.Fliox.Transform.Query.Ops;
-using Raylib_cs;
 
 namespace RayLikeShared;
 
 class Level : IModule {
+	Random Rand;
 	public void Init(EntityStore world) {
+		Rand = new Random();
 		Singleton.Entity.AddComponent(new Grid(Config.MAP_SIZE_X, Config.MAP_SIZE_Y));
 
 		world.OnComponentAdded += (change) => {
@@ -66,16 +65,32 @@ class Level : IModule {
 	}
 
 	private List<Room> GenerateDungeon(EntityStore world) {
+		// true if tile is empty, false if walled
 		var map = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
+
+		RandomizeTiles(map, 0.7);
+		List<Room> rooms = GenerateRooms(map, 5);
+		DigTunnelsBetweenRooms(map, rooms);
+		for (int i = 0; i < Config.CA_SIM_STEPS; i++) {
+			map = CASimStep(map);
+		}
+		rooms = GenerateRooms(map, 10);
+		DigTunnelsBetweenRooms(map, rooms);
+
+		InstantiateECSEntitites(world, map);
+		return rooms;
+	}
+
+	private List<Room> GenerateRooms(bool[,] map, int roomCount) {
 		List<Room> rooms = new();
 
 		// Generate rooms and tunnels and save them to a grid
-		for (int i = 0; i < Config.ROOM_COUNT; i++) {
-			int width = Random.Shared.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
-			int height = Random.Shared.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
+		for (int i = 0; i < roomCount; i++) {
+			int width = Rand.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
+			int height = Rand.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
 			var room = new Room(
-				Random.Shared.Next(0, Config.MAP_SIZE_X - width),
-				Random.Shared.Next(0, Config.MAP_SIZE_Y - height),
+				Rand.Next(0, Config.MAP_SIZE_X - width),
+				Rand.Next(0, Config.MAP_SIZE_Y - height),
 				width,
 				height
 			);
@@ -87,21 +102,13 @@ class Level : IModule {
 			rooms.Add(room);
 		}
 
-		// Go through the grid and instantiate ECS entities
-		for (int i = 0; i < map.GetLength(0); i++) {
-			for (int j = 0; j < map.GetLength(1); j++) {
-				if (!map[i, j])
-					world.CreateEntity(
-						new GridPosition(i, j),
-						new Position(i, 0, j),
-						new Scale3(Config.GRID_SIZE, Config.GRID_SIZE, Config.GRID_SIZE),
-						new Cube() { Color = Palette.Colors[2] },
-						Tags.Get<BlocksPathing, BlocksFOV>()
-					);
-			}
-		}
-
 		return rooms;
+	}
+
+	private void DigTunnelsBetweenRooms(bool[,] map, List<Room> rooms) {
+		for (int i = 1; i < rooms.Count; i++) {
+			DigTunnel(map, rooms[i].Center(), rooms[i - 1].Center());
+		}
 	}
 
 	private void DigRoom(bool[,] map, Room room) {
@@ -120,6 +127,63 @@ class Level : IModule {
 		for (int j = Math.Min(start.Y, end.Y); j <= Math.Max(start.Y, end.Y); j++) {
 			map[Math.Min(start.X, end.X), j] = true;
 			map[Math.Max(start.X, end.X), j] = true;
+		}
+	}
+
+	private void RandomizeTiles(bool[,] map, double emptyChance) {
+		// Randomize map for cellular automata
+		for (int i = 0; i < Config.MAP_SIZE_X; i++) {
+			for (int j = 0; j < Config.MAP_SIZE_Y; j++) {
+				if (Rand.NextSingle() > emptyChance)
+					map[i, j] = true;
+			}
+		}
+	}
+
+	private bool[,] CASimStep(bool[,] map) {
+		var newMap = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
+		for (int i = 0; i < Config.MAP_SIZE_X; i++) {
+			for (int j = 0; j < Config.MAP_SIZE_Y; j++) {
+				var count = CountEmptyNeighbors(map, i, j);
+				if (map[i, j])
+					// cell is empty
+					newMap[i, j] = !(count <= Config.CA_DEATH_LIMIT);
+				else
+					// cell is walled
+					newMap[i, j] = count >= Config.CA_BIRTH_LIMIT;
+			}
+		}
+		return newMap;
+	}
+
+	(int, int)[] _neighbors = [
+		(-1,-1), (0, -1), (1, -1),
+		(-1, 0), (1, 0),
+		(-1, 1), (0, 1), (1, 1)];
+	private int CountEmptyNeighbors(bool[,] map, int i, int j) {
+		int count = 0;
+		foreach (var (x, y) in _neighbors) {
+			bool isInBounds = i + x >= 0 && i + x < map.GetLength(0)
+				&& j + y >= 0 && j + y < map.GetLength(1);
+			if (isInBounds && map[i + x, j + y])
+				count += 1;
+		}
+		return count;
+	}
+
+	private static void InstantiateECSEntitites(EntityStore world, bool[,] map) {
+		// Go through the grid and instantiate ECS entities
+		for (int i = 0; i < map.GetLength(0); i++) {
+			for (int j = 0; j < map.GetLength(1); j++) {
+				if (!map[i, j])
+					world.CreateEntity(
+						new GridPosition(i, j),
+						new Position(i, 0, j),
+						new Scale3(Config.GRID_SIZE, Config.GRID_SIZE, Config.GRID_SIZE),
+						new Cube() { Color = Palette.Colors[2] },
+						Tags.Get<BlocksPathing, BlocksFOV>()
+					);
+			}
 		}
 	}
 
