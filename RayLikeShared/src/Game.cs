@@ -32,6 +32,7 @@ public class Game {
 			new Level(),
 			new Main(),
 			new ActionsModule(),
+			new TurnsManagement(),
 			new Movement(),
 		];
 		Modules.ForEach(m => m.Init(World));
@@ -56,7 +57,7 @@ public class Game {
 		// Need to register schema for AOT (wasm)
 		// can maybe move to wasm project?
 		var aot = new NativeAOT();
-		// TODO register new components here
+		// TODO always remember to register new components here
 		// would be cool to have this codegened from interfaces
 		aot.RegisterComponent<Position>();
 		aot.RegisterComponent<Scale3>();
@@ -68,12 +69,14 @@ public class Game {
 		aot.RegisterComponent<Grid>();
 		aot.RegisterComponent<GridPosition>();
 		aot.RegisterComponent<CameraFollowTarget>();
+		aot.RegisterComponent<Energy>();
 		
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();
 		aot.RegisterTag<Enemy>();
 		aot.RegisterTag<BlocksFOV>();
 		aot.RegisterTag<BlocksPathing>();
+		aot.RegisterTag<CanAct>();
 		// aot.RegisterScript   <MyScript>();
 		var schema = aot.CreateSchema();
 	}

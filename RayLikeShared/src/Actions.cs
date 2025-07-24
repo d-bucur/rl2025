@@ -2,6 +2,7 @@ using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
 
+// TODO can maybe remove buffer once turn system in place?
 internal struct ActionBuffer() : IComponent {
 	internal Queue<IAction> Value = new();
 	internal List<IAction> InExecution = new();

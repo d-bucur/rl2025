@@ -1,5 +1,3 @@
-- camera follow player
-- cave gen: https://code.tutsplus.com/generate-random-cave-levels-using-cellular-automata--gamedev-9664t
 - camera turn tiles transparent
 - will need proper turn resolution at some point: https://journal.stuffwithstuff.com/2014/07/15/a-turn-based-game-loop/
 

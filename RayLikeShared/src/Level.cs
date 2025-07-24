@@ -27,6 +27,7 @@ class Level : IModule {
 			new Position(center.X, 0, center.Y), // TODO should automatically be Set by grid
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			new Cube() { Color = Palette.Colors[0] },
+			new Energy() { GainPerTick = 5 },
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
@@ -34,14 +35,14 @@ class Level : IModule {
 		camera.Value.Target = new Vector3(center.X, 0, center.Y);
 
 		// Test entities
-		// world.CreateEntity(
-		// 	new GridPosition(1, 1),
-		// 	new InputReceiver(),
-		// 	new Position(1, 0, 1),
-		// 	new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-		// 	new Cube(),
-		// 	Tags.Get<Enemy, Character, BlocksPathing>()
-		// );
+		world.CreateEntity(
+			new GridPosition(center.X + 2, center.Y + 2),
+			new Position(center.X + 2, 0, center.Y + 2),
+			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+			new Cube() { Color = Palette.Colors[1]},
+			new Energy() { GainPerTick = 4 },
+			Tags.Get<Enemy, Character, BlocksPathing>()
+		);
 
 		// world.CreateEntity(
 		// 	new GridPosition(3, 3),
@@ -69,12 +70,12 @@ class Level : IModule {
 		var map = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
 
 		RandomizeTiles(map, 0.7);
-		List<Room> rooms = GenerateRooms(map, 5);
-		DigTunnelsBetweenRooms(map, rooms);
+		List<Room> rooms = GenerateRooms(map, 3);
+		// DigTunnelsBetweenRooms(map, rooms);
 		for (int i = 0; i < Config.CA_SIM_STEPS; i++) {
 			map = CASimStep(map);
 		}
-		rooms = GenerateRooms(map, 10);
+		GenerateRooms(map, Config.ROOM_COUNT);
 		DigTunnelsBetweenRooms(map, rooms);
 
 		InstantiateECSEntitites(world, map);

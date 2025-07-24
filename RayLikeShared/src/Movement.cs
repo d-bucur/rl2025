@@ -83,19 +83,21 @@ internal record class MovementAction(Entity Entity, int Dx, int Dy, bool IsBlock
 internal class Movement : IModule {
     public void Init(EntityStore world) {
         UpdatePhases.Input.Add(new InputSystem());
+        UpdatePhases.Input.Add(new EnemyMovementSystem());
     }
 }
 
 internal class InputSystem : QuerySystem<ActionBuffer> {
-    private float downThrottleTime = 0.3f;
+    private float downThrottleTime = 0.2f;
     private float lastPressed;
     private ArchetypeQuery<InputReceiver> receiversQuery;
 
     protected override void OnAddStore(EntityStore store) {
         base.OnAddStore(store);
-        receiversQuery = store.Query<InputReceiver>();
+        receiversQuery = store.Query<InputReceiver>().AllTags(Tags.Get<CanAct>());
     }
     protected override void OnUpdate() {
+        var cmd = CommandBuffer;
         Query.ForEachEntity((ref ActionBuffer buffer, Entity e) => {
             (int, int)? action = null;
             // Would be better to check if animations have stopped rather that a fixed throttle
@@ -113,6 +115,7 @@ internal class InputSystem : QuerySystem<ActionBuffer> {
                 lastPressed = Tick.time;
                 foreach (var entity in receiversQuery.Entities) {
                     buffer.Value.Enqueue(new MovementAction(entity, action.Value.Item1, action.Value.Item2));
+                    cmd.RemoveTag<CanAct>(entity.Id);
                 }
             }
 
@@ -122,10 +125,24 @@ internal class InputSystem : QuerySystem<ActionBuffer> {
             if (Raylib.IsKeyDown(KeyboardKey.Backspace))
                 buffer.Value.Enqueue(new EscapeAction());
         });
-
     }
 
     private static bool ActionPressed(bool isActionEnabled, KeyboardKey key) {
         return Raylib.IsKeyPressed(key) || (isActionEnabled && Raylib.IsKeyDown(key));
+    }
+}
+
+internal class EnemyMovementSystem : QuerySystem<GridPosition> {
+    public EnemyMovementSystem() => Filter.AllTags(Tags.Get<Enemy, CanAct>());
+
+    protected override void OnUpdate() {
+        var cmds = CommandBuffer;
+        var actions = Singleton.Entity.GetComponent<ActionBuffer>();
+        Query.ForEachEntity((ref GridPosition pos, Entity e) => {
+            actions.Value.Enqueue(new MovementAction(
+                e, Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)
+            ));
+            cmds.RemoveTag<CanAct>(e.Id);
+        });
     }
 }
