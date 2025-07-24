@@ -36,12 +36,6 @@ class Singleton {
 	internal static Entity Player;
 	internal static EntityStore World;
 
-	// Old method breaking wasm. Need to register to AOT maybe?
-	// struct SingletonEntity() : IIndexedComponent<int> {
-	// 	int Id = 0;
-	// 	public int GetIndexedValue() => Id;
-	// }
-
 	internal static void Init(EntityStore world) {
 		Entity = world.CreateEntity();
 		World = world;

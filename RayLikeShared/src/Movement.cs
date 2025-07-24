@@ -82,23 +82,21 @@ internal record class MovementAction(Entity Entity, int Dx, int Dy, bool IsBlock
 
 internal class Movement : IModule {
     public void Init(EntityStore world) {
-        UpdatePhases.Input.Add(new InputSystem());
+        UpdatePhases.Input.Add(new PlayerInputSystem());
         UpdatePhases.Input.Add(new EnemyMovementSystem());
     }
 }
 
-internal class InputSystem : QuerySystem<ActionBuffer> {
+internal class PlayerInputSystem : QuerySystem<InputReceiver> {
     private float downThrottleTime = 0.2f;
     private float lastPressed;
-    private ArchetypeQuery<InputReceiver> receiversQuery;
+    public PlayerInputSystem() => Filter.AllTags(Tags.Get<CanAct>());
 
-    protected override void OnAddStore(EntityStore store) {
-        base.OnAddStore(store);
-        receiversQuery = store.Query<InputReceiver>().AllTags(Tags.Get<CanAct>());
-    }
     protected override void OnUpdate() {
         var cmd = CommandBuffer;
-        Query.ForEachEntity((ref ActionBuffer buffer, Entity e) => {
+        var buffer = Singleton.Entity.GetComponent<ActionBuffer>();
+
+        Query.ForEachEntity((ref InputReceiver receiver, Entity entt) => {
             (int, int)? action = null;
             // Would be better to check if animations have stopped rather that a fixed throttle
             var isActionEnabled = (Tick.time - lastPressed) > downThrottleTime;
@@ -113,10 +111,8 @@ internal class InputSystem : QuerySystem<ActionBuffer> {
 
             if (action.HasValue) {
                 lastPressed = Tick.time;
-                foreach (var entity in receiversQuery.Entities) {
-                    buffer.Value.Enqueue(new MovementAction(entity, action.Value.Item1, action.Value.Item2));
-                    cmd.RemoveTag<CanAct>(entity.Id);
-                }
+                buffer.Value.Enqueue(new MovementAction(entt, action.Value.Item1, action.Value.Item2));
+                cmd.RemoveTag<CanAct>(entt.Id);
             }
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
@@ -140,7 +136,7 @@ internal class EnemyMovementSystem : QuerySystem<GridPosition> {
         var actions = Singleton.Entity.GetComponent<ActionBuffer>();
         Query.ForEachEntity((ref GridPosition pos, Entity e) => {
             actions.Value.Enqueue(new MovementAction(
-                e, Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)
+                e, Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2), false
             ));
             cmds.RemoveTag<CanAct>(e.Id);
         });

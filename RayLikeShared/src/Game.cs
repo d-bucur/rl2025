@@ -31,7 +31,6 @@ public class Game {
 			new Render(),
 			new Level(),
 			new Main(),
-			new ActionsModule(),
 			new TurnsManagement(),
 			new Movement(),
 		];
