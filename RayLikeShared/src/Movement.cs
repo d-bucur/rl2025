@@ -24,28 +24,29 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
         var cmd = CommandBuffer;
 
         Query.ForEachEntity((ref InputReceiver receiver, Entity entt) => {
-            (int, int)? action = null;
+            (int, int)? keyMovement = null;
             if (IsActionPressed(KeyboardKey.A))
-                action = (-1, 0);
+                keyMovement = (-1, 0);
             if (IsActionPressed(KeyboardKey.D))
-                action = (1, 0);
+                keyMovement = (1, 0);
             if (IsActionPressed(KeyboardKey.S))
-                action = (0, 1);
+                keyMovement = (0, 1);
             if (IsActionPressed(KeyboardKey.W))
-                action = (0, -1);
+                keyMovement = (0, -1);
 
-            if (action.HasValue) {
-                var movementAction = new MovementAction(entt, action.Value.Item1, action.Value.Item2);
+            if (keyMovement.HasValue) {
+                var movementAction = new MovementAction(entt, keyMovement.Value.Item1, keyMovement.Value.Item2);
                 TurnsManagement.QueueAction(cmd, movementAction);
-
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
                 Console.WriteLine($"Mouse press");
 
-            if (Raylib.IsKeyDown(KeyboardKey.Backspace))
+            if (Raylib.IsKeyDown(KeyboardKey.Backspace)) {
                 TurnsManagement.QueueAction(cmd, new EscapeAction(), false);
+                cmd.RemoveTag<CanAct>(entt.Id);
+            }
         });
     }
 

@@ -61,8 +61,6 @@ class Level : IModule {
 		// 	new Cube(),
 		// Tags.Get<Character, BlocksPathing>()
 		// );
-
-		// InitWallsTest(world);
 	}
 
 	private List<Room> GenerateDungeon(EntityStore world) {
@@ -187,18 +185,6 @@ class Level : IModule {
 			}
 		}
 	}
-
-	// private void InitWallsTest(EntityStore world) {
-	// 	for (int i = 0; i < 10; i++) {
-	// 		world.CreateEntity(
-	// 			new GridPosition(i, 4),
-	// 			new Position(i, 0, 4),
-	// 			new Scale3(Config.GRID_SIZE, Config.GRID_SIZE, Config.GRID_SIZE),
-	// 			new Cube() { Color = Raylib.Fade(Color.DarkBlue, 0.3f) },
-	// 			Tags.Get<BlocksPathing, BlocksFOV>()
-	// 		);
-	// 	}
-	// }
 }
 
 struct Room {
