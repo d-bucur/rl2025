@@ -61,7 +61,6 @@ public class Game {
 		aot.RegisterComponent<Position>();
 		aot.RegisterComponent<Scale3>();
 		aot.RegisterComponent<Cube>();
-		aot.RegisterComponent<ActionBuffer>();
 		aot.RegisterComponent<InputReceiver>();
 		aot.RegisterComponent<Camera>();
 		aot.RegisterComponent<Tween>();
@@ -76,6 +75,15 @@ public class Game {
 		aot.RegisterTag<BlocksFOV>();
 		aot.RegisterTag<BlocksPathing>();
 		aot.RegisterTag<CanAct>();
+
+		aot.RegisterComponent<MovementAction>();
+		aot.RegisterComponent<EscapeAction>();
+
+		aot.RegisterTag<IsActionWaiting>();
+		aot.RegisterTag<IsActionExecuting>();
+		aot.RegisterTag<IsActionFinished>();
+		aot.RegisterTag<IsActionBlocking>();
+
 		// aot.RegisterScript   <MyScript>();
 		var schema = aot.CreateSchema();
 	}

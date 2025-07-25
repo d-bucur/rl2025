@@ -34,6 +34,9 @@ class Main : IModule {
 
 internal class PrgressTweens : QuerySystem<Tween> {
 	protected override void OnUpdate() {
+		// hack to allow callbacks to make structural changes. Should be fine as longs as they don't change Tweens
+		Query.ThrowOnStructuralChange = false;
+
 		Query.ForEachEntity((ref Tween tween, Entity e) => {
 			if (tween.target.IsNull) {
 				e.DeleteEntity();
