@@ -1,3 +1,5 @@
-- camera turn tiles transparent
 - add energy bars next to characters
-- graphics
+- movement animation is a bit jerky
+- animation for invalid movement
+- nonblocking animations should not block player movement (maybe add tween queue)
+- better draw order for transparent objects (some ordering bugs right now)

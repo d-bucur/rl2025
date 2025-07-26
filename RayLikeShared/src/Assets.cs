@@ -3,7 +3,7 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-class Assets: IModule {
+class Assets : IModule {
 	internal static Texture2D rayLogoTexture;
 	internal static Texture2D monsterTexture;
 	internal static Texture2D heroesTexture;
@@ -18,8 +18,10 @@ class Assets: IModule {
 
 	public void Init(EntityStore world) {
 		// could use dictionary here, not a huge benefit. Would need to use string paths in all call sites
-		meshShader = Raylib.LoadShader("Resources/shaders/base.vs", "Resources/shaders/base.fs");
-		billboardShader = Raylib.LoadShader("", "Resources/shaders/billboard.fs");
+		Console.WriteLine($"OpenGL version: {Rlgl.GetVersion()}");
+		var shadersRoot = Rlgl.GetVersion() == GlVersion.OpenGlEs20 ? "Resources/shaders/web" : "Resources/shaders";
+		meshShader = Raylib.LoadShader($"{shadersRoot}/base.vs", $"{shadersRoot}/base.fs");
+		billboardShader = Raylib.LoadShader("", $"{shadersRoot}/billboard.fs");
 
 		rayLogoTexture = Raylib.LoadTexture("Resources/raylib_logo.png");
 		monsterTexture = Raylib.LoadTexture("Resources/sprites/monsters.png");

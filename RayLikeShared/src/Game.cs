@@ -68,6 +68,10 @@ public class Game {
 		aot.RegisterComponent<GridPosition>();
 		aot.RegisterComponent<CameraFollowTarget>();
 		aot.RegisterComponent<Energy>();
+		aot.RegisterComponent<Billboard>();
+		aot.RegisterComponent<TextureWithSource>();
+		aot.RegisterComponent<Mesh>();
+		aot.RegisterComponent<ColorComp>();
 		
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();
@@ -75,6 +79,7 @@ public class Game {
 		aot.RegisterTag<BlocksFOV>();
 		aot.RegisterTag<BlocksPathing>();
 		aot.RegisterTag<CanAct>();
+		aot.RegisterTag<IsSeeThrough>();
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<EscapeAction>();
