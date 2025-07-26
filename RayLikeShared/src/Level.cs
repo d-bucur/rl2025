@@ -28,7 +28,7 @@ class Level : IModule {
 			new Position(center.X, 0, center.Y), // TODO should automatically be Set by grid
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			// new Cube() { Color = Palette.Colors[0] },
-			new Mesh(Raylib.LoadModel("Resources/character_rogue.gltf")),
+			new Mesh(Assets.characterModel),
 			new Energy() { GainPerTick = 5 },
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
@@ -180,9 +180,18 @@ class Level : IModule {
 					world.CreateEntity(
 						new GridPosition(i, j),
 						new Position(i, 0, j),
-						new Scale3(Config.GRID_SIZE, Config.GRID_SIZE, Config.GRID_SIZE),
-						new Cube() { Color = Palette.Colors[2] },
+						new Scale3(Config.GRID_SIZE / 4, 0.3f, 0.7f),
+						// new Cube() { Color = Palette.Colors[2] },
+						new Mesh(Assets.wallModel),
 						Tags.Get<BlocksPathing, BlocksFOV>()
+					);
+				else
+					world.CreateEntity(
+						new GridPosition(i, j),
+						new Position(i, -0.5f, j),
+						new Scale3(Config.GRID_SIZE / 2, 0.5f, Config.GRID_SIZE / 2),
+						// new Cube() { Color = Palette.Colors[2] },
+						new Mesh(Assets.floorModel)
 					);
 			}
 		}

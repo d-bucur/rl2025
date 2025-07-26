@@ -12,9 +12,11 @@ public struct Cube() : IComponent {
 public struct Mesh : IComponent {
 	public Model Model;
 	public Color Color = Color.White;
+	public Vector3 Offset;
 
-	public Mesh(Model model) {
+	public Mesh(Model model, Vector3 offset = default) {
 		Model = model;
+		Offset = offset;
 		SetShader();
 	}
 
@@ -63,13 +65,6 @@ internal class RenderCubes : QuerySystem<Position, Scale3, Cube> {
 		// Raylib.DrawGrid(30, Config.GRID_SIZE);
 		Raylib.EndMode3D();
 
-		DebugStuff();
-	}
-
-	private static void DebugStuff() {
-		Raylib.DrawFPS(4, 4);
-		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
-		Raylib.DrawTexture(Assets.logo, 4, 30, Color.White);
 	}
 }
 
@@ -79,11 +74,18 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh> {
 		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
 		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Mesh mesh, Entity e) => {
-			var posWithOffset = pos.value + new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2;
+			var posWithOffset = pos.value - new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2 + mesh.Offset;
 			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, mesh.Color);
 		});
 
 		Raylib.EndMode3D();
 		Raylib.EndShaderMode();
+		// DebugStuff();
+	}
+
+	private static void DebugStuff() {
+		Raylib.DrawFPS(4, 4);
+		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
+		Raylib.DrawTexture(Assets.logo, 4, 30, Color.White);
 	}
 }
