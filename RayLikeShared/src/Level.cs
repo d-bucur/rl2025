@@ -41,7 +41,8 @@ class Level : IModule {
 			new GridPosition(center.X + 2, center.Y + 2),
 			new Position(center.X + 2, 0, center.Y + 2),
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			new Cube() { Color = Palette.Colors[1]},
+			// new Cube() { Color = Palette.Colors[1]},
+			new Mesh(Assets.enemyModel),
 			new Energy() { GainPerTick = 4 },
 			Tags.Get<Enemy, Character, BlocksPathing>()
 		);
