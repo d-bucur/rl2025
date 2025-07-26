@@ -6,7 +6,6 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 public struct Cube() : IComponent {
-	public Color Color = Palette.Colors[0];
 };
 
 public struct Billboard : IComponent { }
@@ -32,7 +31,6 @@ public struct TextureWithSource : IComponent {
 
 public struct Mesh : IComponent {
 	public Model Model;
-	public Color Color = Color.White;
 	public Vector3 Offset;
 
 	public Mesh(Model model, Vector3 offset = default) {
@@ -48,6 +46,12 @@ public struct Mesh : IComponent {
 	}
 }
 
+public struct ColorComp() : IComponent {
+	public Color Value = Color.White;
+}
+
+public struct IsSeeThrough : ITag;
+
 struct Camera() : IComponent {
 	public required Camera3D Value;
 }
@@ -55,9 +59,10 @@ struct Camera() : IComponent {
 class Render : IModule {
 	public void Init(EntityStore world) {
 		InitCamera(world);
+		RenderPhases.Render.Add(new FadeScenery());
 		RenderPhases.Render.Add(new RenderCubes());
-		RenderPhases.Render.Add(new RenderMeshes());
 		RenderPhases.Render.Add(new RenderBillboards());
+		RenderPhases.Render.Add(new RenderMeshes());
 	}
 
 	private static void InitCamera(EntityStore world) {
@@ -74,13 +79,13 @@ class Render : IModule {
 	}
 }
 
-internal class RenderCubes : QuerySystem<Position, Scale3, Cube> {
+internal class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 	protected override void OnUpdate() {
 		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
-		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Cube cube, Entity e) => {
+		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Cube cube, ref ColorComp color, Entity e) => {
 			var posWithOffset = pos.value + new Vector3(Config.GRID_SIZE) / 2;
-			Raylib.DrawCubeV(posWithOffset, scale.value, cube.Color);
+			Raylib.DrawCubeV(posWithOffset, scale.value, color.Value);
 			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Raylib.Fade(Color.Black, 0.2f));
 		});
 
@@ -90,7 +95,7 @@ internal class RenderCubes : QuerySystem<Position, Scale3, Cube> {
 	}
 }
 
-internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWithSource> {
+internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWithSource, ColorComp> {
 	protected override void OnUpdate() {
 		Raylib.BeginShaderMode(Assets.billboardShader);
 		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
@@ -99,13 +104,13 @@ internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, Textu
 		// camera up vector is second row of view matrix
 		var cameraUp = new Vector3(matrix.M21, matrix.M22, matrix.M23);
 
-		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Billboard billboard, ref TextureWithSource tex, Entity e) => {
+		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Billboard billboard, ref TextureWithSource tex, ref ColorComp color, Entity e) => {
 			Raylib.DrawBillboardPro(
 				camera,
 				tex.Texture,
 				tex.Source,
 				pos.value,
-				cameraUp, Vector2.One, Vector2.UnitX, 0, Color.White
+				cameraUp, Vector2.One, Vector2.UnitX, 0, color.Value
 			);
 		});
 
@@ -114,14 +119,14 @@ internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, Textu
 	}
 }
 
-internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh> {
+internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 	protected override void OnUpdate() {
 		Raylib.BeginShaderMode(Assets.meshShader);
 		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
-		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Mesh mesh, Entity e) => {
+		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Mesh mesh, ref ColorComp color, Entity e) => {
 			var posWithOffset = pos.value - new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2 + mesh.Offset;
-			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, mesh.Color);
+			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, color.Value);
 		});
 
 		Raylib.EndMode3D();
@@ -133,5 +138,41 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh> {
 		Raylib.DrawFPS(4, 4);
 		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
 		Raylib.DrawTexture(Assets.rayLogoTexture, 4, 30, Color.White);
+	}
+}
+
+internal class FadeScenery : QuerySystem<GridPosition> {
+	public FadeScenery() => Filter.AllTags(Tags.Get<Character>());
+
+	const byte FadeAlpha = 200; // range: 0-255
+	private ArchetypeQuery<ColorComp> SeeThroughQuery;
+	private Vec2I[] PositionsBelow = [new Vec2I(0, 1)];
+
+	protected override void OnAddStore(EntityStore store) {
+		SeeThroughQuery = store.Query<ColorComp>().AllTags(Tags.Get<IsSeeThrough>());
+	}
+
+	protected override void OnUpdate() {
+		SeeThroughQuery.ForEachEntity((ref ColorComp color, Entity entt) => {
+			color.Value.A = 255;
+		});
+
+		var grid = Singleton.Entity.GetComponent<Grid>();
+		Query.ForEachEntity((ref GridPosition pos, Entity entt) => {
+			foreach (var delta in PositionsBelow) {
+				var posBelow = pos.Value + delta;
+				if (!grid.IsInsideGrid(posBelow))
+					return;
+
+				var enttBelow = grid.Value[posBelow.X, posBelow.Y];
+				if (enttBelow.IsNull)
+					return;
+
+				if (enttBelow.Tags.Has<IsSeeThrough>()) {
+					ref var color = ref enttBelow.GetComponent<ColorComp>();
+					color.Value.A = FadeAlpha;
+				}
+			}
+		});
 	}
 }

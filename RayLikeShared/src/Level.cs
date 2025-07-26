@@ -34,17 +34,26 @@ class Level : IModule {
 				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(2, 2)
 			},
+			new ColorComp(),
 			new Energy() { GainPerTick = 5 },
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
+
 		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
 		camera.Value.Position = new Vector3(center.X, 0, center.Y);
 		camera.Value.Target = new Vector3(center.X, 0, center.Y);
 
-		// Test entities
-		world.CreateEntity(
-			new GridPosition(center.X + 2, center.Y + 2),
-			new Position(center.X + 2, 0, center.Y + 2),
+		// Test enemies
+		// SpawnEnemy(world, center + new Vec2I(2, 2));
+		foreach (var room in rooms[1..]) {
+			SpawnEnemy(world, room.Center());
+		}
+	}
+
+	private static Entity SpawnEnemy(EntityStore world, Vec2I pos) {
+		return world.CreateEntity(
+			new GridPosition(pos.X, pos.Y),
+			new Position(pos.X, 0, pos.Y),
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			// new Cube() { Color = Palette.Colors[1]},
 			// new Mesh(Assets.enemyModel),
@@ -52,27 +61,10 @@ class Level : IModule {
 				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(0, 4)
 			},
+			new ColorComp(),
 			new Energy() { GainPerTick = 4 },
 			Tags.Get<Enemy, Character, BlocksPathing>()
 		);
-
-		// world.CreateEntity(
-		// 	new GridPosition(3, 3),
-		// 	new InputReceiver(),
-		// 	new Position(3, 0, 3),
-		// 	new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-		// 	new Cube(),
-		// 	Tags.Get<Enemy, Character, BlocksPathing>()
-		// );
-
-		// world.CreateEntity(
-		// 	new GridPosition(-3, 3),
-		// 	new InputReceiver(),
-		// 	new Position(-3, 0, 3),
-		// 	new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-		// 	new Cube(),
-		// Tags.Get<Character, BlocksPathing>()
-		// );
 	}
 
 	private List<Room> GenerateDungeon(EntityStore world) {
@@ -187,21 +179,25 @@ class Level : IModule {
 		for (int i = 0; i < map.GetLength(0); i++) {
 			for (int j = 0; j < map.GetLength(1); j++) {
 				if (!map[i, j])
+					// spawn wall tile
 					world.CreateEntity(
 						new GridPosition(i, j),
 						new Position(i, 0.5f, j),
 						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
-						new Mesh(Assets.wallModel) { Color = Color.Gray },
-						Tags.Get<BlocksPathing, BlocksFOV>()
+						new Mesh(Assets.wallModel),
+						new ColorComp() { Value = Color.Gray },
+						Tags.Get<BlocksPathing, BlocksFOV, IsSeeThrough>()
 					);
 				else
+					// spawn floor tile
 					world.CreateEntity(
 						new GridPosition(i, j),
 						new Position(i, -0.5f, j),
 						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
-						new Mesh(Assets.wallModel) { Color = Color.DarkGray }
+						new Mesh(Assets.wallModel),
+						new ColorComp() { Value = Color.DarkGray }
 					);
 			}
 		}
