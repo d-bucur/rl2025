@@ -1,5 +1,6 @@
 using System.Numerics;
 using Friflo.Engine.ECS;
+using Raylib_cs;
 
 namespace RayLikeShared;
 
@@ -26,7 +27,8 @@ class Level : IModule {
 			new GridPosition(center.X, center.Y),
 			new Position(center.X, 0, center.Y), // TODO should automatically be Set by grid
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			new Cube() { Color = Palette.Colors[0] },
+			// new Cube() { Color = Palette.Colors[0] },
+			new Mesh(Raylib.LoadModel("Resources/character_rogue.gltf")),
 			new Energy() { GainPerTick = 5 },
 			Tags.Get<Player, Character, BlocksPathing>()
 		);

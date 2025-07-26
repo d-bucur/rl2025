@@ -25,8 +25,8 @@ internal struct EscapeAction : IComponent {}
 
 class TurnsManagement : IModule {
 	public void Init(EntityStore world) {
-		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
 		UpdatePhases.ProgressTurns.Add(new TickEnergySystem());
+		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
 	}
 
 	public static void QueueAction<T>(CommandBuffer cmd, T movementAction, bool isActionBlocking = true) where T : struct, IComponent {
