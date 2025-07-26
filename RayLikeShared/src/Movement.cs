@@ -29,10 +29,18 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
                 keyMovement = (-1, 0);
             if (IsActionPressed(KeyboardKey.D))
                 keyMovement = (1, 0);
-            if (IsActionPressed(KeyboardKey.S))
+            if (IsActionPressed(KeyboardKey.S) || IsActionPressed(KeyboardKey.X))
                 keyMovement = (0, 1);
             if (IsActionPressed(KeyboardKey.W))
                 keyMovement = (0, -1);
+            if (IsActionPressed(KeyboardKey.Q))
+                keyMovement = (-1, -1);
+            if (IsActionPressed(KeyboardKey.E))
+                keyMovement = (1, -1);
+            if (IsActionPressed(KeyboardKey.Z))
+                keyMovement = (-1, 1);
+            if (IsActionPressed(KeyboardKey.C))
+                keyMovement = (1, 1);
 
             if (keyMovement.HasValue) {
                 var movementAction = new MovementAction(entt, keyMovement.Value.Item1, keyMovement.Value.Item2);
