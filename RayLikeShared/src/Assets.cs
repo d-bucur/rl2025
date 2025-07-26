@@ -16,7 +16,7 @@ class Assets: IModule {
 		meshShader = Raylib.LoadShader("Resources/shaders/base.vs", "Resources/shaders/base.fs");
 		characterModel = Raylib.LoadModel("Resources/character_rogue.gltf");
 		enemyModel = Raylib.LoadModel("Resources/character_skeleton_minion.gltf");
-		wallModel = Raylib.LoadModel("Resources/wall.gltf.glb");
+		wallModel = Raylib.LoadModel("Resources/bricks_A.gltf");
 		floorModel = Raylib.LoadModel("Resources/tileBrickB_small.gltf.glb");
 	}
 }

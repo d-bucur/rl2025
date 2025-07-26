@@ -180,19 +180,19 @@ class Level : IModule {
 				if (!map[i, j])
 					world.CreateEntity(
 						new GridPosition(i, j),
-						new Position(i, 0, j),
-						new Scale3(Config.GRID_SIZE / 4, 0.3f, 0.7f),
+						new Position(i, 0.5f, j),
+						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
-						new Mesh(Assets.wallModel),
+						new Mesh(Assets.wallModel) { Color = Color.Gray },
 						Tags.Get<BlocksPathing, BlocksFOV>()
 					);
 				else
 					world.CreateEntity(
 						new GridPosition(i, j),
 						new Position(i, -0.5f, j),
-						new Scale3(Config.GRID_SIZE / 2, 0.5f, Config.GRID_SIZE / 2),
+						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
-						new Mesh(Assets.floorModel)
+						new Mesh(Assets.wallModel) { Color = Color.DarkGray }
 					);
 			}
 		}
