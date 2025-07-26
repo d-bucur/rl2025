@@ -31,7 +31,7 @@ struct GridPosition(int x, int y) : IComponent {
 	internal Vec2I Value = new Vec2I(x, y);
 }
 
-struct Vec2I(int x, int y) {
+public struct Vec2I(int x, int y) {
 	public int X = x;
 	public int Y = y;
 

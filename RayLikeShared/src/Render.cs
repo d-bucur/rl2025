@@ -9,6 +9,27 @@ public struct Cube() : IComponent {
 	public Color Color = Palette.Colors[0];
 };
 
+public struct Billboard : IComponent { }
+
+public struct TextureWithSource : IComponent {
+	public TextureWithSource(Texture2D texture, Rectangle? source = null) {
+		Texture = texture;
+		Source = source ?? new Rectangle(0, 0, Texture.Width, Texture.Height);
+	}
+	public Texture2D Texture;
+	public Rectangle Source;
+	// Only works with texture grid
+	public Vec2I TileSize;
+	Vec2I _tileIdx;
+	public Vec2I TileIdx {
+		get => _tileIdx;
+		set {
+			_tileIdx = value;
+			Source = new Rectangle(value.X * TileSize.X, value.Y * TileSize.Y, TileSize.X, TileSize.Y);
+		}
+	}
+};
+
 public struct Mesh : IComponent {
 	public Model Model;
 	public Color Color = Color.White;
@@ -36,6 +57,7 @@ class Render : IModule {
 		InitCamera(world);
 		RenderPhases.Render.Add(new RenderCubes());
 		RenderPhases.Render.Add(new RenderMeshes());
+		RenderPhases.Render.Add(new RenderBillboards());
 	}
 
 	private static void InitCamera(EntityStore world) {
@@ -68,6 +90,30 @@ internal class RenderCubes : QuerySystem<Position, Scale3, Cube> {
 	}
 }
 
+internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWithSource> {
+	protected override void OnUpdate() {
+		Raylib.BeginShaderMode(Assets.billboardShader);
+		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
+		Raylib.BeginMode3D(camera);
+		var matrix = Raylib.GetCameraMatrix(camera);
+		// camera up vector is second row of view matrix
+		var cameraUp = new Vector3(matrix.M21, matrix.M22, matrix.M23);
+
+		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Billboard billboard, ref TextureWithSource tex, Entity e) => {
+			Raylib.DrawBillboardPro(
+				camera,
+				tex.Texture,
+				tex.Source,
+				pos.value,
+				cameraUp, Vector2.One, Vector2.UnitX, 0, Color.White
+			);
+		});
+
+		Raylib.EndMode3D();
+		Raylib.EndShaderMode();
+	}
+}
+
 internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh> {
 	protected override void OnUpdate() {
 		Raylib.BeginShaderMode(Assets.meshShader);
@@ -86,6 +132,6 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh> {
 	private static void DebugStuff() {
 		Raylib.DrawFPS(4, 4);
 		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
-		Raylib.DrawTexture(Assets.logo, 4, 30, Color.White);
+		Raylib.DrawTexture(Assets.rayLogoTexture, 4, 30, Color.White);
 	}
 }
