@@ -40,9 +40,10 @@ public struct Mesh : IComponent {
 	}
 
 	private readonly unsafe void SetShader() {
-		for (int i = 0; i < Model.MaterialCount; i++) {
-			Model.Materials[i].Shader = Assets.meshShader;
-		}
+		// temp disable shaders
+		// for (int i = 0; i < Model.MaterialCount; i++) {
+		// 	Model.Materials[i].Shader = Assets.meshShader;
+		// }
 	}
 }
 
@@ -59,10 +60,13 @@ struct Camera() : IComponent {
 class Render : IModule {
 	public void Init(EntityStore world) {
 		InitCamera(world);
+		UpdatePhases.Input.Add(new CameraInputSystem());
 		RenderPhases.Render.Add(new FadeScenery());
 		RenderPhases.Render.Add(new RenderCubes());
 		RenderPhases.Render.Add(new RenderBillboards());
 		RenderPhases.Render.Add(new RenderMeshes());
+		// disabled for now. can fix later and use for health as well
+		// RenderPhases.Render.Add(new RenderInGameUI());
 	}
 
 	private static void InitCamera(EntityStore world) {
@@ -121,6 +125,7 @@ internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, Textu
 
 internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 	protected override void OnUpdate() {
+		// not really being used, but material on each mesh has its own shader
 		Raylib.BeginShaderMode(Assets.meshShader);
 		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
@@ -173,6 +178,76 @@ internal class FadeScenery : QuerySystem<GridPosition> {
 					color.Value.A = FadeAlpha;
 				}
 			}
+		});
+	}
+}
+
+internal class RenderInGameUI : QuerySystem<Energy, Position> {
+	// buggy rendering of energy bars
+	private RenderTexture2D ForegroundTex;
+	private RenderTexture2D BackgroundTex;
+
+	protected override void OnAddStore(EntityStore store) {
+		ForegroundTex = Raylib.LoadRenderTexture(5, 32);
+		Raylib.BeginTextureMode(ForegroundTex);
+		Raylib.DrawRectangle(0, 0, 5, 32, Color.White);
+		Raylib.EndTextureMode();
+
+		BackgroundTex = Raylib.LoadRenderTexture(5, 32);
+		Raylib.BeginTextureMode(BackgroundTex);
+		Raylib.DrawRectangleLinesEx(new Rectangle(0, 0, 5, 32), 1f, Color.White);
+		Raylib.EndTextureMode();
+	}
+
+	protected override void OnUpdate() {
+		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
+
+		Raylib.BeginMode3D(camera);
+		Raylib.BeginShaderMode(Assets.billboardShader);
+		Query.ForEachEntity((ref Energy energy, ref Position pos, Entity entt) => {
+			var percEnergy = (float)energy.Current / energy.AmountToAct;
+			Raylib.DrawBillboardRec(
+				camera,
+				BackgroundTex.Texture,
+				new Rectangle(0, 0, ForegroundTex.Texture.Width, ForegroundTex.Texture.Height),
+				pos.value + new Vector3(0, 0.6f, 0),
+				new Vector2(0.1f, 1),
+				Raylib.Fade(Color.Black, 0.8f)
+			);
+			Raylib.DrawBillboardRec(
+				camera,
+				ForegroundTex.Texture,
+				new Rectangle(0, 0, ForegroundTex.Texture.Width, ForegroundTex.Texture.Height),
+				pos.value + new Vector3(0, 0.6f, 0),
+				new Vector2(0.1f, percEnergy),
+				Raylib.Fade(Color.DarkBlue, 0.7f)
+			);
+		});
+		Raylib.EndShaderMode();
+		Raylib.EndMode3D();
+	}
+}
+
+internal class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
+	// Experimental top down view. Has quite a few issues
+	// TODO add mouse scroll zoom here
+	private Vector3 prevOffset = new Vector3(0, 30, 1);
+	// private CameraProjection prevProjection = CameraProjection.Orthographic;
+	// private float prevFov = 10;
+
+	protected override void OnUpdate() {
+		// Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
+		if (Raylib.IsKeyPressed(KeyboardKey.Space)) {
+			// camera.Position
+			Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+				// prevOffset = follow.Offset;
+				(follow.Offset, prevOffset) = (prevOffset, follow.Offset);
+				// (cam.Value.Projection, prevProjection) = (prevProjection, cam.Value.Projection);
+				// (cam.Value.FovY, prevFov) = (prevFov, cam.Value.FovY);
+			});
+		}
+		Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+			follow.Offset.Y += Raylib.GetMouseWheelMoveV().Y;
 		});
 	}
 }

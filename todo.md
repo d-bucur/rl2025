@@ -1,4 +1,3 @@
-- add energy bars next to characters
 - movement animation is a bit jerky
 - animation for invalid movement
 - nonblocking animations should not block player movement (maybe add tween queue)
