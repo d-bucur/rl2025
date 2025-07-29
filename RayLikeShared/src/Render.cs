@@ -100,6 +100,8 @@ internal class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 }
 
 internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWithSource, ColorComp> {
+	public RenderBillboards() => Filter.AnyTags(Tags.Get<IsVisible>());
+
 	protected override void OnUpdate() {
 		Raylib.BeginShaderMode(Assets.billboardShader);
 		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
@@ -175,12 +177,12 @@ internal class FadeScenery : QuerySystem<GridPosition> {
 				if (!grid.IsInsideGrid(posBelow))
 					return;
 
-				var enttBelow = grid.Value[posBelow.X, posBelow.Y];
-				if (enttBelow.IsNull)
+				var tileBelow = grid.Tile[posBelow.X, posBelow.Y];
+				if (tileBelow.IsNull)
 					return;
 
-				if (enttBelow.Tags.Has<IsSeeThrough>()) {
-					ref var color = ref enttBelow.GetComponent<ColorComp>();
+				if (tileBelow.Tags.Has<IsSeeThrough>()) {
+					ref var color = ref tileBelow.GetComponent<ColorComp>();
 					color.Value.A = FadeAlpha;
 				}
 			}

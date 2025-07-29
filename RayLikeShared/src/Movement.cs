@@ -98,27 +98,33 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
     }
 
     private bool TryPerformMove(MovementAction action) {
-        var grid = Singleton.Entity.GetComponent<Grid>();
-        ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
-        var newPos = gridPos.Value + new Vec2I(action.Dx, action.Dy);
+		var grid = Singleton.Entity.GetComponent<Grid>();
+		ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
+		var newPos = gridPos.Value + new Vec2I(action.Dx, action.Dy);
 
-        // Check if move is valid
-        if (!grid.IsInsideGrid(newPos))
-            return false;
+		// Check if move is valid
+		if (!grid.IsInsideGrid(newPos))
+			return false;
 
-        var entt = grid.Value[newPos.X, newPos.Y];
-        bool isTileFree = entt.IsNull || (!entt.Tags.Has<BlocksPathing>());
-        if (!isTileFree)
-            return false;
+		if (!IsTileFree(grid, newPos))
+			return false;
 
-        // Perform the move
-        grid.SetPos(gridPos.Value, newPos);
-        gridPos.Value = newPos;
-        action.Entity.Set(gridPos); // trigger update hooks
-        return true;
-    }
+		// Perform the move
+		grid.MoveCharacterPos(gridPos.Value, newPos);
+		gridPos.Value = newPos;
+		action.Entity.Set(gridPos); // trigger update hooks
+		return true;
+	}
 
-    private void PlayMoveAnimation(MovementAction action, Entity actionEntt) {
+	private static bool IsTileFree(Grid grid, Vec2I pos) {
+		var destTile = grid.Tile[pos.X, pos.Y];
+		bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
+		var destChar = grid.Character[pos.X, pos.Y];
+		bool isCharFree = destChar.IsNull || (!destChar.Tags.Has<BlocksPathing>());
+		return isTileFree && isCharFree;
+	}
+
+	private void PlayMoveAnimation(MovementAction action, Entity actionEntt) {
         var Entity = action.Entity;
         // Add movement animations
         var pos = Entity.GetComponent<Position>();

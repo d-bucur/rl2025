@@ -14,7 +14,10 @@ class Level : IModule {
 			if (change.Action == ComponentChangedAction.Add && change.Type == typeof(GridPosition)) {
 				var grid = Singleton.Entity.GetComponent<Grid>();
 				var pos = change.Component<GridPosition>();
-				grid.Value[pos.Value.X, pos.Value.Y] = change.Entity;
+				if (change.Entity.Tags.Has<Character>())
+					grid.Character[pos.Value.X, pos.Value.Y] = change.Entity;
+				else
+					grid.Tile[pos.Value.X, pos.Value.Y] = change.Entity;
 			}
 		};
 

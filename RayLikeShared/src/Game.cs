@@ -16,6 +16,7 @@ public class Game {
 		RegisterComponentsForNativeAot();
 
 		World = new EntityStore();
+		World.EventRecorder.Enabled = true;
 		Singleton.Init(World);
 
 		UpdateRootSystems = new SystemRoot(World);
@@ -47,6 +48,8 @@ public class Game {
 		Raylib.ClearBackground(Palette.Colors[3]);
 		RenderRootSystems.Update(GetUpdateTick());
 		Raylib.EndDrawing();
+
+		World.EventRecorder.ClearEvents();
 	}
 
 	public static UpdateTick GetUpdateTick() {
@@ -81,6 +84,9 @@ public class Game {
 		aot.RegisterTag<BlocksPathing>();
 		aot.RegisterTag<CanAct>();
 		aot.RegisterTag<IsSeeThrough>();
+		aot.RegisterTag<IsVisible>();
+		aot.RegisterTag<IsExplored>();
+		aot.RegisterTag<VisionSource>();
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<EscapeAction>();

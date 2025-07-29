@@ -1,4 +1,5 @@
 using Friflo.Engine.ECS;
+using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
@@ -7,47 +8,53 @@ struct IsExplored : ITag;
 struct VisionSource : ITag; // TODO turn into comp with params
 
 class Vision : IModule {
-	private EntityStore World;
-	private ArchetypeQuery<GridPosition> VisibleTilesQuery;
-
 	public void Init(EntityStore world) {
-		World = world;
-		VisibleTilesQuery = world.Query<GridPosition>().AllTags(Tags.Get<IsVisible>());
-		var q = world.Query<GridPosition>().AllTags(Tags.Get<VisionSource>());
+		UpdatePhases.PostApplyActions.Add(new RecalculateVisionSystem());
+	}
+}
 
-		// TODO rewrite using world event so multiple sources are recalculated on change
-		foreach (var entt in q.Entities) {
-			entt.OnComponentChanged += RecalculateVision;
+internal class RecalculateVisionSystem : QuerySystem<GridPosition> {
+	public RecalculateVisionSystem() => Filter.AllTags(Tags.Get<VisionSource>());
+	private ArchetypeQuery<GridPosition> VisibleObjectsQuery;
+
+	protected override void OnAddStore(EntityStore store) {
+		base.OnAddStore(store);
+		VisibleObjectsQuery = store.Query<GridPosition>().AllTags(Tags.Get<IsVisible>());
+		foreach (var query in Queries) {
+			query.EventFilter.ComponentAdded<GridPosition>();
 		}
 	}
 
-	private void RecalculateVision(ComponentChanged changed) {
-		if (changed.Type != typeof(GridPosition) || changed.Action != ComponentChangedAction.Update)
-			return;
+	protected override void OnUpdate() {
+		Query.ForEachEntity((ref GridPosition pos, Entity entt) => {
+			if (Query.HasEvent(entt.Id)) {
+				RecalculateVision(ref pos, entt);
+			}
+		});
+	}
 
+	private void RecalculateVision(ref GridPosition source, Entity entt) {
 		// Set all previous visible tiles to explored
-		var cmds = World.GetCommandBuffer();
-		VisibleTilesQuery.ForEachEntity((ref GridPosition pos, Entity entt) => {
+		var cmds = CommandBuffer;
+		VisibleObjectsQuery.ForEachEntity((ref GridPosition pos, Entity entt) => {
 			cmds.RemoveTag<IsVisible>(entt.Id);
 		});
-		cmds.Playback();
 
 		// Calculate new visible tiles
 		var grid = Singleton.Entity.GetComponent<Grid>();
 		int visionDistance = 4;
-		var source = changed.Component<GridPosition>();
-		Console.WriteLine($"Recalculating vision from {source.Value}");
 
 		for (int i = -visionDistance; i < visionDistance + 1; i++) {
 			for (int j = -visionDistance; j < visionDistance + 1; j++) {
 				var pos = source.Value + new Vec2I(i, j);
 				if (!grid.IsInsideGrid(pos))
 					continue;
-				Entity entt = grid.Value[pos.X, pos.Y];
-				// TODO bug: prev tile is null. Need layers of tiles+characters
-				if (!entt.IsNull) {
-					entt.AddTag<IsVisible>();
-					entt.AddTag<IsExplored>();
+				Entity tile = grid.Tile[pos.X, pos.Y];
+				Entity character = grid.Character[pos.X, pos.Y];
+				if (!tile.IsNull) {
+					cmds.AddTags(tile.Id, Tags.Get<IsVisible, IsExplored>());
+					if (!character.IsNull)
+						cmds.AddTag<IsVisible>(character.Id);
 				}
 			}
 		}
