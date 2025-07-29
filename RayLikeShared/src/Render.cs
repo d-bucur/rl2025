@@ -124,6 +124,8 @@ internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, Textu
 }
 
 internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
+	public RenderMeshes() => Filter.AnyTags(Tags.Get<IsVisible, IsExplored>());
+	
 	protected override void OnUpdate() {
 		// not really being used, but material on each mesh has its own shader
 		Raylib.BeginShaderMode(Assets.meshShader);
@@ -131,7 +133,11 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 
 		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Mesh mesh, ref ColorComp color, Entity e) => {
 			var posWithOffset = pos.value - new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2 + mesh.Offset;
-			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, color.Value);
+			// TODO read explored color from somewhere. Maybe new value in ColorComp
+			Color colorFinal = e.Tags.Has<IsVisible>()
+				? color.Value 
+				: Raylib.ColorBrightness(color.Value, -0.3f);
+			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, colorFinal);
 		});
 
 		Raylib.EndMode3D();
@@ -247,7 +253,7 @@ internal class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
 			});
 		}
 		Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
-			follow.Offset.Y += Raylib.GetMouseWheelMoveV().Y;
+			follow.Offset.Y -= Raylib.GetMouseWheelMoveV().Y;
 		});
 	}
 }

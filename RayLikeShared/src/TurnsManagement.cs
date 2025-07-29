@@ -62,7 +62,7 @@ internal class TickEnergySystem : QuerySystem<Energy> {
 				var remaining = energy.Current - energy.AmountToAct;
 				// Console.WriteLine($"Progressing {e} to energy {energy.Current}");
 				if (remaining >= 0) {
-					Console.WriteLine($"{e}'s turn to act");
+					// Console.WriteLine($"{e}'s turn to act");
 					energy.Current = remaining;
 					buffer.AddTag<CanAct>(e.Id);
 				}
@@ -90,7 +90,6 @@ internal class ProcessActionsSystem : QuerySystem {
 		var cmds = CommandBuffer;
 		// Remove finished actions
 		foreach (var entt in finishedQuery.Entities) {
-			Console.WriteLine($"deleting finished action: {entt}");
 			cmds.DeleteEntity(entt.Id);
 		}
 		cmds.Playback();

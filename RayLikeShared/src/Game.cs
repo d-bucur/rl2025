@@ -33,6 +33,7 @@ public class Game {
 			new Main(),
 			new TurnsManagement(),
 			new Movement(),
+			new Vision(),
 		];
 		Modules.ForEach(m => m.Init(World));
 	}

@@ -21,11 +21,23 @@ class Level : IModule {
 		var rooms = GenerateDungeon(world);
 		var center = rooms[0].Center();
 
-		// player
+		SpawnPlayer(world, center);
+
+		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
+		camera.Value.Position = new Vector3(center.X, 0, center.Y);
+		camera.Value.Target = new Vector3(center.X, 0, center.Y);
+
+		// Test enemies
+		foreach (var room in rooms[1..]) {
+			SpawnEnemy(world, room.Center());
+		}
+	}
+
+	private static void SpawnPlayer(EntityStore world, Vec2I pos) {
 		Singleton.Player = world.CreateEntity(
 			new InputReceiver(),
-			new GridPosition(center.X, center.Y),
-			new Position(center.X, 0, center.Y), // TODO should automatically be Set by grid
+			new GridPosition(pos.X, pos.Y),
+			new Position(pos.X, 0, pos.Y), // TODO should automatically be Set by grid
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			// new Cube() { Color = Palette.Colors[0] },
 			// new Mesh(Assets.characterModel),
@@ -36,18 +48,8 @@ class Level : IModule {
 			},
 			new ColorComp(),
 			new Energy() { GainPerTick = 5 },
-			Tags.Get<Player, Character, BlocksPathing>()
+			Tags.Get<Player, Character, BlocksPathing, VisionSource>()
 		);
-
-		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
-		camera.Value.Position = new Vector3(center.X, 0, center.Y);
-		camera.Value.Target = new Vector3(center.X, 0, center.Y);
-
-		// Test enemies
-		// SpawnEnemy(world, center + new Vec2I(2, 2));
-		foreach (var room in rooms[1..]) {
-			SpawnEnemy(world, room.Center());
-		}
 	}
 
 	private static Entity SpawnEnemy(EntityStore world, Vec2I pos) {
@@ -80,7 +82,7 @@ class Level : IModule {
 		GenerateRooms(map, Config.ROOM_COUNT);
 		DigTunnelsBetweenRooms(map, rooms);
 
-		InstantiateECSEntitites(world, map);
+		SpawnTiles(world, map);
 		return rooms;
 	}
 
@@ -174,7 +176,7 @@ class Level : IModule {
 		return count;
 	}
 
-	private static void InstantiateECSEntitites(EntityStore world, bool[,] map) {
+	private static void SpawnTiles(EntityStore world, bool[,] map) {
 		// Go through the grid and instantiate ECS entities
 		for (int i = 0; i < map.GetLength(0); i++) {
 			for (int j = 0; j < map.GetLength(1); j++) {
@@ -182,7 +184,7 @@ class Level : IModule {
 					// spawn wall tile
 					world.CreateEntity(
 						new GridPosition(i, j),
-						new Position(i, 0.5f, j),
+						new Position(i, 0.4f, j),
 						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),

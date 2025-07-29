@@ -84,8 +84,9 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
 
     protected override void OnUpdate() {
         var cmds = CommandBuffer;
+        Query.ThrowOnStructuralChange = false;
         Query.ForEachEntity((ref MovementAction action, Entity entt) => {
-            Console.WriteLine($"Executing action: {action} --- {entt}");
+            // Console.WriteLine($"Executing action: {action} --- {entt}");
             cmds.RemoveTag<IsActionWaiting>(entt.Id);
             if (!TryPerformMove(action)) {
                 // Could play a fail animation here
@@ -113,6 +114,7 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
         // Perform the move
         grid.SetPos(gridPos.Value, newPos);
         gridPos.Value = newPos;
+        action.Entity.Set(gridPos); // trigger update hooks
         return true;
     }
 
@@ -126,7 +128,7 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
             pos.value, pos.value + new Vector3(action.Dx * Config.GRID_SIZE, 0, action.Dy * Config.GRID_SIZE),
             0.2f, Ease.SineOut, Vector3.Lerp,
             OnEnd: (ref Position p) => {
-                Console.WriteLine($"Finished action: {actionEntt}");
+                // Console.WriteLine($"Finished action: {actionEntt}");
                 actionEntt.AddTag<IsActionFinished>();
             }
         ).RegisterEcs();

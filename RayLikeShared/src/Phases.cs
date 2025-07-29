@@ -3,6 +3,7 @@ using Friflo.Engine.ECS.Systems;
 class UpdatePhases {
 	static internal SystemGroup Input = new("InputPhase");
 	static internal SystemGroup ApplyActions = new("ApplyActionsPhase");
+	static internal SystemGroup PostApplyActions = new("PostApplyActions");
 	static internal SystemGroup Animations = new("AnimationsPhase");
 	static internal SystemGroup ProgressTurns = new("ProgressTurnsPhase");
 
@@ -10,6 +11,7 @@ class UpdatePhases {
 		ProgressTurns,
 		Input,
 		ApplyActions,
+		PostApplyActions,
 		Animations,
 	];
 }
