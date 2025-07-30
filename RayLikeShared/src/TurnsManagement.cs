@@ -29,9 +29,10 @@ class TurnsManagement : IModule {
 		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
 	}
 
-	public static void QueueAction<T>(CommandBuffer cmd, T movementAction, bool isActionBlocking = true) where T : struct, IComponent {
+	public static void QueueAction<T>(CommandBuffer cmd, T movementAction, bool isActionBlocking = false) where T : struct, IComponent {
 		var a = cmd.CreateEntity();
 		cmd.AddComponent(a, movementAction);
+		// TODO non-blocking actions not working as they should
 		if (isActionBlocking)
 			cmd.AddTags(a, Tags.Get<IsActionWaiting, IsActionBlocking>());
 		else

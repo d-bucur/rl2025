@@ -44,7 +44,7 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
 
             if (keyMovement.HasValue) {
                 var movementAction = new MovementAction(entt, keyMovement.Value.Item1, keyMovement.Value.Item2);
-                TurnsManagement.QueueAction(cmd, movementAction);
+                TurnsManagement.QueueAction(cmd, movementAction, false);
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
 

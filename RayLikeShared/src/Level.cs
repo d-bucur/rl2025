@@ -51,7 +51,7 @@ class Level : IModule {
 			},
 			new ColorComp(),
 			new Energy() { GainPerTick = 5 },
-			new VisionSource(),
+			new VisionSource() { Range = 7 },
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 	}
@@ -192,7 +192,7 @@ class Level : IModule {
 						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),
-						new ColorComp() { Value = Color.Gray },
+						new ColorComp(Palette.Wall),
 						Tags.Get<BlocksPathing, BlocksFOV, IsSeeThrough>()
 					);
 				else
@@ -203,7 +203,7 @@ class Level : IModule {
 						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),
-						new ColorComp() { Value = Color.DarkGray }
+						new ColorComp(Palette.Floor)
 					);
 			}
 		}

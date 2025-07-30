@@ -39,11 +39,9 @@ class Palette {
 
 	public static Color[] Colors = Palette3;
 
-	Color Background;
-	Color Wall;
-	Color WallDark;
-	Color Floor;
-	Color FloorDark;
-	Color Player;
-	Color Enemy;
+	public static Color Background = Colors[3];
+	public static Color Wall = Color.Gray;
+	public static Color Floor = Color.DarkGray;
+	public static Color DebugFOVBlocked = Color.DarkGreen;
+	public static Color DebugFOVCorner = Color.DarkBlue;
 }

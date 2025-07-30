@@ -47,8 +47,19 @@ public struct Mesh : IComponent {
 	}
 }
 
-public struct ColorComp() : IComponent {
+public struct ColorComp : IComponent {
 	public Color Value = Color.White;
+	public Color InitialValue = Color.White;
+
+	public ColorComp(Color color) {
+		Value = color;
+		InitialValue = color;
+	}
+
+	public ColorComp() {
+		Value = Color.White;
+		InitialValue = Value;
+	}
 }
 
 public struct IsSeeThrough : ITag;
@@ -137,7 +148,7 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 			var posWithOffset = pos.value - new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2 + mesh.Offset;
 			// TODO read explored color from somewhere. Maybe new value in ColorComp
 			Color colorFinal = e.Tags.Has<IsVisible>()
-				? color.Value 
+				? Raylib.ColorTint(color.Value, Color.White) // Debug color here
 				: Raylib.ColorBrightness(color.Value, -0.3f);
 			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, colorFinal);
 		});

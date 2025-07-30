@@ -45,7 +45,7 @@ public class Game {
 
 	public void Draw() {
 		Raylib.BeginDrawing();
-		Raylib.ClearBackground(Palette.Colors[3]);
+		Raylib.ClearBackground(Palette.Background);
 		RenderRootSystems.Update(GetUpdateTick());
 		Raylib.EndDrawing();
 
