@@ -76,6 +76,7 @@ public class Game {
 		aot.RegisterComponent<TextureWithSource>();
 		aot.RegisterComponent<Mesh>();
 		aot.RegisterComponent<ColorComp>();
+		aot.RegisterComponent<VisionSource>();
 		
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();
@@ -86,7 +87,6 @@ public class Game {
 		aot.RegisterTag<IsSeeThrough>();
 		aot.RegisterTag<IsVisible>();
 		aot.RegisterTag<IsExplored>();
-		aot.RegisterTag<VisionSource>();
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<EscapeAction>();

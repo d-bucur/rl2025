@@ -51,7 +51,8 @@ class Level : IModule {
 			},
 			new ColorComp(),
 			new Energy() { GainPerTick = 5 },
-			Tags.Get<Player, Character, BlocksPathing, VisionSource>()
+			new VisionSource(),
+			Tags.Get<Player, Character, BlocksPathing>()
 		);
 	}
 

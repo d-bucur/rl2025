@@ -5,7 +5,9 @@ namespace RayLikeShared;
 
 struct IsVisible : ITag;
 struct IsExplored : ITag;
-struct VisionSource : ITag; // TODO turn into comp with params
+struct VisionSource() : IComponent {
+	public int Range = 5;
+}
 
 class Vision : IModule {
 	public void Init(EntityStore world) {
@@ -13,8 +15,7 @@ class Vision : IModule {
 	}
 }
 
-internal class RecalculateVisionSystem : QuerySystem<GridPosition> {
-	public RecalculateVisionSystem() => Filter.AllTags(Tags.Get<VisionSource>());
+internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 	private ArchetypeQuery<GridPosition> VisibleObjectsQuery;
 
 	protected override void OnAddStore(EntityStore store) {
@@ -26,14 +27,14 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition> {
 	}
 
 	protected override void OnUpdate() {
-		Query.ForEachEntity((ref GridPosition pos, Entity entt) => {
+		Query.ForEachEntity((ref GridPosition pos, ref VisionSource vision, Entity entt) => {
 			if (Query.HasEvent(entt.Id)) {
-				RecalculateVision(ref pos, entt);
+				RecalculateVision(ref pos, ref vision, entt);
 			}
 		});
 	}
 
-	private void RecalculateVision(ref GridPosition source, Entity entt) {
+	private void RecalculateVision(ref GridPosition source, ref VisionSource vision, Entity entt) {
 		// Set all previous visible tiles to explored
 		var cmds = CommandBuffer;
 		VisibleObjectsQuery.ForEachEntity((ref GridPosition pos, Entity entt) => {
@@ -42,10 +43,9 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition> {
 
 		// Calculate new visible tiles
 		var grid = Singleton.Entity.GetComponent<Grid>();
-		int visionDistance = 4;
 
-		for (int i = -visionDistance; i < visionDistance + 1; i++) {
-			for (int j = -visionDistance; j < visionDistance + 1; j++) {
+		for (int i = -vision.Range; i < vision.Range + 1; i++) {
+			for (int j = -vision.Range; j < vision.Range + 1; j++) {
 				var pos = source.Value + new Vec2I(i, j);
 				if (!grid.IsInsideGrid(pos))
 					continue;
