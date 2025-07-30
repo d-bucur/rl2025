@@ -44,4 +44,6 @@ class Palette {
 	public static Color Floor = Color.DarkGray;
 	public static Color DebugFOVBlocked = Color.DarkGreen;
 	public static Color DebugFOVCorner = Color.DarkBlue;
+	
+	public static Color Transparent = Raylib.Fade(Color.White, 0);
 }

@@ -1,4 +1,4 @@
-- FOV
+- kicking enemy
 
 - nonblocking animations should not block player movement (maybe add tween queue)
 - in overhead mode camera shouldn't rotate with side movement

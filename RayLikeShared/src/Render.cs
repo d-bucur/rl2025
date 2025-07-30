@@ -76,6 +76,7 @@ class Render : IModule {
 		RenderPhases.Render.Add(new RenderCubes());
 		RenderPhases.Render.Add(new RenderBillboards());
 		RenderPhases.Render.Add(new RenderMeshes());
+		RenderPhases.Render.Add(new RenderMinimap());
 		// disabled for now. can fix later and use for health as well
 		// RenderPhases.Render.Add(new RenderInGameUI());
 	}
@@ -138,7 +139,7 @@ internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, Textu
 
 internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 	public RenderMeshes() => Filter.AnyTags(Tags.Get<IsVisible, IsExplored>());
-	
+
 	protected override void OnUpdate() {
 		// not really being used, but material on each mesh has its own shader
 		Raylib.BeginShaderMode(Assets.meshShader);
@@ -155,13 +156,13 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 
 		Raylib.EndMode3D();
 		Raylib.EndShaderMode();
-		// DebugStuff();
+		DebugStuff();
 	}
 
 	private static void DebugStuff() {
 		Raylib.DrawFPS(4, 4);
 		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
-		Raylib.DrawTexture(Assets.rayLogoTexture, 4, 30, Color.White);
+		// Raylib.DrawTexture(Assets.rayLogoTexture, 4, 30, Color.White);
 	}
 }
 
@@ -244,6 +245,50 @@ internal class RenderInGameUI : QuerySystem<Energy, Position> {
 		});
 		Raylib.EndShaderMode();
 		Raylib.EndMode3D();
+	}
+}
+
+// Optimization: could only redraw on change
+internal class RenderMinimap : QuerySystem {
+	private Image MinimapImage;
+	private Texture2D MinimapTexture;
+
+	protected override void OnAddStore(EntityStore store) {
+		MinimapImage = Raylib.GenImageColor(Config.MAP_SIZE_X, Config.MAP_SIZE_Y, Palette.Transparent);
+		MinimapTexture = Raylib.LoadTextureFromImage(MinimapImage);
+	}
+
+	// TODO handle visible color, preferably with color refactor
+	protected override unsafe void OnUpdate() {
+		var grid = Singleton.Entity.GetComponent<Grid>();
+		for (int x = 0; x < grid.Tile.GetLength(0); x++) {
+			for (int y = 0; y < grid.Tile.GetLength(1); y++) {
+				Raylib.ImageDrawPixel(ref MinimapImage, x, y, GetColor(grid, x, y));
+			}
+		}
+		Raylib.UpdateTexture(MinimapTexture, Raylib.LoadImageColors(MinimapImage));
+		const int SCALE = 5;
+		Raylib.DrawTextureEx(MinimapTexture,
+			new Vector2(Config.WIN_SIZE_X - MinimapImage.Width * SCALE, 0),
+			0,
+			SCALE,
+			Raylib.Fade(Color.White, 0.5f)
+		);
+	}
+
+	private static unsafe Color GetColor(Grid grid, int x, int y) {
+		Entity tile = grid.Tile[x, y];
+		if (!tile.Tags.Has<IsExplored>())
+			return Palette.Transparent;
+		var color = grid.Tile[x, y].GetComponent<ColorComp>().Value;
+		Entity character = grid.Character[x, y];
+		if (!character.IsNull) {
+			if (character.Tags.Has<Player>())
+				color = Color.Green;
+			if (character.Tags.Has<Enemy>() && tile.Tags.Has<IsVisible>())
+				color = Color.Red;
+		}
+		return color;
 	}
 }
 

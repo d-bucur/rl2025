@@ -6,7 +6,10 @@ class Config {
     internal const int ROOM_SIZE_MIN = 5;
     internal const int ROOM_SIZE_MAX = 8;
 
-    internal static int CA_DEATH_LIMIT = 3;
-    internal static int CA_BIRTH_LIMIT = 5;
-    internal static int CA_SIM_STEPS = 4;
+    internal const int CA_DEATH_LIMIT = 3;
+    internal const int CA_BIRTH_LIMIT = 5;
+    internal const int CA_SIM_STEPS = 4;
+
+	internal const int WIN_SIZE_X = 1024;
+	internal const int WIN_SIZE_Y = 600;
 }

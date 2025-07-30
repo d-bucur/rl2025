@@ -12,7 +12,7 @@ public class Game {
 
 	public Game() {
 		Raylib.SetTargetFPS(60);
-		Raylib.InitWindow(1024, 600, "RaygueLike Challenge");
+		Raylib.InitWindow(Config.WIN_SIZE_X, Config.WIN_SIZE_Y, "RaygueLike Challenge");
 		RegisterComponentsForNativeAot();
 
 		World = new EntityStore();

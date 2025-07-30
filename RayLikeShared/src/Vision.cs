@@ -50,7 +50,8 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 			color.Value = color.InitialValue;
 		});
 
-		// New FOV algo - inspired by FOV pass in https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
+		// New FOV algo - inspired by FOV pass in 
+		// https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
 		// breadth first search, mark FOV corners, draw lines from corners and block further search for tiles on the line
 		var grid = Singleton.Entity.GetComponent<Grid>();
 		Queue<(Vec2I, Vec2I)> toVisit = new();
