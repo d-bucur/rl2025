@@ -7,7 +7,7 @@ namespace RayLikeShared;
 struct IsVisible : ITag;
 struct IsExplored : ITag;
 struct VisionSource() : IComponent {
-	public int Range = 5;
+	public required int Range;
 }
 
 class Vision : IModule {
@@ -53,12 +53,12 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 		// New FOV algo - inspired by FOV pass in https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
 		// breadth first search, mark FOV corners, draw lines from corners and block further search for tiles on the line
 		var grid = Singleton.Entity.GetComponent<Grid>();
-		Queue<(Vec2I, Vec2I, int)> toVisit = new();
-		toVisit.Enqueue((source.Value, new Vec2I(0, 0), 0));
+		Queue<(Vec2I, Vec2I)> toVisit = new();
+		toVisit.Enqueue((source.Value, new Vec2I(0, 0)));
 		HashSet<Vec2I> visited = [source.Value];
 		HashSet<Vec2I> fovBlocked = [];
 		while (toVisit.Count > 0) {
-			var (currPos, fromDir, distance) = toVisit.Dequeue();
+			var (currPos, fromDir) = toVisit.Dequeue();
 			if (fovBlocked.Contains(currPos))
 				continue;
 
@@ -78,7 +78,6 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 				float dirLen = dirFloat.Length();
 				var lineDir = (Vec2I)(dirFloat / dirLen * (vision.Range - dirLen));
 
-
 				foreach (var linePoint in LinePoints(currPos, currPos + lineDir)) {
 					if (currPos == linePoint)
 						continue;
@@ -92,16 +91,15 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 			}
 			else {
 				// Is not a wall. Queue neighbors to visit
-				// TODO should use geometric distance instead
-				if (distance >= vision.Range)
-					continue;
 				foreach (var neighDir in Grid.NeighborsCardinal) {
 					var neighPos = currPos + neighDir;
 					if (!grid.IsInsideGrid(neighPos)
 						|| visited.Contains(neighPos)
 						|| fovBlocked.Contains(neighPos))
 						continue;
-					toVisit.Enqueue((neighPos, neighDir, distance + 1));
+					if (MathF.Round((neighPos - source.Value).ToVector2().Length()) >= vision.Range)
+						continue;
+					toVisit.Enqueue((neighPos, neighDir));
 					visited.Add(neighPos);
 				}
 			}

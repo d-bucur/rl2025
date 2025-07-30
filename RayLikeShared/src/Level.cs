@@ -40,7 +40,7 @@ class Level : IModule {
 		Singleton.Player = world.CreateEntity(
 			new InputReceiver(),
 			new GridPosition(pos.X, pos.Y),
-			new Position(pos.X, 0, pos.Y), // TODO should automatically be Set by grid
+			new Position(pos.X, 0, pos.Y),
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 			// new Cube() { Color = Palette.Colors[0] },
 			// new Mesh(Assets.characterModel),
@@ -51,7 +51,7 @@ class Level : IModule {
 			},
 			new ColorComp(),
 			new Energy() { GainPerTick = 5 },
-			new VisionSource() { Range = 7 },
+			new VisionSource() { Range = 6 },
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 	}

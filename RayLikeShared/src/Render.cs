@@ -249,7 +249,6 @@ internal class RenderInGameUI : QuerySystem<Energy, Position> {
 
 internal class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
 	// Experimental top down view. Has quite a few issues
-	// TODO add mouse scroll zoom here
 	private Vector3 prevOffset = new Vector3(0, 30, 1);
 	// private CameraProjection prevProjection = CameraProjection.Orthographic;
 	// private float prevFov = 10;

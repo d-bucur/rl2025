@@ -11,12 +11,7 @@
 - https://www.roguebasin.com/index.php?title=Field_of_Vision
 - https://www.roguebasin.com/index.php?title=Comparative_study_of_field_of_view_algorithms_for_2D_grid_based_worlds
 - http://www.adammil.net/blog/v125_Roguelike_Vision_Algorithms.html
-
-## Action dispatch attempts
-- simple one calling Execute(EntityStore) on each actions
-- attempt a more complicated one where Tags/Components are added to execute actions and dumb systems listen for these all the time (overengineered for ecs?)
-- adding components just to trigger events is probably an antipattern. An alternative is to use events/signals directly
-- attempted one where action dispatcher calls systems directly through an action->system dictionary, but friflo systems are more limited than bevy: can't pass around parameters or pipe data between them, so can't actually pass around the action to execute. If I have to add components so they can be picked up by systems later I can just do the above approach and avoid custom scheduling of systems
+- https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
 
 ## More articles
 - https://www.roguebasin.com/index.php?title=Articles
