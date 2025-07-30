@@ -1,5 +1,6 @@
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using Raylib_cs;
 
 namespace RayLikeShared;
 
@@ -58,5 +59,44 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 				}
 			}
 		}
+
+		// New FOV algo - inspired by FOV pass in https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
+		Queue<(Vec2I, Vec2I, int)> toVisit = new();
+		toVisit.Enqueue((source.Value, new Vec2I(0, 0), 0));
+		HashSet<Vec2I> visited = [source.Value];
+		while (toVisit.Count > 0) {
+			var (currPos, fromDir, distance) = toVisit.Dequeue();
+
+			if (grid.IsBlocking(currPos)) {
+				var corners = GetCorners(currPos, fromDir);
+				var isFOVCorner = !grid.IsBlocking(corners.Item1)
+					|| !grid.IsBlocking(corners.Item2);
+				if (isFOVCorner) {
+					ref var color = ref grid.Tile[currPos.X, currPos.Y].GetComponent<ColorComp>();
+					color.Value = Color.Red;
+					Console.WriteLine($"fov corner: {currPos}");
+				}
+				continue;
+			}
+
+			if (distance >= vision.Range)
+				continue;
+			foreach (var neighDir in Grid.NeighborsCardinal) {
+				var neighPos = currPos + neighDir;
+				if (!grid.IsInsideGrid(neighPos) || visited.Contains(neighPos))
+					continue;
+				toVisit.Enqueue((neighPos, neighDir, distance + 1));
+				visited.Add(neighPos);
+			}
+		}
+		Console.WriteLine($"Finished FOV pass");
+	}
+
+	// Only works for cardinal directions
+	private (Vec2I, Vec2I) GetCorners(Vec2I currPos, Vec2I fromDir) {
+		if (fromDir.Y != 0)
+			return (currPos + new Vec2I(1, 0), currPos + new Vec2I(-1, 0));
+		else
+			return (currPos + new Vec2I(0, 1), currPos + new Vec2I(0, -1));
 	}
 }
