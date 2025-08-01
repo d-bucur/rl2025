@@ -17,8 +17,8 @@ public struct TextureWithSource : IComponent {
 	}
 	public Texture2D Texture;
 	public Rectangle Source;
-	// Only works with texture grid
-	public Vec2I TileSize;
+	// Only works with texture grid, not atlas
+	public Vec2I TileSize; // Could save with texture to avoid duplication
 	Vec2I _tileIdx;
 	public Vec2I TileIdx {
 		get => _tileIdx;

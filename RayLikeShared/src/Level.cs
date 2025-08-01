@@ -1,6 +1,5 @@
 using System.Numerics;
 using Friflo.Engine.ECS;
-using Raylib_cs;
 
 namespace RayLikeShared;
 
@@ -8,7 +7,8 @@ class Level : IModule {
 	Random Rand;
 	public void Init(EntityStore world) {
 		Rand = new Random();
-		Singleton.Entity.AddComponent(new Grid(Config.MAP_SIZE_X, Config.MAP_SIZE_Y));
+		Grid grid = new(Config.MAP_SIZE_X, Config.MAP_SIZE_Y);
+		Singleton.Entity.AddComponent(grid);
 
 		world.OnComponentAdded += (change) => {
 			if (change.Action == ComponentChangedAction.Add && change.Type == typeof(GridPosition)) {
@@ -31,8 +31,9 @@ class Level : IModule {
 		camera.Value.Target = new Vector3(center.X, 0, center.Y);
 
 		// Test enemies
+		Console.WriteLine($"Total rooms: {rooms.Count}");
 		foreach (var room in rooms[1..]) {
-			SpawnEnemy(world, room.Center());
+			SpawnEnemy(world, room, ref grid);
 		}
 	}
 
@@ -56,21 +57,70 @@ class Level : IModule {
 		);
 	}
 
-	private static Entity SpawnEnemy(EntityStore world, Vec2I pos) {
-		return world.CreateEntity(
-			new GridPosition(pos.X, pos.Y),
-			new Position(pos.X, 0, pos.Y),
-			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			// new Cube() { Color = Palette.Colors[1]},
-			// new Mesh(Assets.enemyModel),
-			new Billboard(), new TextureWithSource(Assets.monsterTexture) {
-				TileSize = new Vec2I(32, 32),
-				TileIdx = new Vec2I(0, 4)
-			},
-			new ColorComp(),
-			new Energy() { GainPerTick = 4 },
-			Tags.Get<Enemy, Character, BlocksPathing>()
-		);
+	enum MonsterType {
+		Skeleton,
+		Banshee,
+		Ogre,
+		Orc,
+	};
+
+	private static void SpawnEnemy(EntityStore world, Room room, ref Grid grid) {
+		var monsterTypes = Enum.GetValues(typeof(MonsterType));
+
+		for (int i = 0; i <= Config.MAX_ENEMIES_PER_ROOM; i++) {
+			var pos = new Vec2I(Random.Shared.Next(room.StartX + 1, room.EndX), Random.Shared.Next(room.StartY + 1, room.EndY));
+			if (!grid.Character[pos.X, pos.Y].IsNull)
+				continue;
+			var enemyType = (MonsterType)monsterTypes.GetValue(Random.Shared.Next(monsterTypes.Length))!;
+
+			var entt = world.CreateEntity(
+				new GridPosition(pos.X, pos.Y),
+				new Position(pos.X, 0, pos.Y),
+				new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+				new Billboard(),
+				new ColorComp(),
+				Tags.Get<Enemy, Character, BlocksPathing>()
+			);
+			switch (enemyType) {
+				case MonsterType.Skeleton:
+					entt.Add(
+						new TextureWithSource(Assets.monsterTexture) {
+							TileSize = new Vec2I(32, 32),
+							TileIdx = new Vec2I(0, 4)
+						},
+						new Energy() { GainPerTick = 4 }
+					);
+					break;
+				case MonsterType.Banshee:
+					entt.Add(
+						new TextureWithSource(Assets.monsterTexture) {
+							TileSize = new Vec2I(32, 32),
+							TileIdx = new Vec2I(1, 5)
+						},
+						new Energy() { GainPerTick = 4 }
+					);
+					break;
+				case MonsterType.Orc:
+					entt.Add(
+						new TextureWithSource(Assets.monsterTexture) {
+							TileSize = new Vec2I(32, 32),
+							TileIdx = new Vec2I(3, 0)
+						},
+						new Energy() { GainPerTick = 4 }
+					);
+					break;
+				case MonsterType.Ogre:
+					entt.Add(
+						new TextureWithSource(Assets.monsterTexture) {
+							TileSize = new Vec2I(32, 32),
+							TileIdx = new Vec2I(0, 1)
+						},
+						new Energy() { GainPerTick = 3 }
+					);
+					break;
+			}
+			Console.WriteLine($"Spawned {enemyType} in {room}");
+		}
 	}
 
 	private List<Room> GenerateDungeon(EntityStore world) {
@@ -83,7 +133,7 @@ class Level : IModule {
 		for (int i = 0; i < Config.CA_SIM_STEPS; i++) {
 			map = CASimStep(map);
 		}
-		GenerateRooms(map, Config.ROOM_COUNT);
+		GenerateRooms(map, Config.MAX_ROOM_COUNT);
 		DigTunnelsBetweenRooms(map, rooms);
 
 		SpawnTiles(world, map);
@@ -115,6 +165,7 @@ class Level : IModule {
 	}
 
 	private void DigTunnelsBetweenRooms(bool[,] map, List<Room> rooms) {
+		// TODO allow separate high/low dig
 		for (int i = 1; i < rooms.Count; i++) {
 			DigTunnel(map, rooms[i].Center(), rooms[i - 1].Center());
 		}
@@ -235,5 +286,9 @@ struct Room {
 			(StartX + EndX) / 2,
 			(StartY + EndY) / 2
 		);
+	}
+
+	public override string ToString() {
+		return $"Room({StartX}, {StartY}, {EndX},  {EndY})";
 	}
 }

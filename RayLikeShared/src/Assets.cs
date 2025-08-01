@@ -11,8 +11,8 @@ class Assets : IModule {
 	internal static Shader meshShader;
 	internal static Shader billboardShader;
 
-	internal static Model heroModel;
-	internal static Model enemyModel;
+	// internal static Model heroModel;
+	// internal static Model enemyModel;
 	internal static Model wallModel;
 	internal static Model floorModel;
 
@@ -27,8 +27,8 @@ class Assets : IModule {
 		monsterTexture = Raylib.LoadTexture("Resources/sprites/monsters.png");
 		heroesTexture = Raylib.LoadTexture("Resources/sprites/rogues.png");
 
-		heroModel = Raylib.LoadModel("Resources/character_rogue.gltf");
-		enemyModel = Raylib.LoadModel("Resources/character_skeleton_minion.gltf");
+		// heroModel = Raylib.LoadModel("Resources/character_rogue.gltf");
+		// enemyModel = Raylib.LoadModel("Resources/character_skeleton_minion.gltf");
 		wallModel = Raylib.LoadModel("Resources/bricks_A.gltf");
 		floorModel = Raylib.LoadModel("Resources/tileBrickB_small.gltf.glb");
 	}
