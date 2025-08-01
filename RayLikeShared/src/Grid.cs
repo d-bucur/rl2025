@@ -62,7 +62,6 @@ struct GridPosition : IComponent {
 	internal Vec2I Value;
 	public GridPosition(int x, int y) {
 		Value = new Vec2I(x, y);
-
 	}
 }
 

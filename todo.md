@@ -1,8 +1,6 @@
 - kicking enemy
-- bug: animations are broken if enemy energy gain is >= of player
 - color refactor
 
-- nonblocking animations should not block player movement (maybe add tween queue)
 - in overhead mode camera shouldn't rotate with side movement
 - movement animation is a bit jerky
 - animation for invalid movement

@@ -47,7 +47,7 @@ internal class TickEnergySystem : QuerySystem<Energy> {
 	protected override void OnAddStore(EntityStore store) {
 		canActQuery = store.Query().AllTags(Tags.Get<CanAct>());
 		// tried to wait on blocking actions only, but then non blocking ones bug out if done fast
-		actionsInPipelineQuery = store.Query().AnyTags(Tags.Get<IsActionWaiting, IsActionExecuting>());
+		actionsInPipelineQuery = store.Query().AnyTags(Tags.Get<IsActionBlocking>());
 	}
 
 	protected override void OnUpdate() {

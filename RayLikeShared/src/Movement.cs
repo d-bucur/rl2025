@@ -44,7 +44,7 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
 
             if (keyMovement.HasValue) {
                 var movementAction = new MovementAction(entt, keyMovement.Value.Item1, keyMovement.Value.Item2);
-                TurnsManagement.QueueAction(cmd, movementAction, false);
+                TurnsManagement.QueueAction(cmd, movementAction, true);
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
 
@@ -88,12 +88,13 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
         Query.ForEachEntity((ref MovementAction action, Entity entt) => {
             // Console.WriteLine($"Executing action: {action} --- {entt}");
             cmds.RemoveTag<IsActionWaiting>(entt.Id);
+            var oldPos = action.Entity.GetComponent<GridPosition>().Value;
             if (!TryPerformMove(action)) {
                 // Could play a fail animation here
                 cmds.AddTag<IsActionFinished>(entt.Id);
                 return;
             }
-            PlayMoveAnimation(action, entt);
+            PlayMoveAnimation(action, entt, oldPos);
         });
     }
 
@@ -124,14 +125,16 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
 		return isTileFree && isCharFree;
 	}
 
-	private void PlayMoveAnimation(MovementAction action, Entity actionEntt) {
+	private void PlayMoveAnimation(MovementAction action, Entity actionEntt, Vec2I oldPos) {
         var Entity = action.Entity;
         // Add movement animations
-        var pos = Entity.GetComponent<Position>();
-        // xz anim
-        new Tween(Entity).With(
+        var pos = Entity.GetComponent<GridPosition>();
+		Vector3 currPos = new(pos.Value.X, 0, pos.Value.Y);
+		// xz anim
+		new Tween(Entity).With(
             (ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
-            pos.value, pos.value + new Vector3(action.Dx * Config.GRID_SIZE, 0, action.Dy * Config.GRID_SIZE),
+            new Vector3(oldPos.X, 0, oldPos.Y) * Config.GRID_SIZE,
+            currPos * Config.GRID_SIZE,
             0.2f, Ease.SineOut, Vector3.Lerp,
             OnEnd: (ref Position p) => {
                 // Console.WriteLine($"Finished action: {actionEntt}");
@@ -152,16 +155,16 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
         ).RegisterEcs();
 
         // scale
-        var scale = Entity.GetComponent<Scale3>();
-        var startScale = scale.x;
-        new Tween(Entity).With(
-            (ref Scale3 s, float v) => { s.x = v; },
-            startScale, 0.5f,
-            0.2f, Ease.Linear
-        ).With(
-            (ref Scale3 s, float v) => { s.x = v; },
-            0.5f, startScale,
-            0.2f, Ease.Linear
-        ).RegisterEcs();
+        // var scale = Entity.GetComponent<Scale3>();
+        // var startScale = scale.x;
+        // new Tween(Entity).With(
+        //     (ref Scale3 s, float v) => { s.x = v; },
+        //     startScale, 0.5f,
+        //     0.2f, Ease.Linear
+        // ).With(
+        //     (ref Scale3 s, float v) => { s.x = v; },
+        //     0.5f, startScale,
+        //     0.2f, Ease.Linear
+        // ).RegisterEcs();
     }
 }

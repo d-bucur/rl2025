@@ -88,7 +88,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(0, 4)
 						},
-						new Energy() { GainPerTick = 4 }
+						new Energy() { GainPerTick = 5 }
 					);
 					break;
 				case MonsterType.Banshee:
@@ -97,7 +97,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(1, 5)
 						},
-						new Energy() { GainPerTick = 4 }
+						new Energy() { GainPerTick = 6 }
 					);
 					break;
 				case MonsterType.Orc:
