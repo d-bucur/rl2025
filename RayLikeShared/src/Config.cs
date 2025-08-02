@@ -1,3 +1,5 @@
+using Friflo.Engine.ECS;
+
 class Config {
     internal const float GRID_SIZE = 1;
     internal const int MAP_SIZE_X = 50;
@@ -10,7 +12,12 @@ class Config {
     internal const int CA_BIRTH_LIMIT = 5;
     internal const int CA_SIM_STEPS = 4;
 
-	internal const int WIN_SIZE_X = 1024;
-	internal const int WIN_SIZE_Y = 600;
-	internal static int MAX_ENEMIES_PER_ROOM = 3;
+    internal const int WIN_SIZE_X = 1024;
+    internal const int WIN_SIZE_Y = 600;
+    internal static int MAX_ENEMIES_PER_ROOM = 3;
+}
+
+struct Settings() : IComponent {
+    public bool DebugColorsEnabled = false;
+    public bool MinimapEnabled = true;
 }

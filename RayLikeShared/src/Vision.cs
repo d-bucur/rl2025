@@ -46,9 +46,10 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 			cmds.RemoveTag<IsVisible>(entt.Id);
 		});
 
-		// reset debug colors
+		// Reset colors on every tick
 		ColoredQuery.ForEachEntity((ref ColorComp color, Entity _) => {
 			color.Value = color.InitialValue;
+			color.DebugColor = null;
 		});
 
 		// New FOV algo - inspired by FOV pass in 
@@ -84,12 +85,12 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 					if (currPos == linePoint)
 						continue;
 					fovBlocked.Add(linePoint);
-					// grid.SetColorHelper(linePoint, Palette.DebugFOVBlocked);
+					grid.SetDebugColor(linePoint, Palette.DebugFOVBlocked);
 					// not super sure about this early exit
 					// if (grid.Tile[linePoint.X, linePoint.Y].Tags.Has<BlocksFOV>())
 					// 	break;
 				}
-				// grid.SetColorHelper(currPos, Palette.DebugFOVCorner);
+				grid.SetDebugColor(currPos, Palette.DebugFOVCorner);
 			}
 			else {
 				// Is not a wall. Queue neighbors to visit

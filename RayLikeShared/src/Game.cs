@@ -33,6 +33,7 @@ public class Game {
 			new Level(),
 			new Main(),
 			new TurnsManagement(),
+			new InputModule(),
 			new Movement(),
 			new Vision(),
 			new Combat(),
@@ -78,6 +79,7 @@ public class Game {
 		aot.RegisterComponent<Mesh>();
 		aot.RegisterComponent<ColorComp>();
 		aot.RegisterComponent<VisionSource>();
+		aot.RegisterComponent<Settings>();
 		
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();

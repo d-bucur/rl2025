@@ -20,6 +20,7 @@ struct CameraFollowTarget() : IComponent {
 class Main : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.Animations.Add(new PrgressTweens());
+		Singleton.Entity.Add(new Settings());
 
 		// Add camera following player
 		Singleton.Camera.AddComponent(

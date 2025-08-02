@@ -28,11 +28,10 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 	}
 
 	// Used only for debugging
-	internal void SetColorHelper(Vec2I pos, Raylib_cs.Color color) {
-		// TODO add debugColor field to ColorComp
+	internal void SetDebugColor(Vec2I pos, Raylib_cs.Color color) {
 		if (IsInsideGrid(pos)) {
 			ref var colorComp = ref Tile[pos.X, pos.Y].GetComponent<ColorComp>();
-			colorComp.Value = color;
+			colorComp.DebugColor = color;
 		}
 	}
 

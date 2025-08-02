@@ -50,6 +50,7 @@ public struct Mesh : IComponent {
 public struct ColorComp : IComponent {
 	public Color Value = Color.White;
 	public Color InitialValue = Color.White;
+	public Color? DebugColor = null;
 
 	public ColorComp(Color color) {
 		Value = color;
@@ -147,10 +148,12 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 
 		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Mesh mesh, ref ColorComp color, Entity e) => {
 			var posWithOffset = pos.value - new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2 + mesh.Offset;
-			// TODO read explored color from somewhere. Maybe new value in ColorComp
-			Color colorFinal = e.Tags.Has<IsVisible>()
-				? Raylib.ColorTint(color.Value, Color.White) // Debug color here
+			var normalColor = e.Tags.Has<IsVisible>()
+				? Raylib.ColorTint(color.Value, Color.White)
 				: Raylib.ColorBrightness(color.Value, -0.3f);
+			var colorFinal = Singleton.Entity.GetComponent<Settings>().DebugColorsEnabled
+				? (color.DebugColor ?? normalColor)
+				: normalColor;
 			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, colorFinal);
 		});
 
@@ -258,8 +261,10 @@ internal class RenderMinimap : QuerySystem {
 		MinimapTexture = Raylib.LoadTextureFromImage(MinimapImage);
 	}
 
-	// TODO handle visible color, preferably with color refactor
 	protected override unsafe void OnUpdate() {
+		if (!Singleton.Entity.GetComponent<Settings>().MinimapEnabled)
+			return;
+
 		var grid = Singleton.Entity.GetComponent<Grid>();
 		for (int x = 0; x < grid.Tile.GetLength(0); x++) {
 			for (int y = 0; y < grid.Tile.GetLength(1); y++) {
