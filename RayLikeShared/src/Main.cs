@@ -14,7 +14,8 @@ struct BlocksFOV : ITag; // transparent in tutorial
 struct CameraFollowTarget() : IComponent {
 	public Entity Target;
 	public Vector3 Offset = default;
-	public float Speed = 0.03f;
+	public float SpeedPos = 0.03f;
+	public float SpeedTargetFact = 2f;
 }
 
 class Main : IModule {
@@ -32,8 +33,8 @@ class Main : IModule {
 			var targetPos = follow.Target.GetComponent<Position>();
 			Vector3 endPos = targetPos.value + follow.Offset;
 			endPos.Y = follow.Offset.Y;
-			cam.Value.Position = Vector3.Lerp(cam.Value.Position, endPos, follow.Speed);
-			cam.Value.Target = Vector3.Lerp(cam.Value.Target, targetPos.value, follow.Speed * 2);
+			cam.Value.Position = Vector3.Lerp(cam.Value.Position, endPos, follow.SpeedPos);
+			cam.Value.Target = Vector3.Lerp(cam.Value.Target, targetPos.value, follow.SpeedPos * follow.SpeedTargetFact);
 		}));
 	}
 }

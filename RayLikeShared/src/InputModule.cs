@@ -1,3 +1,4 @@
+using System.Numerics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Raylib_cs;
@@ -8,12 +9,13 @@ internal struct InputReceiver : IComponent;
 
 class InputModule : IModule {
 	public void Init(EntityStore world) {
+		UpdatePhases.Input.Add(new CameraInputSystem());
 		UpdatePhases.Input.Add(new PlayerInputSystem());
 		UpdatePhases.Input.Add(new GameInputSystem());
 	}
 }
 
-internal class PlayerInputSystem : QuerySystem<InputReceiver> {
+file class PlayerInputSystem : QuerySystem<InputReceiver> {
     public PlayerInputSystem() => Filter.AllTags(Tags.Get<CanAct>());
 
     protected override void OnUpdate() {
@@ -78,7 +80,7 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
     }
 }
 
-internal class GameInputSystem : QuerySystem {
+file class GameInputSystem : QuerySystem {
 	protected override void OnUpdate() {
 		ref Settings settings = ref Singleton.Entity.GetComponent<Settings>();
 		if (Raylib.IsKeyPressed(KeyboardKey.K)) 
@@ -86,4 +88,28 @@ internal class GameInputSystem : QuerySystem {
 		if (Raylib.IsKeyPressed(KeyboardKey.M)) 
 			settings.MinimapEnabled = !settings.MinimapEnabled;
 	}
+}
+
+file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
+	// TODO Experimental top down view. Billboards should always render above 3d geometry
+	private Vector3 prevOffset = new Vector3(0, 30, 1);
+    private float prevCameraTargetFollow = 1f;
+    // private CameraProjection prevProjection = CameraProjection.Orthographic;
+    // private float prevFov = 10;
+
+	protected override void OnUpdate() {
+        // Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
+        if (Raylib.IsKeyPressed(KeyboardKey.Space)) {
+            // camera.Position
+            Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+                (follow.Offset, prevOffset) = (prevOffset, follow.Offset);
+                (follow.SpeedTargetFact, prevCameraTargetFollow) = (prevCameraTargetFollow, follow.SpeedTargetFact);
+                // (cam.Value.Projection, prevProjection) = (prevProjection, cam.Value.Projection);
+                // (cam.Value.FovY, prevFov) = (prevFov, cam.Value.FovY);
+            });
+        }
+        Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+            follow.Offset.Y -= Raylib.GetMouseWheelMoveV().Y;
+        });
+    }
 }

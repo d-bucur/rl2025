@@ -72,7 +72,6 @@ struct Camera() : IComponent {
 class Render : IModule {
 	public void Init(EntityStore world) {
 		InitCamera(world);
-		UpdatePhases.Input.Add(new CameraInputSystem());
 		RenderPhases.Render.Add(new FadeScenery());
 		RenderPhases.Render.Add(new RenderCubes());
 		RenderPhases.Render.Add(new RenderBillboards());
@@ -106,7 +105,6 @@ internal class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Raylib.Fade(Color.Black, 0.2f));
 		});
 
-		// Raylib.DrawGrid(30, Config.GRID_SIZE);
 		Raylib.EndMode3D();
 
 	}
@@ -294,28 +292,5 @@ internal class RenderMinimap : QuerySystem {
 				color = Color.Red;
 		}
 		return color;
-	}
-}
-
-internal class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
-	// Experimental top down view. Has quite a few issues
-	private Vector3 prevOffset = new Vector3(0, 30, 1);
-	// private CameraProjection prevProjection = CameraProjection.Orthographic;
-	// private float prevFov = 10;
-
-	protected override void OnUpdate() {
-		// Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
-		if (Raylib.IsKeyPressed(KeyboardKey.Space)) {
-			// camera.Position
-			Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
-				// prevOffset = follow.Offset;
-				(follow.Offset, prevOffset) = (prevOffset, follow.Offset);
-				// (cam.Value.Projection, prevProjection) = (prevProjection, cam.Value.Projection);
-				// (cam.Value.FovY, prevFov) = (prevFov, cam.Value.FovY);
-			});
-		}
-		Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
-			follow.Offset.Y -= Raylib.GetMouseWheelMoveV().Y;
-		});
 	}
 }
