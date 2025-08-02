@@ -1,4 +1,3 @@
-- kicking enemy
 - color refactor
 
 - in overhead mode camera shouldn't rotate with side movement

@@ -150,6 +150,7 @@ record struct Tween(Entity target) : IComponent {
 
 public class Ease {
 	#region easings
+	// More: https://easings.net/
 	public static float Linear(float x) {
 		return x;
 	}
@@ -158,6 +159,9 @@ public class Ease {
 	}
 	public static float SineOut(float x) {
 		return MathF.Sin(x * MathF.PI / 2);
+	}
+	public static float SineIn(float x) {
+		return 1 - MathF.Cos(x * MathF.PI / 2);
 	}
 	#endregion
 }

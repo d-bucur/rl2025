@@ -24,7 +24,7 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
         var cmd = CommandBuffer;
 
         Query.ForEachEntity((ref InputReceiver receiver, Entity entt) => {
-            (int, int)? keyMovement = null;
+            Vec2I? keyMovement = null;
             if (IsActionPressed(KeyboardKey.A))
                 keyMovement = (-1, 0);
             if (IsActionPressed(KeyboardKey.D))
@@ -43,9 +43,7 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
                 keyMovement = (1, 1);
 
             if (keyMovement.HasValue) {
-                var movementAction = new MovementAction(entt, keyMovement.Value.Item1, keyMovement.Value.Item2);
-                TurnsManagement.QueueAction(cmd, movementAction, true);
-                cmd.RemoveTag<CanAct>(entt.Id);
+                HandleMovementInput(entt, cmd, keyMovement.Value);
             }
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))
@@ -56,6 +54,26 @@ internal class PlayerInputSystem : QuerySystem<InputReceiver> {
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
         });
+    }
+
+    private static void HandleMovementInput(Entity entt, CommandBuffer cmd, Vec2I keyMovement) {
+		Vec2I prevPos = entt.GetComponent<GridPosition>().Value;
+		var newPos = prevPos + keyMovement;
+        var grid = Singleton.Entity.GetComponent<Grid>();
+        if (grid.IsBlocking(newPos)) {
+            Animations.Bump(entt, prevPos.ToWorldPos(), prevPos.ToWorldPos() + keyMovement.ToWorldPos() * 0.3f);
+            return;
+        }
+        Entity charAtPos = grid.Character[newPos.X, newPos.Y];
+        if (charAtPos.IsNull) {
+            var action = new MovementAction(entt, keyMovement.X, keyMovement.Y);
+            TurnsManagement.QueueAction(cmd, action, true);
+        }
+        else {
+            var action = new MeleeAction(entt, charAtPos, keyMovement.X, keyMovement.Y);
+            TurnsManagement.QueueAction(cmd, action, true);
+        }
+        cmd.RemoveTag<CanAct>(entt.Id);
     }
 
     private static bool IsActionPressed(KeyboardKey key) {
@@ -94,77 +112,36 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
                 cmds.AddTag<IsActionFinished>(entt.Id);
                 return;
             }
-            PlayMoveAnimation(action, entt, oldPos);
+            // Add movement animations
+            Vector3 currPos = action.Entity.GetComponent<GridPosition>().Value.ToWorldPos();
+            Animations.Move(action.Entity, entt, oldPos, currPos);
         });
     }
 
     private bool TryPerformMove(MovementAction action) {
-		var grid = Singleton.Entity.GetComponent<Grid>();
-		ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
-		var newPos = gridPos.Value + new Vec2I(action.Dx, action.Dy);
+        var grid = Singleton.Entity.GetComponent<Grid>();
+        ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
+        var newPos = gridPos.Value + new Vec2I(action.Dx, action.Dy);
 
-		// Check if move is valid
-		if (!grid.IsInsideGrid(newPos))
-			return false;
+        // Check if move is valid
+        if (!grid.IsInsideGrid(newPos))
+            return false;
 
-		if (!IsTileFree(grid, newPos))
-			return false;
+        if (!IsTileFree(grid, newPos))
+            return false;
 
-		// Perform the move
-		grid.MoveCharacterPos(gridPos.Value, newPos);
-		gridPos.Value = newPos;
-		action.Entity.Set(gridPos); // trigger update hooks
-		return true;
-	}
+        // Perform the move
+        grid.MoveCharacterPos(gridPos.Value, newPos);
+        gridPos.Value = newPos;
+        action.Entity.Set(gridPos); // trigger update hooks
+        return true;
+    }
 
-	private static bool IsTileFree(Grid grid, Vec2I pos) {
-		var destTile = grid.Tile[pos.X, pos.Y];
-		bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
-		var destChar = grid.Character[pos.X, pos.Y];
-		bool isCharFree = destChar.IsNull || (!destChar.Tags.Has<BlocksPathing>());
-		return isTileFree && isCharFree;
-	}
-
-	private void PlayMoveAnimation(MovementAction action, Entity actionEntt, Vec2I oldPos) {
-        var Entity = action.Entity;
-        // Add movement animations
-        var pos = Entity.GetComponent<GridPosition>();
-		Vector3 currPos = new(pos.Value.X, 0, pos.Value.Y);
-		// xz anim
-		new Tween(Entity).With(
-            (ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
-            new Vector3(oldPos.X, 0, oldPos.Y) * Config.GRID_SIZE,
-            currPos * Config.GRID_SIZE,
-            0.2f, Ease.SineOut, Vector3.Lerp,
-            OnEnd: (ref Position p) => {
-                // Console.WriteLine($"Finished action: {actionEntt}");
-                actionEntt.AddTag<IsActionFinished>();
-            }
-        ).RegisterEcs();
-
-        // y anim
-        const float jumpHeight = 0.3f;
-        new Tween(Entity).With(
-            (ref Position p, float v) => { p.y = v; },
-            0, jumpHeight,
-            0.1f, Ease.Linear
-        ).With(
-            (ref Position p, float v) => { p.y = v; },
-            jumpHeight, 0,
-            0.1f, Ease.Linear
-        ).RegisterEcs();
-
-        // scale
-        // var scale = Entity.GetComponent<Scale3>();
-        // var startScale = scale.x;
-        // new Tween(Entity).With(
-        //     (ref Scale3 s, float v) => { s.x = v; },
-        //     startScale, 0.5f,
-        //     0.2f, Ease.Linear
-        // ).With(
-        //     (ref Scale3 s, float v) => { s.x = v; },
-        //     0.5f, startScale,
-        //     0.2f, Ease.Linear
-        // ).RegisterEcs();
+    private static bool IsTileFree(Grid grid, Vec2I pos) {
+        var destTile = grid.Tile[pos.X, pos.Y];
+        bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
+        var destChar = grid.Character[pos.X, pos.Y];
+        bool isCharFree = destChar.IsNull || (!destChar.Tags.Has<BlocksPathing>());
+        return isTileFree && isCharFree;
     }
 }

@@ -35,6 +35,7 @@ public class Game {
 			new TurnsManagement(),
 			new Movement(),
 			new Vision(),
+			new Combat(),
 		];
 		Modules.ForEach(m => m.Init(World));
 	}
@@ -90,6 +91,7 @@ public class Game {
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<EscapeAction>();
+		aot.RegisterComponent<MeleeAction>();
 
 		aot.RegisterTag<IsActionWaiting>();
 		aot.RegisterTag<IsActionExecuting>();
