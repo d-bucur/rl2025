@@ -92,11 +92,11 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 				// Is not a wall. Queue neighbors to visit
 				foreach (var neighDir in Grid.NeighborsCardinal) {
 					var neighPos = currPos + neighDir;
+					if (MathF.Round((neighPos - source.Value).ToVector2().Length()) >= vision.Range)
+						continue;
 					if (!grid.IsInsideGrid(neighPos)
 						|| visited.Contains(neighPos)
 						|| fovBlocked.Contains(neighPos))
-						continue;
-					if (MathF.Round((neighPos - source.Value).ToVector2().Length()) >= vision.Range)
 						continue;
 					toVisit.Enqueue((neighPos, neighDir));
 					visited.Add(neighPos);
@@ -115,11 +115,12 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 		foreach (var linePoint in LinePoints(cornerPos, shadowEndPos)) {
 			if (cornerPos == linePoint)
 				continue;
+			// Exit early if hit another wall. It will block vision on its own
+			if (grid.Tile[linePoint.X, linePoint.Y].Tags.Has<BlocksFOV>())
+				break;
 			fovBlocked.Add(linePoint);
 			grid.SetDebugColor(linePoint, Palette.DebugFOVBlocked);
-			// not super sure about this early exit
-			// if (grid.Tile[linePoint.X, linePoint.Y].Tags.Has<BlocksFOV>())
-			// 	break;
+
 		}
 	}
 
