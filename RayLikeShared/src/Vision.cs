@@ -72,25 +72,21 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 				var corners = GetCorners(currPos, fromDir);
 				var isFOVCorner = !grid.IsBlocking(corners.Item1)
 					|| !grid.IsBlocking(corners.Item2);
-				if (!isFOVCorner) {
+				if (!isFOVCorner)
 					continue;
-				}
-				// TODO 2 lines to circle edges for better accuracy
-				// Given a line form source to dest, returns the line continued behind it, clamped by distance
-				Vector2 dirFloat = (currPos - source.Value).ToVector2();
-				float dirLen = dirFloat.Length();
-				var lineDir = (Vec2I)(dirFloat / dirLen * (vision.Range - dirLen));
-
-				foreach (var linePoint in LinePoints(currPos, currPos + lineDir)) {
-					if (currPos == linePoint)
-						continue;
-					fovBlocked.Add(linePoint);
-					grid.SetDebugColor(linePoint, Palette.DebugFOVBlocked);
-					// not super sure about this early exit
-					// if (grid.Tile[linePoint.X, linePoint.Y].Tags.Has<BlocksFOV>())
-					// 	break;
-				}
 				grid.SetDebugColor(currPos, Palette.DebugFOVCorner);
+
+				// Draw two lines from source to corner "edges" (the perpendicular points on a circle)
+				Vector3 center = currPos.ToWorldPos();
+				var dir = Vector3.Normalize(center - source.Value.ToWorldPos());
+				var d1 = Vector3.Normalize(new Vector3(dir.Z, 0, -dir.X));
+				var d2 = Vector3.Normalize(new Vector3(-dir.Z, 0, dir.X));
+				var p1 = center + d1 * Config.VIS_SENSITIVITY;
+				var p2 = center + d2 * Config.VIS_SENSITIVITY;
+
+				// Given a line from source to an edge, blocks tiles on the line continued behind it, clamped by distance
+				BlockVisionBehind(source.Value, p1, currPos, vision.Range, grid, fovBlocked);
+				BlockVisionBehind(source.Value, p2, currPos, vision.Range, grid, fovBlocked);
 			}
 			else {
 				// Is not a wall. Queue neighbors to visit
@@ -106,6 +102,24 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 					visited.Add(neighPos);
 				}
 			}
+		}
+	}
+
+	private void BlockVisionBehind(Vec2I source, Vector3 cornerEdge, Vec2I cornerPos, int visionRange, Grid grid, HashSet<Vec2I> fovBlocked) {
+		Vector3 dirFloat = cornerEdge - source.ToWorldPos();
+		float dirLen = dirFloat.Length();
+		// Line behind that continues until visionRange
+		Vector3 shadowDir = dirFloat / dirLen * (visionRange - dirLen);
+		Vec2I shadowEndPos = Vec2I.FromWorldPos(cornerEdge + shadowDir);
+
+		foreach (var linePoint in LinePoints(cornerPos, shadowEndPos)) {
+			if (cornerPos == linePoint)
+				continue;
+			fovBlocked.Add(linePoint);
+			grid.SetDebugColor(linePoint, Palette.DebugFOVBlocked);
+			// not super sure about this early exit
+			// if (grid.Tile[linePoint.X, linePoint.Y].Tags.Has<BlocksFOV>())
+			// 	break;
 		}
 	}
 

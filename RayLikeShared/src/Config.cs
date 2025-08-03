@@ -14,7 +14,9 @@ class Config {
 
     internal const int WIN_SIZE_X = 1024;
     internal const int WIN_SIZE_Y = 600;
-    internal static int MAX_ENEMIES_PER_ROOM = 3;
+    internal const int MAX_ENEMIES_PER_ROOM = 3;
+
+    internal const float VIS_SENSITIVITY = 0f; // range: 0 .. 0.5f
 }
 
 struct Settings() : IComponent {

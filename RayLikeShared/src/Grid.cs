@@ -84,6 +84,7 @@ public struct Vec2I {
 	public static explicit operator Vec2I(Vector2 t) => new((int)MathF.Round(t.X), (int)MathF.Round(t.Y));
 	public Vector2 ToVector2() => new Vector2(X, Y);
 	public Vector3 ToWorldPos() => new Vector3(X, 0, Y) * Config.GRID_SIZE;
+	public static Vec2I FromWorldPos(Vector3 v) => new Vec2I((int)MathF.Round(v.X / Config.GRID_SIZE), (int)MathF.Round(v.Z / Config.GRID_SIZE));
 
 	public override string ToString() => $"V2I({X}, {Y})";
 }

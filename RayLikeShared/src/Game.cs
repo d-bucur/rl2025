@@ -42,12 +42,14 @@ public class Game {
 	}
 
 	public void Update() {
+		// not ideal but starting drawing here allows for debug during Update()
+		// Only works if there is 1 Update() followed by 1 Draw()
+		Raylib.BeginDrawing();
+		Raylib.ClearBackground(Palette.Background);
 		UpdateRootSystems.Update(GetUpdateTick());
 	}
 
 	public void Draw() {
-		Raylib.BeginDrawing();
-		Raylib.ClearBackground(Palette.Background);
 		RenderRootSystems.Update(GetUpdateTick());
 		Raylib.EndDrawing();
 
