@@ -4,32 +4,19 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 class Assets : IModule {
-	internal static Texture2D rayLogoTexture;
-	internal static Texture2D monsterTexture;
-	internal static Texture2D heroesTexture;
-
 	internal static Shader meshShader;
 	internal static Shader billboardShader;
 
-	// internal static Model heroModel;
-	// internal static Model enemyModel;
-	internal static Model wallModel;
-	internal static Model floorModel;
+	internal static Texture2D monsterTexture = Raylib.LoadTexture("Resources/sprites/monsters.png");
+	internal static Texture2D heroesTexture = Raylib.LoadTexture("Resources/sprites/rogues.png");
+	// internal static Texture2D rayLogoTexture = Raylib.LoadTexture("Resources/raylib_logo.png");
+
+	internal static Model wallModel = Raylib.LoadModel("Resources/bricks_A.gltf");
 
 	public void Init(EntityStore world) {
-		// could use dictionary here, not a huge benefit. Would need to use string paths in all call sites
 		Console.WriteLine($"OpenGL version: {Rlgl.GetVersion()}");
 		var shadersRoot = Rlgl.GetVersion() == GlVersion.OpenGlEs20 ? "Resources/shaders/web" : "Resources/shaders";
 		meshShader = Raylib.LoadShader($"{shadersRoot}/base.vs", $"{shadersRoot}/base.fs");
 		billboardShader = Raylib.LoadShader("", $"{shadersRoot}/billboard.fs");
-
-		rayLogoTexture = Raylib.LoadTexture("Resources/raylib_logo.png");
-		monsterTexture = Raylib.LoadTexture("Resources/sprites/monsters.png");
-		heroesTexture = Raylib.LoadTexture("Resources/sprites/rogues.png");
-
-		// heroModel = Raylib.LoadModel("Resources/character_rogue.gltf");
-		// enemyModel = Raylib.LoadModel("Resources/character_skeleton_minion.gltf");
-		wallModel = Raylib.LoadModel("Resources/bricks_A.gltf");
-		floorModel = Raylib.LoadModel("Resources/tileBrickB_small.gltf.glb");
 	}
 }
