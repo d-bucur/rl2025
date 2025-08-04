@@ -12,7 +12,10 @@ public class Game {
 
 	public Game() {
 		Raylib.SetTargetFPS(60);
-		Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
+		if (!OperatingSystem.IsBrowser()) {
+			Console.WriteLine($"Setting ResizableWindow");
+			Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
+		}
 		Raylib.SetWindowMinSize(Config.WIN_SIZE_X, Config.WIN_SIZE_Y);
 		Raylib.InitWindow(Config.WIN_SIZE_X, Config.WIN_SIZE_Y, "RaygueLike Challenge");
 		RegisterComponentsForNativeAot();
@@ -84,7 +87,7 @@ public class Game {
 		aot.RegisterComponent<ColorComp>();
 		aot.RegisterComponent<VisionSource>();
 		aot.RegisterComponent<Settings>();
-		
+
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();
 		aot.RegisterTag<Enemy>();

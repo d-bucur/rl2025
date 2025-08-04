@@ -7,6 +7,19 @@
 
         <link rel="modulepreload" href="./main.js" />
         <link rel="modulepreload" href="./_framework/dotnet.js" />
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0px;
+                padding: 0px;
+            }
+            #canvas {
+                object-fit: contain;
+                width: 100%;
+                height: 100%;
+                aspect-ratio: 1024/600;
+            }
+        </style>
     </head>
     <body>
         <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
