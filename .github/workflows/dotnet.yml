@@ -10,14 +10,17 @@ on:
         description: 'ref to deploy'
         required: true
         default: 'main'
-  # push:
-  #   tags:
-  #     - '*'
+      dotnet_config:
+        description: 'Config: Debug | Release'
+        required: true
+        default: Debug
+        options:
+          - Debug
+          - Release
 
 env:
   project_name: rl2025
   itch_target: sirdorius/rayguelike-2025
-  dotnet_config: Debug
 
 jobs:
   publish-wasm:
@@ -39,10 +42,10 @@ jobs:
     - name: Install wasm-tools
       run: dotnet workload restore
     - name: Publish
-      run: dotnet publish RayLikeWasm -c ${{ env.dotnet_config }}
+      run: dotnet publish RayLikeWasm -c ${{ github.event.inputs.dotnet_config }}
 
     - name: Package as a zip
-      working-directory: RayLikeWasm/bin/${{ env.dotnet_config }}/net8.0/browser-wasm/AppBundle
+      working-directory: RayLikeWasm/bin/${{ github.event.inputs.dotnet_config }}/net8.0/browser-wasm/AppBundle
       run: |
         zip --recurse-paths ${{ env.project_name }}-${{ github.sha }}.zip .
     - name: Install butler
@@ -60,5 +63,5 @@ jobs:
         ./butler push \
             --fix-permissions \
             --userversion="${{ steps.get_version.outputs.tag }}" \
-            RayLikeWasm/bin/${{ env.dotnet_config }}/net8.0/browser-wasm/AppBundle/${{ env.project_name }}-${{ github.sha }}.zip \
-            ${{ env.itch_target }}:wasm
+            RayLikeWasm/bin/${{ github.event.inputs.dotnet_config }}/net8.0/browser-wasm/AppBundle/${{ env.project_name }}-${{ github.sha }}.zip \
+            ${{ env.itch_target }}:wasm-${{ github.sha }}
