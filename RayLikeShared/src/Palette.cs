@@ -42,7 +42,7 @@ class Palette {
 
 	public readonly static Color Background = Colors[3];
 	public readonly static Color Wall = Color.Gray;
-	public readonly static Color Floor = Color.DarkGray;
+	public readonly static Color Floor = new Color(74, 75, 80);
 	public readonly static Color DebugFOVBlocked = Color.DarkGreen;
 	public readonly static Color DebugFOVCorner = Color.DarkBlue;
 	public readonly static float NotVisibleFade = -0.4f;

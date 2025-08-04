@@ -1,4 +1,4 @@
-- fullscreen support
 - better draw order for transparent objects (some ordering bugs right now).
   - Or just render characters on top
   - Or transparent shader for meshes
+- show vision colors in minimap?

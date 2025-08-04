@@ -272,7 +272,7 @@ internal class RenderMinimap : QuerySystem {
 		Raylib.UpdateTexture(MinimapTexture, Raylib.LoadImageColors(MinimapImage));
 		const int SCALE = 5;
 		Raylib.DrawTextureEx(MinimapTexture,
-			new Vector2(Config.WIN_SIZE_X - MinimapImage.Width * SCALE, 0),
+			new Vector2(Raylib.GetScreenWidth() - MinimapImage.Width * SCALE, 0),
 			0,
 			SCALE,
 			Raylib.Fade(Color.White, 0.5f)
