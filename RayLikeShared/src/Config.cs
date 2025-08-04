@@ -22,4 +22,5 @@ class Config {
 struct Settings() : IComponent {
     public bool DebugColorsEnabled = false;
     public bool MinimapEnabled = true;
+    public bool VisibilityHack = false;
 }

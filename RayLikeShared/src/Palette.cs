@@ -1,6 +1,7 @@
 using Raylib_cs;
 
 class Palette {
+	// Palettes not used right now
 	// https://lospec.com/palette-list/pnp-gb
 	public static Color[] Palette1 = [
 		Raylib.GetColor(0xf2ccffff),
@@ -37,13 +38,14 @@ class Palette {
 
 	// https://lospec.com/palette-list/midnight-ablaze
 
-	public static Color[] Colors = Palette3;
+	public readonly static Color[] Colors = Palette3;
 
-	public static Color Background = Colors[3];
-	public static Color Wall = Color.Gray;
-	public static Color Floor = Color.DarkGray;
-	public static Color DebugFOVBlocked = Color.DarkGreen;
-	public static Color DebugFOVCorner = Color.DarkBlue;
+	public readonly static Color Background = Colors[3];
+	public readonly static Color Wall = Color.Gray;
+	public readonly static Color Floor = Color.DarkGray;
+	public readonly static Color DebugFOVBlocked = Color.DarkGreen;
+	public readonly static Color DebugFOVCorner = Color.DarkBlue;
+	public readonly static float NotVisibleFade = -0.3f;
 	
-	public static Color Transparent = Raylib.Fade(Color.White, 0);
+	public readonly static Color Transparent = Raylib.Fade(Color.White, 0);
 }

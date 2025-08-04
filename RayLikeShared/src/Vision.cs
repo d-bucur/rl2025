@@ -43,7 +43,8 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 		// Set all previous visible tiles to explored
 		var cmds = CommandBuffer;
 		VisibleObjectsQuery.ForEachEntity((ref GridPosition pos, Entity entt) => {
-			cmds.RemoveTag<IsVisible>(entt.Id);
+			if (!Singleton.Entity.GetComponent<Settings>().VisibilityHack)
+				cmds.RemoveTag<IsVisible>(entt.Id);
 		});
 
 		// Reset colors on every tick
@@ -168,5 +169,26 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 				grid.MarkVisible(pos, CommandBuffer);
 			}
 		}
+	}
+
+	public static void MarkAllTiles<T>() where T : struct, ITag {
+		var grid = Singleton.Entity.GetComponent<Grid>();
+		var cmds = Singleton.World.GetCommandBuffer();
+		for (int i = 0; i < grid.Tile.GetLength(0); i++) {
+			for (int j = 0; j < grid.Tile.GetLength(1); j++) {
+				cmds.AddTag<T>(grid.Tile[i, j].Id);
+			}
+		}
+		cmds.Playback();
+	}
+
+	public static void MarkAllCharacters<T>() where T : struct, ITag {
+		var cmds = Singleton.World.GetCommandBuffer();
+		var q = Singleton.World.Query<GridPosition>();
+		q.Filter.AllTags(Tags.Get<Character>());
+		q.ForEachEntity((ref GridPosition _, Entity e) => {
+			cmds.AddTag<T>(e.Id);
+		});
+		cmds.Playback();
 	}
 }

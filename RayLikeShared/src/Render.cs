@@ -148,7 +148,7 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 			var posWithOffset = pos.value - new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2 + mesh.Offset;
 			var normalColor = e.Tags.Has<IsVisible>()
 				? Raylib.ColorTint(color.Value, Color.White)
-				: Raylib.ColorBrightness(color.Value, -0.3f);
+				: Raylib.ColorBrightness(color.Value, Palette.NotVisibleFade);
 			var colorFinal = Singleton.Entity.GetComponent<Settings>().DebugColorsEnabled
 				? (color.DebugColor ?? normalColor)
 				: normalColor;
@@ -161,7 +161,7 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 	}
 
 	private static void DebugStuff() {
-		Raylib.DrawFPS(4, 4);
+		// Raylib.DrawFPS(4, 4);
 		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
 		// Raylib.DrawTexture(Assets.rayLogoTexture, 4, 30, Color.White);
 	}
