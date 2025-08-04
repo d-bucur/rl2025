@@ -44,7 +44,7 @@ jobs:
     - name: Package as a zip
       working-directory: RayLikeWasm/bin/${{ env.dotnet_config }}/net8.0/browser-wasm/AppBundle
       run: |
-        zip --recurse-paths ${{ env.project_name }}.zip .
+        zip --recurse-paths ${{ env.project_name }}-${{ github.sha }}.zip .
     - name: Install butler
       run: |
         curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
@@ -60,5 +60,5 @@ jobs:
         ./butler push \
             --fix-permissions \
             --userversion="${{ steps.get_version.outputs.tag }}" \
-            RayLikeWasm/bin/${{ env.dotnet_config }}/net8.0/browser-wasm/AppBundle/${{ env.project_name }}.zip \
+            RayLikeWasm/bin/${{ env.dotnet_config }}/net8.0/browser-wasm/AppBundle/${{ env.project_name }}-${{ github.sha }}.zip \
             ${{ env.itch_target }}:wasm
