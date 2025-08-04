@@ -157,11 +157,17 @@ public class Ease {
 	public static float QuartOut(float x) {
 		return 1 - MathF.Pow(1 - x, 4);
 	}
+	public static float QuartIn(float x) {
+		return x * x * x * x;
+	}
 	public static float SineOut(float x) {
 		return MathF.Sin(x * MathF.PI / 2);
 	}
 	public static float SineIn(float x) {
 		return 1 - MathF.Cos(x * MathF.PI / 2);
+	}
+	public static float SineInOut(float x) {
+		return -(MathF.Cos(MathF.PI * x) - 1) / 2;
 	}
 	#endregion
 }

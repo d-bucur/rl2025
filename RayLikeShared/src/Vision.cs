@@ -117,7 +117,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 			if (cornerPos == linePoint)
 				continue;
 			// Exit early if hit another wall. It will block vision on its own
-			if (grid.Tile[linePoint.X, linePoint.Y].Tags.Has<BlocksFOV>())
+			if (grid.IsBlocking(linePoint))
 				break;
 			fovBlocked.Add(linePoint);
 			grid.SetDebugColor(linePoint, Palette.DebugFOVBlocked);

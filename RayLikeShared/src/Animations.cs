@@ -25,20 +25,20 @@ class Animations {
 			(ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
 			startPos.ToWorldPos(),
 			endPos,
-			0.2f, Ease.SineOut, Vector3.Lerp,
+			0.2f, Ease.SineInOut, Vector3.Lerp,
 			OnEnd: (ref Position p) => actionEntt.AddTag<IsActionFinished>()
 		).RegisterEcs();
 
 		// y anim
-		const float jumpHeight = 0.3f;
+		const float jumpHeight = 0.2f;
 		new Tween(Target).With(
 			(ref Position p, float v) => { p.y = v; },
 			0, jumpHeight,
-			0.1f, Ease.Linear
+			0.1f, Ease.QuartOut
 		).With(
 			(ref Position p, float v) => { p.y = v; },
 			jumpHeight, 0,
-			0.1f, Ease.Linear
+			0.1f, Ease.QuartIn
 		).RegisterEcs();
 
 		// scale
