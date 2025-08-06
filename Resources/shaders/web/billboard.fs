@@ -19,5 +19,5 @@ void main()
     }
 
     gl_FragColor = texelColor * colDiffuse * fragColor;
-    gl_FragDepthEXT = 0.1;
+    gl_FragDepthEXT = gl_FragCoord.z - 0.5;
 }
