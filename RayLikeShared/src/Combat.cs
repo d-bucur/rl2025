@@ -25,9 +25,22 @@ internal struct Figher : IComponent {
 }
 internal record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IComponent { }
 
+internal struct DeathSignal { }
+
 internal class Combat : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.ApplyActions.Add(new ProcessMeleeSystem());
+	}
+
+	internal static void EnemyDeath(Signal<DeathSignal> signal) {
+		Singleton.Entity.GetComponent<Grid>()
+			.RemoveCharacter(signal.Entity.GetComponent<GridPosition>().Value);
+		signal.Entity.DeleteEntity();
+	}
+
+	internal static void PlayerDeath(Signal<DeathSignal> signal) {
+		signal.Entity.RemoveComponent<InputReceiver>();
+		Console.WriteLine($"You are dead!");
 	}
 }
 
@@ -35,6 +48,8 @@ internal class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 	public ProcessMeleeSystem() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
 
 	protected override void OnUpdate() {
+		// Action entities are disjoint from the entities they operate on. No need to throw on structural changes
+		Query.ThrowOnStructuralChange = false;
 		Query.ForEachEntity((ref MeleeAction action, Entity actionEntt) => {
 			CommandBuffer.RemoveTag<IsActionWaiting>(actionEntt.Id);
 			Vector3 startPos = action.Source.GetComponent<GridPosition>().Value.ToWorldPos();
@@ -53,10 +68,8 @@ internal class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 			if (damage > 0) {
 				targetFighter.ApplyDamage(damage);
 				if (targetFighter.HP <= 0) {
-					CommandBuffer.DeleteEntity(action.Target.Id);
-					Singleton.Entity.GetComponent<Grid>()
-						.RemoveCharacter(action.Target.GetComponent<GridPosition>().Value);
 					Console.WriteLine($"{desc} for {damage} HP and killed it");
+					action.Target.EmitSignal(new DeathSignal());
 				}
 				else
 					Console.WriteLine($"{desc} for {damage} HP");

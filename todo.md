@@ -1,9 +1,9 @@
-- player damage and death
 - pathfindding
 - enemy ai
-- corpses
 - ui
+- corpses
 - damage overhead fx
+- event handlers for different game states?
 
 ## Other
 - show vision colors in minimap?

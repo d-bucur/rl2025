@@ -60,6 +60,7 @@ class Level : IModule {
 		Singleton.Player.Add(
 			new Name { Value = "Player" }
 		);
+		Singleton.Player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
 	}
 
 	enum MonsterType {
@@ -132,6 +133,7 @@ class Level : IModule {
 					);
 					break;
 			}
+			entt.AddSignalHandler<DeathSignal>(Combat.EnemyDeath);
 			Console.WriteLine($"Spawned {enemyType} in {room}");
 		}
 	}
