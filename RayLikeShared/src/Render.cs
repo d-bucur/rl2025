@@ -72,7 +72,7 @@ struct Camera() : IComponent {
 class Render : IModule {
 	public void Init(EntityStore world) {
 		InitCamera(world);
-		RenderPhases.Render.Add(new FadeScenery());
+		// RenderPhases.Render.Add(new FadeScenery()); // Disabled, using shaders now
 		RenderPhases.Render.Add(new RenderCubes());
 		RenderPhases.Render.Add(new RenderBillboards());
 		RenderPhases.Render.Add(new RenderMeshes());

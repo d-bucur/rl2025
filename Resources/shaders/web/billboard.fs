@@ -1,3 +1,5 @@
+#version 100   
+#extension GL_EXT_frag_depth : enable 
 precision mediump float;
 
 // Inputs from vertex shader
@@ -17,4 +19,5 @@ void main()
     }
 
     gl_FragColor = texelColor * colDiffuse * fragColor;
+    gl_FragDepthEXT = 0.1;
 }

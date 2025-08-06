@@ -15,4 +15,5 @@ void main()
 		discard;
 	}
 	finalColor = texelColor*colDiffuse*fragColor;
+	gl_FragDepth = 0.1;
 }    

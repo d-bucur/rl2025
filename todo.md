@@ -1,4 +1,5 @@
-- better draw order for transparent objects (some ordering bugs right now).
-  - Or just render characters on top
-  - Or transparent shader for meshes
 - show vision colors in minimap?
+- character shaders:
+  - render wall tiles with partial alpha when overlapping characters
+  - or add a radial fade effect to mesh shader around character positions
+  - both require postprocessing framebuffers
