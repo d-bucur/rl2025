@@ -1,3 +1,11 @@
+- player damage and death
+- pathfindding
+- enemy ai
+- corpses
+- ui
+- damage overhead fx
+
+## Other
 - show vision colors in minimap?
 - character shaders:
   - render wall tiles with partial alpha when overlapping characters

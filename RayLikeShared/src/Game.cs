@@ -87,6 +87,8 @@ public class Game {
 		aot.RegisterComponent<ColorComp>();
 		aot.RegisterComponent<VisionSource>();
 		aot.RegisterComponent<Settings>();
+		aot.RegisterComponent<Figher>();
+		aot.RegisterComponent<Name>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();

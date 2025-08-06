@@ -7,6 +7,9 @@ namespace RayLikeShared;
 struct Character : ITag; // Entity in tutorial, but name would conflict with ECS
 struct Player : ITag;
 struct Enemy : ITag;
+struct Name : IComponent {
+	public string Value;
+}
 
 struct BlocksPathing : ITag; // walkable in tutorial
 struct BlocksFOV : ITag; // transparent in tutorial

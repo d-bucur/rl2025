@@ -47,6 +47,10 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		}
 	}
 
+	internal void RemoveCharacter(Vec2I pos) {
+		Character[pos.X, pos.Y] = new Entity();
+	}
+
 	// public bool TryMovePos(Vec2I oldPos, Vec2I newPos) {
 	// 	if (!IsInsideGrid(newPos))
 	// 		return false;

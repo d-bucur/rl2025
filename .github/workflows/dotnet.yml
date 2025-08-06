@@ -42,8 +42,11 @@ jobs:
         cache-dependency-path: RayLikeWasm/packages.lock.json
     - name: Install wasm-tools
       run: dotnet workload install wasm-tools wasm-tools-net8
-    - name: Install wasm-tools
+    - name: dotnet workload restore
       run: dotnet workload restore
+    # needed for caching to work?
+    # - name: dotnet restore
+    #   run: dotnet restore --locked-mode
     - name: Publish
       run: dotnet publish RayLikeWasm -c ${{ github.event.inputs.dotnet_config }}
 
