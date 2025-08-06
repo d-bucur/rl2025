@@ -14,7 +14,7 @@ on:
         description: 'Config: Debug | Release'
         required: true
         type: choice
-        default: Debug
+        default: Release
         options:
           - Debug
           - Release
@@ -39,6 +39,7 @@ jobs:
       with:
         dotnet-version: 9.0.x
         cache: true
+        cache-dependency-path: RayLikeWasm/packages.lock.json
     - name: Install wasm-tools
       run: dotnet workload install wasm-tools wasm-tools-net8
     - name: Install wasm-tools

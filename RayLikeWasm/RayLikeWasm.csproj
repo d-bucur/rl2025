@@ -15,6 +15,7 @@
     <WasmBuildNative>true</WasmBuildNative>
     <WasmNativeStrip>true</WasmNativeStrip>
     <WasmAllowUndefinedSymbols>true</WasmAllowUndefinedSymbols>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup>
