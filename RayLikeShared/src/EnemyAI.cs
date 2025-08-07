@@ -40,7 +40,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 				Entity destEntt = grid.Character[dest.X, dest.Y];
 				if (!destEntt.IsNull && !destEntt.Tags.Has<Enemy>()) {
 					TurnsManagement.QueueAction(cmds,
-						new MeleeAction(enemyEntt, destEntt, diff.X, diff.Y));
+						new MeleeAction(enemyEntt, destEntt, diff.X, diff.Y), true);
 				}
 				else {
 					var action = new MovementAction(enemyEntt, diff.X, diff.Y);

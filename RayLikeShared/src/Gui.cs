@@ -34,6 +34,7 @@ class GuiModule : IModule {
 		RenderPhases.Render.Add(new RenderHealth());
 		RenderPhases.Render.Add(new RenderGameOver());
 		RenderPhases.Render.Add(new RenderMessageLog());
+		RenderPhases.Render.Add(new MouseSelect());
 	}
 }
 
@@ -86,7 +87,7 @@ file class RenderMessageLog : QuerySystem<MessageLog> {
 		int LineHeight = 25;
 		Query.ForEachEntity((ref MessageLog log, Entity entt) => {
 			int pos = GUIValues.HealthHeight + GUIValues.Padding + LineHeight;
-			for (int i = log.Messages.Count - 1; i >= 0 && i >= log.Messages.Count - log.DisplayCount; i--) {
+			for (int i = Math.Max(0, log.Messages.Count - log.DisplayCount); i < log.Messages.Count; i++) {
 				var message = log.Messages[i];
 				Raylib.DrawText(message.Text, GUIValues.Padding, pos, TextHeight, message.Color);
 				pos += LineHeight;
@@ -155,5 +156,42 @@ file class RenderMinimap : QuerySystem {
 				color = Color.Red;
 		}
 		return color;
+	}
+}
+
+file class MouseSelect : QuerySystem {
+	protected override void OnUpdate() {
+		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
+		var ray = Raylib.GetScreenToWorldRay(Raylib.GetMousePosition(), camera);
+
+		if (Math.Abs(ray.Direction.Y) > 1e-6) {
+			Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
+			float t = -ray.Position.Y / ray.Direction.Y;
+			Vector3 intersection = ray.Position + t * ray.Direction + tileOffset;
+			Vec2I posI = Vec2I.FromWorldPos(intersection);
+			Grid grid = Singleton.Entity.GetComponent<Grid>();
+
+			if (!grid.IsInsideGrid(posI))
+				return;
+
+			Raylib.BeginMode3D(camera);
+			Raylib.DrawCubeWiresV(
+				posI.ToWorldPos() - tileOffset,
+				new Vector3(1.1f, 1f, 1.1f),
+				Raylib.Fade(Color.Red, 0.3f));
+			Raylib.EndMode3D();
+
+			var charAtPos = grid.Character[posI.X, posI.Y];
+			if (!charAtPos.IsNull) {
+				string name = charAtPos.GetComponent<Name>().Value;
+				var fighter = charAtPos.GetComponent<Fighter>();
+				GUI.RenderText(
+					$"{name} {fighter.HP}/{fighter.MaxHP} HP",
+					GUIValues.Padding,
+					Raylib.GetScreenHeight() - 20 - GUIValues.Padding,
+					20
+				);
+			}
+		}
 	}
 }

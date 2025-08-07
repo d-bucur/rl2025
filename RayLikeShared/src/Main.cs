@@ -52,8 +52,6 @@ file class PrgressTweens : QuerySystem<Tween> {
 		Query.ForEachEntity((ref Tween tween, Entity e) => {
 			if (tween.target.IsNull) {
 				e.DeleteEntity();
-				// not sure if this works
-				Console.WriteLine("Deleting Tween because target is dead");
 				return;
 			}
 			tween.Tick(Tick.deltaTime);
