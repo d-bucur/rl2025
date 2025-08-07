@@ -5,27 +5,12 @@ using Friflo.Engine.ECS.Systems;
 namespace RayLikeShared;
 
 internal record struct MovementAction(Entity Entity, int Dx, int Dy) : IComponent { }
+internal record struct RestAction(Entity Entity) : IComponent { }
 
 internal class Movement : IModule {
     public void Init(EntityStore world) {
-        UpdatePhases.Input.Add(new EnemyMovementSystem());
         UpdatePhases.ApplyActions.Add(new ProcessMovementSystem());
-    }
-}
-
-internal class EnemyMovementSystem : QuerySystem<GridPosition> {
-    public EnemyMovementSystem() => Filter.AllTags(Tags.Get<Enemy, CanAct>());
-
-    protected override void OnUpdate() {
-        var cmds = CommandBuffer;
-        Query.ForEachEntity((ref GridPosition pos, Entity e) => {
-            var action = new MovementAction(
-                e, Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)
-            );
-            TurnsManagement.QueueAction(cmds, action, false);
-
-            cmds.RemoveTag<CanAct>(e.Id);
-        });
+        // UpdatePhases.ApplyActions.Add(new ProcessRestSystem());
     }
 }
 
@@ -59,7 +44,7 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
         if (!grid.IsInsideGrid(newPos))
             return false;
 
-        if (!IsTileFree(grid, newPos))
+        if (!IsTileFree(grid, newPos, action.Entity))
             return false;
 
         // Perform the move
@@ -69,11 +54,26 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
         return true;
     }
 
-    private static bool IsTileFree(Grid grid, Vec2I pos) {
+    private static bool IsTileFree(Grid grid, Vec2I pos, Entity entt) {
         var destTile = grid.Tile[pos.X, pos.Y];
         bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
         var destChar = grid.Character[pos.X, pos.Y];
         bool isCharFree = destChar.IsNull || (!destChar.Tags.Has<BlocksPathing>());
-        return isTileFree && isCharFree;
+        return isTileFree && (isCharFree || destChar == entt);
     }
 }
+
+// Not used for now. Current just using 0,0 MovementAction for rest.
+// Might want to use this later if rest has some side effect. Or just add side effect to movement?
+// internal class ProcessRestSystem : QuerySystem<RestAction> {
+//     public ProcessRestSystem() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
+
+//     protected override void OnUpdate() {
+//         Query.ThrowOnStructuralChange = false;
+//         Query.ForEachEntity((ref RestAction action, Entity entt) => {
+//             Console.WriteLine($"Executing action: {action} --- {entt}");
+//             CommandBuffer.RemoveTag<IsActionWaiting>(entt.Id);
+//             CommandBuffer.AddTag<IsActionFinished>(entt.Id);
+//         });
+//     }
+// }

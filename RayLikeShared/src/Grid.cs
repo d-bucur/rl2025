@@ -27,6 +27,12 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		return Tile[pos.X, pos.Y].Tags.Has<BlocksFOV>();
 	}
 
+	public bool IsVisible(Vec2I pos) {
+		if (!IsInsideGrid(pos))
+			return false;
+		return Tile[pos.X, pos.Y].Tags.Has<IsVisible>();
+	}
+
 	// Used only for debugging
 	internal void SetDebugColor(Vec2I pos, Raylib_cs.Color color) {
 		if (IsInsideGrid(pos)) {

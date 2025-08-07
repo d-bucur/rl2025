@@ -25,23 +25,28 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
             Vec2I? keyMovement = null;
             if (IsActionPressed(KeyboardKey.A))
                 keyMovement = (-1, 0);
-            if (IsActionPressed(KeyboardKey.D))
+            else if (IsActionPressed(KeyboardKey.D))
                 keyMovement = (1, 0);
-            if (IsActionPressed(KeyboardKey.S) || IsActionPressed(KeyboardKey.X))
+            else if (IsActionPressed(KeyboardKey.S) || IsActionPressed(KeyboardKey.X))
                 keyMovement = (0, 1);
-            if (IsActionPressed(KeyboardKey.W))
+            else if (IsActionPressed(KeyboardKey.W))
                 keyMovement = (0, -1);
-            if (IsActionPressed(KeyboardKey.Q))
+            else if (IsActionPressed(KeyboardKey.Q))
                 keyMovement = (-1, -1);
-            if (IsActionPressed(KeyboardKey.E))
+            else if (IsActionPressed(KeyboardKey.E))
                 keyMovement = (1, -1);
-            if (IsActionPressed(KeyboardKey.Z))
+            else if (IsActionPressed(KeyboardKey.Z))
                 keyMovement = (-1, 1);
-            if (IsActionPressed(KeyboardKey.C))
+            else if (IsActionPressed(KeyboardKey.C))
                 keyMovement = (1, 1);
 
             if (keyMovement.HasValue) {
                 HandleMovementInput(entt, cmd, keyMovement.Value);
+            }
+            else if (IsActionPressed(KeyboardKey.R)) {
+                // TurnsManagement.QueueAction(cmd, new RestAction(), true);
+                TurnsManagement.QueueAction(cmd, new MovementAction(entt, 0, 0), true);
+                cmd.RemoveTag<CanAct>(entt.Id);
             }
 
             if (Raylib.IsMouseButtonPressed(MouseButton.Left))

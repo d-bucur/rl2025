@@ -85,6 +85,7 @@ class Level : IModule {
 				new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 				new Billboard(),
 				new ColorComp(),
+				new EnemyAI(),
 				Tags.Get<Enemy, Character, BlocksPathing>()
 			);
 			switch (enemyType) {

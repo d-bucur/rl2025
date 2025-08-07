@@ -39,6 +39,7 @@ public class Game {
 			new Main(),
 			new TurnsManagement(),
 			new InputModule(),
+			new EnemyAIModule(),
 			new Movement(),
 			new Vision(),
 			new Combat(),
@@ -89,6 +90,7 @@ public class Game {
 		aot.RegisterComponent<Settings>();
 		aot.RegisterComponent<Figher>();
 		aot.RegisterComponent<Name>();
+		aot.RegisterComponent<EnemyAI>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();
@@ -103,6 +105,7 @@ public class Game {
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<EscapeAction>();
 		aot.RegisterComponent<MeleeAction>();
+		aot.RegisterComponent<RestAction>();
 
 		aot.RegisterTag<IsActionWaiting>();
 		aot.RegisterTag<IsActionExecuting>();

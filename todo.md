@@ -1,5 +1,4 @@
 - pathfindding
-- enemy ai
 - ui
 - corpses
 - damage overhead fx
