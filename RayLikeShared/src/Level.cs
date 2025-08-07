@@ -53,12 +53,12 @@ class Level : IModule {
 			new ColorComp(),
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
-			new Figher(10, 2, 3),
+			new Fighter(10, 2, 3),
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 		// max 10 components per method...
 		Singleton.Player.Add(
-			new Name { Value = "Player" }
+			new Name { Value = "Hero" }
 		);
 		Singleton.Player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
 	}
@@ -96,7 +96,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(0, 4)
 						},
-						new Figher(4, 1, 3),
+						new Fighter(4, 1, 3),
 						new Energy() { GainPerTick = 5 }
 					);
 					break;
@@ -107,7 +107,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(1, 5)
 						},
-						new Figher(5, 0, 5),
+						new Fighter(5, 0, 5),
 						new Energy() { GainPerTick = 6 }
 					);
 					break;
@@ -118,7 +118,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(3, 0)
 						},
-						new Figher(5, 1, 4),
+						new Fighter(5, 1, 4),
 						new Energy() { GainPerTick = 4 }
 					);
 					break;
@@ -129,7 +129,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(0, 1)
 						},
-						new Figher(10, 2, 3),
+						new Fighter(10, 2, 3),
 						new Energy() { GainPerTick = 3 }
 					);
 					break;

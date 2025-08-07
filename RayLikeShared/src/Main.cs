@@ -26,6 +26,8 @@ class Main : IModule {
 		UpdatePhases.Animations.Add(new PrgressTweens());
 		Singleton.Entity.Add(new Settings());
 
+		MessageLog.Print("You descend into the dark dungeon");
+
 		// Add camera following player
 		Singleton.Camera.AddComponent(
 			new CameraFollowTarget() {

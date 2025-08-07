@@ -1,16 +1,17 @@
 using System.Numerics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using Raylib_cs;
 
 namespace RayLikeShared;
 
-struct Figher : IComponent {
+struct Fighter : IComponent {
 	public int MaxHP;
 	public int HP;
 	public int Defense;
 	public int Power;
 
-	public Figher(int maxHP, int defense, int power) {
+	public Fighter(int maxHP, int defense, int power) {
 		MaxHP = maxHP;
 		HP = maxHP;
 		Defense = defense;
@@ -40,7 +41,7 @@ class Combat : IModule {
 
 	internal static void PlayerDeath(Signal<DeathSignal> signal) {
 		signal.Entity.RemoveComponent<InputReceiver>();
-		Console.WriteLine($"You are dead!");
+		MessageLog.Print($"You are dead!", Color.Red);
 	}
 }
 
@@ -61,21 +62,23 @@ file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 			);
 
 			// Do the actual damage
-			ref var sourceFighter = ref action.Source.GetComponent<Figher>();
-			ref var targetFighter = ref action.Target.GetComponent<Figher>();
+			ref var sourceFighter = ref action.Source.GetComponent<Fighter>();
+			ref var targetFighter = ref action.Target.GetComponent<Fighter>();
 			var damage = sourceFighter.Power - targetFighter.Defense;
 			var desc = $"{action.Source.GetComponent<Name>().Value} attacks {action.Target.GetComponent<Name>().Value}";
+			var isTargetPlayer = action.Target.Tags.Has<Player>();
+			var color = isTargetPlayer ? Color.Red : Color.Orange;
 			if (damage > 0) {
 				targetFighter.ApplyDamage(damage);
 				if (targetFighter.HP <= 0) {
-					Console.WriteLine($"{desc} for {damage} HP and killed it");
+					MessageLog.Print($"{desc} for {damage} HP and killed it", color);
 					action.Target.EmitSignal(new DeathSignal());
 				}
 				else
-					Console.WriteLine($"{desc} for {damage} HP");
+					MessageLog.Print($"{desc} for {damage} HP", color);
 			}
 			else
-				Console.WriteLine($"{desc} but does not damage");
+				MessageLog.Print($"{desc} but does no damage", color);
 		});
 	}
 }

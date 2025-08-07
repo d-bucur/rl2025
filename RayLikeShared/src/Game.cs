@@ -35,6 +35,7 @@ public class Game {
 		Modules = [
 			new Assets(),
 			new Render(),
+			new GuiModule(),
 			new Level(),
 			new Main(),
 			new TurnsManagement(),
@@ -88,9 +89,10 @@ public class Game {
 		aot.RegisterComponent<ColorComp>();
 		aot.RegisterComponent<VisionSource>();
 		aot.RegisterComponent<Settings>();
-		aot.RegisterComponent<Figher>();
+		aot.RegisterComponent<Fighter>();
 		aot.RegisterComponent<Name>();
 		aot.RegisterComponent<EnemyAI>();
+		aot.RegisterComponent<MessageLog>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Player>();

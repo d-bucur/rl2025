@@ -73,7 +73,6 @@ class Render : IModule {
 		RenderPhases.Render.Add(new RenderCubes());
 		RenderPhases.Render.Add(new RenderBillboards());
 		RenderPhases.Render.Add(new RenderMeshes());
-		RenderPhases.Render.Add(new RenderMinimap());
 		// disabled for now. can fix later and use for health as well
 		// RenderPhases.Render.Add(new RenderInGameUI());
 	}
@@ -87,6 +86,9 @@ class Render : IModule {
 					new Vector3(0.0f, 1.0f, 0.0f),
 					35.0f,
 					CameraProjection.Perspective
+					// Alternative:
+					// 10.0f,
+					// CameraProjection.Orthographic
 				)
 			});
 	}
@@ -243,51 +245,5 @@ file class RenderInGameUI : QuerySystem<Energy, Position> {
 		});
 		Raylib.EndShaderMode();
 		Raylib.EndMode3D();
-	}
-}
-
-// Optimization: could only redraw on change
-class RenderMinimap : QuerySystem {
-	Image MinimapImage;
-	Texture2D MinimapTexture;
-
-	protected override void OnAddStore(EntityStore store) {
-		MinimapImage = Raylib.GenImageColor(Config.MAP_SIZE_X, Config.MAP_SIZE_Y, Palette.Transparent);
-		MinimapTexture = Raylib.LoadTextureFromImage(MinimapImage);
-	}
-
-	protected override unsafe void OnUpdate() {
-		if (!Singleton.Entity.GetComponent<Settings>().MinimapEnabled)
-			return;
-
-		var grid = Singleton.Entity.GetComponent<Grid>();
-		for (int x = 0; x < grid.Tile.GetLength(0); x++) {
-			for (int y = 0; y < grid.Tile.GetLength(1); y++) {
-				Raylib.ImageDrawPixel(ref MinimapImage, x, y, GetColor(grid, x, y));
-			}
-		}
-		Raylib.UpdateTexture(MinimapTexture, Raylib.LoadImageColors(MinimapImage));
-		const int SCALE = 5;
-		Raylib.DrawTextureEx(MinimapTexture,
-			new Vector2(Raylib.GetScreenWidth() - MinimapImage.Width * SCALE, 0),
-			0,
-			SCALE,
-			Raylib.Fade(Color.White, 0.5f)
-		);
-	}
-
-	static unsafe Color GetColor(Grid grid, int x, int y) {
-		Entity tile = grid.Tile[x, y];
-		if (!tile.Tags.Has<IsExplored>())
-			return Palette.Transparent;
-		var color = grid.Tile[x, y].GetComponent<ColorComp>().Value;
-		Entity character = grid.Character[x, y];
-		if (!character.IsNull) {
-			if (character.Tags.Has<Player>())
-				color = Color.Green;
-			if (character.Tags.Has<Enemy>() && tile.Tags.Has<IsVisible>())
-				color = Color.Red;
-		}
-		return color;
 	}
 }
