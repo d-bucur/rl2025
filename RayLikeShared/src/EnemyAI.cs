@@ -13,7 +13,7 @@ class EnemyAIModule : IModule {
 	}
 }
 
-internal class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
+file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 	public EnemyMovementSystem() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {

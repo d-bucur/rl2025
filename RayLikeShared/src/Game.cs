@@ -5,10 +5,10 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 public class Game {
-	private EntityStore World;
-	private SystemRoot UpdateRootSystems;
-	private SystemRoot RenderRootSystems;
-	private List<IModule> Modules;
+	EntityStore World;
+	SystemRoot UpdateRootSystems;
+	SystemRoot RenderRootSystems;
+	List<IModule> Modules;
 
 	public Game() {
 		Raylib.SetTargetFPS(60);
@@ -66,7 +66,7 @@ public class Game {
 		return new UpdateTick(Raylib.GetFrameTime(), (float)Raylib.GetTime());
 	}
 
-	private static void RegisterComponentsForNativeAot() {
+	static void RegisterComponentsForNativeAot() {
 		// Need to register schema for AOT (wasm)
 		// can maybe move to wasm project?
 		var aot = new NativeAOT();

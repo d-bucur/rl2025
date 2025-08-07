@@ -21,7 +21,7 @@ struct IsActionFinished : ITag;
 // Marks that other actions should not be executed until this is finished
 struct IsActionBlocking : ITag;
 
-internal struct EscapeAction : IComponent {}
+struct EscapeAction : IComponent {}
 
 class TurnsManagement : IModule {
 	public void Init(EntityStore world) {
@@ -29,7 +29,7 @@ class TurnsManagement : IModule {
 		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
 	}
 
-	public static void QueueAction<T>(CommandBuffer cmd, T movementAction, bool isActionBlocking = false) where T : struct, IComponent {
+	internal static void QueueAction<T>(CommandBuffer cmd, T movementAction, bool isActionBlocking = false) where T : struct, IComponent {
 		var a = cmd.CreateEntity();
 		cmd.AddComponent(a, movementAction);
 		if (isActionBlocking)
@@ -39,9 +39,9 @@ class TurnsManagement : IModule {
 	}
 }
 
-internal class TickEnergySystem : QuerySystem<Energy> {
-	private ArchetypeQuery canActQuery;
-	private ArchetypeQuery actionsInPipelineQuery;
+file class TickEnergySystem : QuerySystem<Energy> {
+	ArchetypeQuery canActQuery;
+	ArchetypeQuery actionsInPipelineQuery;
 
 	protected override void OnAddStore(EntityStore store) {
 		canActQuery = store.Query().AllTags(Tags.Get<CanAct>());
@@ -75,10 +75,10 @@ internal class TickEnergySystem : QuerySystem<Energy> {
 /// <summary>
 /// Does maintenance of currently executing actions
 /// </summary>
-internal class ProcessActionsSystem : QuerySystem {
-	private ArchetypeQuery finishedQuery;
-	private ArchetypeQuery waitingQuery;
-	private ArchetypeQuery blockingQuery;
+file class ProcessActionsSystem : QuerySystem {
+	ArchetypeQuery finishedQuery;
+	ArchetypeQuery waitingQuery;
+	ArchetypeQuery blockingQuery;
 
 	protected override void OnAddStore(EntityStore store) {
 		finishedQuery = store.Query().AllTags(Tags.Get<IsActionFinished>());

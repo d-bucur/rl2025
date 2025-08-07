@@ -1,5 +1,7 @@
 using Raylib_cs;
 
+namespace RayLikeShared;
+
 class Palette {
 	// Palettes not used right now
 	// https://lospec.com/palette-list/pnp-gb
@@ -46,6 +48,6 @@ class Palette {
 	public readonly static Color DebugFOVBlocked = Color.DarkGreen;
 	public readonly static Color DebugFOVCorner = Color.DarkBlue;
 	public readonly static float NotVisibleFade = -0.4f;
-	
+
 	public readonly static Color Transparent = Raylib.Fade(Color.White, 0);
 }

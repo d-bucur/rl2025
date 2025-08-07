@@ -1,5 +1,7 @@
 using Friflo.Engine.ECS.Systems;
 
+namespace RayLikeShared;
+
 class UpdatePhases {
 	static internal SystemGroup Input = new("InputPhase");
 	static internal SystemGroup ApplyActions = new("ApplyActionsPhase");

@@ -4,7 +4,7 @@ using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
-internal struct Figher : IComponent {
+struct Figher : IComponent {
 	public int MaxHP;
 	public int HP;
 	public int Defense;
@@ -23,11 +23,11 @@ internal struct Figher : IComponent {
 		// HP = Math.Max(HP - damage, 0);
 	}
 }
-internal record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IComponent { }
+record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IComponent { }
 
-internal struct DeathSignal { }
+struct DeathSignal { }
 
-internal class Combat : IModule {
+class Combat : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.ApplyActions.Add(new ProcessMeleeSystem());
 	}
@@ -44,7 +44,7 @@ internal class Combat : IModule {
 	}
 }
 
-internal class ProcessMeleeSystem : QuerySystem<MeleeAction> {
+file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 	public ProcessMeleeSystem() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
 
 	protected override void OnUpdate() {

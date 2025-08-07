@@ -16,9 +16,9 @@ class Vision : IModule {
 	}
 }
 
-internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
-	private ArchetypeQuery<GridPosition> VisibleObjectsQuery;
-	private ArchetypeQuery<ColorComp> ColoredQuery;
+class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
+	ArchetypeQuery<GridPosition> VisibleObjectsQuery;
+	ArchetypeQuery<ColorComp> ColoredQuery;
 
 	protected override void OnAddStore(EntityStore store) {
 		base.OnAddStore(store);
@@ -39,7 +39,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 	}
 
 	// Calculate new visible tiles
-	private void RecalculateVision(ref GridPosition source, ref VisionSource vision, Entity _) {
+	void RecalculateVision(ref GridPosition source, ref VisionSource vision, Entity _) {
 		// Set all previous visible tiles to explored
 		var cmds = CommandBuffer;
 		VisibleObjectsQuery.ForEachEntity((ref GridPosition pos, Entity entt) => {
@@ -106,7 +106,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 		}
 	}
 
-	private void BlockVisionBehind(Vec2I source, Vector3 cornerEdge, Vec2I cornerPos, int visionRange, Grid grid, HashSet<Vec2I> fovBlocked) {
+	void BlockVisionBehind(Vec2I source, Vector3 cornerEdge, Vec2I cornerPos, int visionRange, Grid grid, HashSet<Vec2I> fovBlocked) {
 		Vector3 dirFloat = cornerEdge - source.ToWorldPos();
 		float dirLen = dirFloat.Length();
 		// Line behind that continues until visionRange
@@ -126,7 +126,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 	}
 
 	// Enumerate discrete points on a line from p0 to p1
-	private IEnumerable<Vec2I> LinePoints(Vec2I p0, Vec2I p1) {
+	IEnumerable<Vec2I> LinePoints(Vec2I p0, Vec2I p1) {
 		// using general version of https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm#All_cases
 		int dx = Math.Abs(p1.X - p0.X);
 		int sx = p0.X < p1.X ? 1 : -1;
@@ -153,7 +153,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 	}
 
 	// Get the 2 neighbors perpendicular to the direction. Only works for cardinal directions
-	private (Vec2I, Vec2I) GetCorners(Vec2I currPos, Vec2I dir) {
+	(Vec2I, Vec2I) GetCorners(Vec2I currPos, Vec2I dir) {
 		if (dir.Y != 0)
 			return (currPos + new Vec2I(1, 0), currPos + new Vec2I(-1, 0));
 		else
@@ -161,7 +161,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 	}
 
 	// Old, simple visibility algorithm marking all tiles in a square radius around the source
-	private void SimpleVisionWalk(GridPosition source, VisionSource vision) {
+	void SimpleVisionWalk(GridPosition source, VisionSource vision) {
 		var grid = Singleton.Entity.GetComponent<Grid>();
 		for (int i = -vision.Range; i < vision.Range + 1; i++) {
 			for (int j = -vision.Range; j < vision.Range + 1; j++) {
@@ -171,7 +171,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 		}
 	}
 
-	public static void MarkAllTiles<T>() where T : struct, ITag {
+	internal static void MarkAllTiles<T>() where T : struct, ITag {
 		var grid = Singleton.Entity.GetComponent<Grid>();
 		var cmds = Singleton.World.GetCommandBuffer();
 		for (int i = 0; i < grid.Tile.GetLength(0); i++) {
@@ -182,7 +182,7 @@ internal class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource>
 		cmds.Playback();
 	}
 
-	public static void MarkAllCharacters<T>() where T : struct, ITag {
+	internal static void MarkAllCharacters<T>() where T : struct, ITag {
 		var cmds = Singleton.World.GetCommandBuffer();
 		var q = Singleton.World.Query<GridPosition>();
 		q.Filter.AllTags(Tags.Get<Character>());

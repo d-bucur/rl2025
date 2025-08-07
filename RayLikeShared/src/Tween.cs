@@ -44,13 +44,13 @@ record struct PropertyTween<C, P> (
 		}
 	}
 
-	private void Reverse() {
+	void Reverse() {
 		// Not a proper flip
 		CurrentTime = 0;
 		(To, From) = (From, To);
 	}
 
-	private readonly bool ShouldRepeat() {
+	readonly bool ShouldRepeat() {
 		return Repetitions < 0 || CurrentRepetitions < Repetitions;
 	}
 
@@ -66,7 +66,7 @@ record struct PropertyTween<C, P> (
 record struct Tween(Entity target) : IComponent {
 	// Now this is pretty simple, but this is the place where you could
 	// combine different PropertyTweens in sequence, parallel etc.
-	private List<IPropertyTween> PropertyTweens = new();
+	List<IPropertyTween> PropertyTweens = new();
 
 	public void Tick(float delta) {
 		foreach (var t in PropertyTweens) {

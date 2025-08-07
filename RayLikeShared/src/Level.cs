@@ -37,7 +37,7 @@ class Level : IModule {
 		}
 	}
 
-	private static void SpawnPlayer(EntityStore world, Vec2I pos) {
+	static void SpawnPlayer(EntityStore world, Vec2I pos) {
 		Singleton.Player = world.CreateEntity(
 			new InputReceiver(),
 			new GridPosition(pos.X, pos.Y),
@@ -70,7 +70,7 @@ class Level : IModule {
 		Orc,
 	};
 
-	private static void SpawnEnemy(EntityStore world, Room room, ref Grid grid) {
+	static void SpawnEnemy(EntityStore world, Room room, ref Grid grid) {
 		var monsterTypes = Enum.GetValues(typeof(MonsterType));
 
 		for (int i = 0; i <= Config.MAX_ENEMIES_PER_ROOM; i++) {
@@ -139,7 +139,7 @@ class Level : IModule {
 		}
 	}
 
-	private List<Room> GenerateDungeon(EntityStore world) {
+	List<Room> GenerateDungeon(EntityStore world) {
 		// true if tile is empty, false if walled
 		var map = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
 
@@ -156,7 +156,7 @@ class Level : IModule {
 		return rooms;
 	}
 
-	private List<Room> GenerateRooms(bool[,] map, int roomCount) {
+	List<Room> GenerateRooms(bool[,] map, int roomCount) {
 		List<Room> rooms = new();
 
 		// Generate rooms and tunnels and save them to a grid
@@ -180,14 +180,14 @@ class Level : IModule {
 		return rooms;
 	}
 
-	private void DigTunnelsBetweenRooms(bool[,] map, List<Room> rooms) {
+	void DigTunnelsBetweenRooms(bool[,] map, List<Room> rooms) {
 		// TODO allow separate high/low dig
 		for (int i = 1; i < rooms.Count; i++) {
 			DigTunnel(map, rooms[i].Center(), rooms[i - 1].Center());
 		}
 	}
 
-	private void DigRoom(bool[,] map, Room room) {
+	void DigRoom(bool[,] map, Room room) {
 		for (int i = room.StartX + 1; i < room.EndX - 1; i++) {
 			for (int j = room.StartY + 1; j < room.EndY - 1; j++) {
 				map[i, j] = true;
@@ -195,7 +195,7 @@ class Level : IModule {
 		}
 	}
 
-	private void DigTunnel(bool[,] map, Vec2I start, Vec2I end) {
+	void DigTunnel(bool[,] map, Vec2I start, Vec2I end) {
 		for (int i = Math.Min(start.X, end.X); i <= Math.Max(start.X, end.X); i++) {
 			map[i, Math.Min(start.Y, end.Y)] = true;
 			map[i, Math.Max(start.Y, end.Y)] = true;
@@ -206,7 +206,7 @@ class Level : IModule {
 		}
 	}
 
-	private void RandomizeTiles(bool[,] map, double emptyChance) {
+	void RandomizeTiles(bool[,] map, double emptyChance) {
 		// Randomize map for cellular automata
 		for (int i = 0; i < Config.MAP_SIZE_X; i++) {
 			for (int j = 0; j < Config.MAP_SIZE_Y; j++) {
@@ -216,7 +216,7 @@ class Level : IModule {
 		}
 	}
 
-	private bool[,] CASimStep(bool[,] map) {
+	bool[,] CASimStep(bool[,] map) {
 		var newMap = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
 		for (int i = 0; i < Config.MAP_SIZE_X; i++) {
 			for (int j = 0; j < Config.MAP_SIZE_Y; j++) {
@@ -236,7 +236,7 @@ class Level : IModule {
 		(-1,-1), (0, -1), (1, -1),
 		(-1, 0), (1, 0),
 		(-1, 1), (0, 1), (1, 1)];
-	private int CountEmptyNeighbors(bool[,] map, int i, int j) {
+	int CountEmptyNeighbors(bool[,] map, int i, int j) {
 		int count = 0;
 		foreach (var (x, y) in _neighbors) {
 			bool isInBounds = i + x >= 0 && i + x < map.GetLength(0)
@@ -247,7 +247,7 @@ class Level : IModule {
 		return count;
 	}
 
-	private static void SpawnTiles(EntityStore world, bool[,] map) {
+	static void SpawnTiles(EntityStore world, bool[,] map) {
 		// Go through the grid and instantiate ECS entities
 		for (int i = 0; i < map.GetLength(0); i++) {
 			for (int j = 0; j < map.GetLength(1); j++) {

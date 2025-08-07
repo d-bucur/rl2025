@@ -9,25 +9,25 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 	internal Entity[,] Tile = new Entity[sizeX, sizeY];
 	internal Entity[,] Character = new Entity[sizeX, sizeY];
 
-	public bool IsInsideGrid(Vec2I pos) {
+	internal bool IsInsideGrid(Vec2I pos) {
 		return pos.X < sizeX && pos.X >= 0
 			&& pos.Y < sizeY && pos.Y >= 0;
 	}
 
-	public void MoveCharacterPos(Vec2I oldPos, Vec2I newPos) {
+	internal void MoveCharacterPos(Vec2I oldPos, Vec2I newPos) {
 		var character = Character[oldPos.X, oldPos.Y];
 		Character[oldPos.X, oldPos.Y] = default;
 		Debug.Assert(Character[oldPos.X, oldPos.Y].IsNull);
 		Character[newPos.X, newPos.Y] = character;
 	}
 
-	public bool IsBlocking(Vec2I pos) {
+	internal bool IsBlocking(Vec2I pos) {
 		if (!IsInsideGrid(pos))
 			return true;
 		return Tile[pos.X, pos.Y].Tags.Has<BlocksFOV>();
 	}
 
-	public bool IsVisible(Vec2I pos) {
+	internal bool IsVisible(Vec2I pos) {
 		if (!IsInsideGrid(pos))
 			return false;
 		return Tile[pos.X, pos.Y].Tags.Has<IsVisible>();
@@ -57,7 +57,7 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		Character[pos.X, pos.Y] = new Entity();
 	}
 
-	// public bool TryMovePos(Vec2I oldPos, Vec2I newPos) {
+	// internal bool TryMovePos(Vec2I oldPos, Vec2I newPos) {
 	// 	if (!IsInsideGrid(newPos))
 	// 		return false;
 	// 	MoveCharacterPos(oldPos, newPos);
@@ -69,12 +69,12 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 
 struct GridPosition : IComponent {
 	internal Vec2I Value;
-	public GridPosition(int x, int y) {
+	internal GridPosition(int x, int y) {
 		Value = new Vec2I(x, y);
 	}
 }
 
-public struct Vec2I {
+struct Vec2I {
 	public int X;
 	public int Y;
 

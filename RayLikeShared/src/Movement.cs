@@ -4,17 +4,17 @@ using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
-internal record struct MovementAction(Entity Entity, int Dx, int Dy) : IComponent { }
-internal record struct RestAction(Entity Entity) : IComponent { }
+record struct MovementAction(Entity Entity, int Dx, int Dy) : IComponent { }
+record struct RestAction(Entity Entity) : IComponent { }
 
-internal class Movement : IModule {
+class Movement : IModule {
     public void Init(EntityStore world) {
         UpdatePhases.ApplyActions.Add(new ProcessMovementSystem());
         // UpdatePhases.ApplyActions.Add(new ProcessRestSystem());
     }
 }
 
-internal class ProcessMovementSystem : QuerySystem<MovementAction> {
+file class ProcessMovementSystem : QuerySystem<MovementAction> {
     public ProcessMovementSystem() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
 
     protected override void OnUpdate() {
@@ -35,7 +35,7 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
         });
     }
 
-    private bool TryPerformMove(MovementAction action) {
+    bool TryPerformMove(MovementAction action) {
         var grid = Singleton.Entity.GetComponent<Grid>();
         ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
         var newPos = gridPos.Value + new Vec2I(action.Dx, action.Dy);
@@ -54,7 +54,7 @@ internal class ProcessMovementSystem : QuerySystem<MovementAction> {
         return true;
     }
 
-    private static bool IsTileFree(Grid grid, Vec2I pos, Entity entt) {
+    static bool IsTileFree(Grid grid, Vec2I pos, Entity entt) {
         var destTile = grid.Tile[pos.X, pos.Y];
         bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
         var destChar = grid.Character[pos.X, pos.Y];

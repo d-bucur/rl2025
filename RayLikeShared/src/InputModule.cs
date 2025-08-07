@@ -5,7 +5,7 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-internal struct InputReceiver : IComponent;
+struct InputReceiver : IComponent;
 
 class InputModule : IModule {
     public void Init(EntityStore world) {
@@ -59,7 +59,7 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
         });
     }
 
-    private static void HandleMovementInput(Entity entt, CommandBuffer cmd, Vec2I keyMovement) {
+    static void HandleMovementInput(Entity entt, CommandBuffer cmd, Vec2I keyMovement) {
         Vec2I prevPos = entt.GetComponent<GridPosition>().Value;
         var newPos = prevPos + keyMovement;
         var grid = Singleton.Entity.GetComponent<Grid>();
@@ -80,7 +80,7 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
         cmd.RemoveTag<CanAct>(entt.Id);
     }
 
-    private static bool IsActionPressed(KeyboardKey key) {
+    static bool IsActionPressed(KeyboardKey key) {
         return Raylib.IsKeyPressed(key) || Raylib.IsKeyDown(key);
     }
 }
@@ -107,17 +107,17 @@ file class GameInputSystem : QuerySystem {
         }
     }
 
-    private static bool IsDevKeyModifier() {
+    static bool IsDevKeyModifier() {
         return Raylib.IsKeyDown(KeyboardKey.LeftShift) || Raylib.IsKeyDown(KeyboardKey.RightShift);
     }
 }
 
 file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
     // TODO Experimental top down view. Billboards should always render above 3d geometry
-    private Vector3 prevOffset = new Vector3(0, 30, 1);
-    private float prevCameraTargetFollow = 1f;
-    // private CameraProjection prevProjection = CameraProjection.Orthographic;
-    // private float prevFov = 10;
+    Vector3 prevOffset = new Vector3(0, 30, 1);
+    float prevCameraTargetFollow = 1f;
+    // CameraProjection prevProjection = CameraProjection.Orthographic;
+    // float prevFov = 10;
 
     protected override void OnUpdate() {
         // Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;

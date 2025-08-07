@@ -5,12 +5,9 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-public struct Cube() : IComponent {
-};
-
-public struct Billboard : IComponent { }
-
-public struct TextureWithSource : IComponent {
+struct Cube() : IComponent { }
+struct Billboard : IComponent { }
+struct TextureWithSource : IComponent {
 	public TextureWithSource(Texture2D texture, Rectangle? source = null) {
 		Texture = texture;
 		Source = source ?? new Rectangle(0, 0, Texture.Width, Texture.Height);
@@ -29,7 +26,7 @@ public struct TextureWithSource : IComponent {
 	}
 };
 
-public struct Mesh : IComponent {
+struct Mesh : IComponent {
 	public Model Model;
 	public Vector3 Offset;
 
@@ -39,7 +36,7 @@ public struct Mesh : IComponent {
 		SetShader();
 	}
 
-	private readonly unsafe void SetShader() {
+	readonly unsafe void SetShader() {
 		// temp disable shaders
 		// for (int i = 0; i < Model.MaterialCount; i++) {
 		// 	Model.Materials[i].Shader = Assets.meshShader;
@@ -47,7 +44,7 @@ public struct Mesh : IComponent {
 	}
 }
 
-public struct ColorComp : IComponent {
+struct ColorComp : IComponent {
 	public Color Value = Color.White;
 	public Color InitialValue = Color.White;
 	public Color? DebugColor = null;
@@ -63,7 +60,7 @@ public struct ColorComp : IComponent {
 	}
 }
 
-public struct IsSeeThrough : ITag;
+struct IsSeeThrough : ITag;
 
 struct Camera() : IComponent {
 	public required Camera3D Value;
@@ -81,7 +78,7 @@ class Render : IModule {
 		// RenderPhases.Render.Add(new RenderInGameUI());
 	}
 
-	private static void InitCamera(EntityStore world) {
+	static void InitCamera(EntityStore world) {
 		Singleton.Camera = world.CreateEntity(
 			new Camera() {
 				Value = new Camera3D(
@@ -95,7 +92,7 @@ class Render : IModule {
 	}
 }
 
-internal class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
+file class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 	protected override void OnUpdate() {
 		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
@@ -110,7 +107,7 @@ internal class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 	}
 }
 
-internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWithSource, ColorComp> {
+file class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWithSource, ColorComp> {
 	public RenderBillboards() => Filter.AnyTags(Tags.Get<IsVisible>());
 
 	protected override void OnUpdate() {
@@ -136,7 +133,7 @@ internal class RenderBillboards : QuerySystem<Position, Scale3, Billboard, Textu
 	}
 }
 
-internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
+file class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 	public RenderMeshes() => Filter.AnyTags(Tags.Get<IsVisible, IsExplored>());
 
 	protected override void OnUpdate() {
@@ -160,19 +157,19 @@ internal class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 		DebugStuff();
 	}
 
-	private static void DebugStuff() {
+	static void DebugStuff() {
 		// Raylib.DrawFPS(4, 4);
 		// Raylib.DrawText("text test", 12, 12, 20, Color.RayWhite);
 		// Raylib.DrawTexture(Assets.rayLogoTexture, 4, 30, Color.White);
 	}
 }
 
-internal class FadeScenery : QuerySystem<GridPosition> {
+file class FadeScenery : QuerySystem<GridPosition> {
 	public FadeScenery() => Filter.AllTags(Tags.Get<Character>());
 
 	const byte FadeAlpha = 200; // range: 0-255
-	private ArchetypeQuery<ColorComp> SeeThroughQuery;
-	private Vec2I[] PositionsBelow = [new Vec2I(0, 1)];
+	ArchetypeQuery<ColorComp> SeeThroughQuery;
+	Vec2I[] PositionsBelow = [new Vec2I(0, 1)];
 
 	protected override void OnAddStore(EntityStore store) {
 		SeeThroughQuery = store.Query<ColorComp>().AllTags(Tags.Get<IsSeeThrough>());
@@ -203,10 +200,10 @@ internal class FadeScenery : QuerySystem<GridPosition> {
 	}
 }
 
-internal class RenderInGameUI : QuerySystem<Energy, Position> {
+file class RenderInGameUI : QuerySystem<Energy, Position> {
 	// buggy rendering of energy bars
-	private RenderTexture2D ForegroundTex;
-	private RenderTexture2D BackgroundTex;
+	RenderTexture2D ForegroundTex;
+	RenderTexture2D BackgroundTex;
 
 	protected override void OnAddStore(EntityStore store) {
 		ForegroundTex = Raylib.LoadRenderTexture(5, 32);
@@ -250,9 +247,9 @@ internal class RenderInGameUI : QuerySystem<Energy, Position> {
 }
 
 // Optimization: could only redraw on change
-internal class RenderMinimap : QuerySystem {
-	private Image MinimapImage;
-	private Texture2D MinimapTexture;
+class RenderMinimap : QuerySystem {
+	Image MinimapImage;
+	Texture2D MinimapTexture;
 
 	protected override void OnAddStore(EntityStore store) {
 		MinimapImage = Raylib.GenImageColor(Config.MAP_SIZE_X, Config.MAP_SIZE_Y, Palette.Transparent);
@@ -279,7 +276,7 @@ internal class RenderMinimap : QuerySystem {
 		);
 	}
 
-	private static unsafe Color GetColor(Grid grid, int x, int y) {
+	static unsafe Color GetColor(Grid grid, int x, int y) {
 		Entity tile = grid.Tile[x, y];
 		if (!tile.Tags.Has<IsExplored>())
 			return Palette.Transparent;

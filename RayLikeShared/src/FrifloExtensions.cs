@@ -1,10 +1,13 @@
-using System.Numerics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
-class LambdaSystems {
+interface IModule {
+	void Init(EntityStore world);
+}
+
+static class LambdaSystems {
 	static internal LambdaSystem1<T1> New<T1>(ForEachEntity<T1> lambda) where T1 : struct, IComponent {
 		return new LambdaSystem1<T1>(lambda);
 	}
@@ -26,11 +29,7 @@ class LambdaSystems {
 	}
 }
 
-interface IModule {
-	public void Init(EntityStore world);
-}
-
-class Singleton {
+static class Singleton {
 	internal static Entity Entity;
 	internal static Entity Camera;
 	internal static Entity Player;

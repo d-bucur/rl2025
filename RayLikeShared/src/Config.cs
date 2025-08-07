@@ -1,6 +1,8 @@
 using Friflo.Engine.ECS;
 
-class Config {
+namespace RayLikeShared;
+
+static class Config {
     internal const float GRID_SIZE = 1;
     internal const int MAP_SIZE_X = 50;
     internal const int MAP_SIZE_Y = 50;
@@ -20,7 +22,7 @@ class Config {
 }
 
 struct Settings() : IComponent {
-    public bool DebugColorsEnabled = false;
-    public bool MinimapEnabled = true;
-    public bool VisibilityHack = false;
+    internal bool DebugColorsEnabled = false;
+    internal bool MinimapEnabled = true;
+    internal bool VisibilityHack = false;
 }

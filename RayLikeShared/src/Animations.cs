@@ -3,8 +3,8 @@ using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
 
-class Animations {
-	public static void Bump(Entity Target, Vector3 startPos, Vector3 endPos, EndCallback<Position>? onEnd = null) {
+static class Animations {
+	internal static void Bump(Entity Target, Vector3 startPos, Vector3 endPos, EndCallback<Position>? onEnd = null) {
 		new Tween(Target).With(
 			(ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
 			startPos,
@@ -19,7 +19,7 @@ class Animations {
 		).RegisterEcs();
 	}
 
-	public static void Move(Entity Target, Entity actionEntt, Vec2I startPos, Vector3 endPos) {
+	internal static void Move(Entity Target, Entity actionEntt, Vec2I startPos, Vector3 endPos) {
 		// xz anim
 		new Tween(Target).With(
 			(ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
