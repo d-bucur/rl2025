@@ -204,7 +204,7 @@ file class MouseSelect : QuerySystem {
 		Vec2I posI = Vec2I.FromWorldPos(intersection);
 		Grid grid = Singleton.Entity.GetComponent<Grid>();
 
-		if (!grid.IsInsideGrid(posI))
+		if (!grid.IsInside(posI))
 			return;
 
 		// Draw outline at tile
@@ -213,7 +213,10 @@ file class MouseSelect : QuerySystem {
 			posI.ToWorldPos() - tileOffset,
 			new Vector3(1.1f, 1f, 1.1f),
 			Raylib.Fade(Color.Red, 0.3f));
+			if (grid.Check<IsExplored>(posI))
+				PathTo(posI);
 		Raylib.EndMode3D();
+
 
 		// Get all entities at position
 		InspectStrings.Clear();
@@ -237,6 +240,14 @@ file class MouseSelect : QuerySystem {
 				GUIValues.TextHeight,
 				3
 			);
+		}
+	}
+
+	private void PathTo(Vec2I posI) {
+		var pathfinder = new Pathfinder(Singleton.Entity.GetComponent<Grid>());
+		pathfinder.Goal(Singleton.Player.GetComponent<GridPosition>().Value);
+		foreach (var p in pathfinder.PathFrom(posI).Skip(1)) {
+			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f, Raylib.Fade(Color.RayWhite, 0.3f));
 		}
 	}
 }

@@ -26,17 +26,21 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 			}
 
 			// If in range of player visibility then set that as a target
-			if (grid.IsVisible(enemyPos.Value)) {
+			if (grid.Check<IsVisible>(enemyPos.Value)) {
 				var playerPos = Singleton.Player.GetComponent<GridPosition>();
 				ai.LastFollowPos = playerPos.Value;
 			}
 
 			if (ai.LastFollowPos.HasValue) {
 				// If has a target go towards that
-				var diff = ai.LastFollowPos.Value - enemyPos.Value;
-				diff = (Math.Clamp(diff.X, -1, 1), Math.Clamp(diff.Y, -1, 1));
-				// TODO proper pathfinding
-				var dest = enemyPos.Value + diff;
+				// TODO pathfinding caching
+				var dest = new Pathfinder(grid)
+					.Goal(ai.LastFollowPos.Value)
+					.PathFrom(enemyPos.Value)
+					.SkipLast(1)
+					.Last();
+				var diff = dest - enemyPos.Value;
+
 				Entity destEntt = grid.Character[dest.X, dest.Y];
 				if (!destEntt.IsNull && !destEntt.Tags.Has<Enemy>()) {
 					TurnsManagement.QueueAction(cmds,
@@ -44,8 +48,8 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 				}
 				else {
 					var action = new MovementAction(enemyEntt, diff.X, diff.Y);
-					TurnsManagement.QueueAction(cmds, action, enemyEntt.Tags.Has<IsVisible>());
-					// Console.WriteLine($"{enemyEntt.GetComponent<Name>().Value} moving towards {ai.LastFollowPos.Value}");
+					bool isActionBlocking = enemyEntt.Tags.Has<IsVisible>();
+					TurnsManagement.QueueAction(cmds, action, isActionBlocking);
 				}
 			}
 			else {

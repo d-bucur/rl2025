@@ -95,7 +95,7 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 					var neighPos = currPos + neighDir;
 					if (MathF.Round((neighPos - source.Value).ToVector2().Length()) >= vision.Range)
 						continue;
-					if (!grid.IsInsideGrid(neighPos)
+					if (!grid.IsInside(neighPos)
 						|| visited.Contains(neighPos)
 						|| fovBlocked.Contains(neighPos))
 						continue;

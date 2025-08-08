@@ -15,7 +15,7 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		internal List<Entity> Value = new();
 	}
 
-	internal readonly bool IsInsideGrid(Vec2I pos) {
+	internal readonly bool IsInside(Vec2I pos) {
 		return pos.X < sizeX && pos.X >= 0
 			&& pos.Y < sizeY && pos.Y >= 0;
 	}
@@ -28,27 +28,27 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 	}
 
 	internal readonly bool IsBlocking(Vec2I pos) {
-		if (!IsInsideGrid(pos))
+		if (!IsInside(pos))
 			return true;
 		return Tile[pos.X, pos.Y].Tags.Has<BlocksFOV>();
 	}
 
-	internal readonly bool IsVisible(Vec2I pos) {
-		if (!IsInsideGrid(pos))
+	internal readonly bool Check<T>(Vec2I pos) where T : struct, ITag {
+		if (!IsInside(pos))
 			return false;
-		return Tile[pos.X, pos.Y].Tags.Has<IsVisible>();
+		return Tile[pos.X, pos.Y].Tags.Has<T>();
 	}
 
 	// Used only for debugging
 	internal void SetDebugColor(Vec2I pos, Raylib_cs.Color color) {
-		if (IsInsideGrid(pos)) {
+		if (IsInside(pos)) {
 			ref var colorComp = ref Tile[pos.X, pos.Y].GetComponent<ColorComp>();
 			colorComp.DebugColor = color;
 		}
 	}
 
 	internal void MarkVisible(Vec2I pos, CommandBuffer cmds) {
-		if (!IsInsideGrid(pos))
+		if (!IsInside(pos))
 			return;
 		Entity tile = Tile[pos.X, pos.Y];
 		if (!tile.IsNull) {
@@ -109,4 +109,6 @@ struct Vec2I {
 	public static Vec2I FromWorldPos(Vector3 v) => new Vec2I((int)MathF.Round(v.X / Config.GRID_SIZE), (int)MathF.Round(v.Z / Config.GRID_SIZE));
 
 	public override string ToString() => $"V2I({X}, {Y})";
+
+	public static readonly Vec2I Zero = new(0, 0);
 }

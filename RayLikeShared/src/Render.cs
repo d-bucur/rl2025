@@ -191,7 +191,7 @@ file class FadeScenery : QuerySystem<GridPosition> {
 		Query.ForEachEntity((ref GridPosition pos, Entity entt) => {
 			foreach (var delta in PositionsBelow) {
 				var posBelow = pos.Value + delta;
-				if (!grid.IsInsideGrid(posBelow))
+				if (!grid.IsInside(posBelow))
 					return;
 
 				var tileBelow = grid.Tile[posBelow.X, posBelow.Y];

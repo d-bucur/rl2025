@@ -41,7 +41,7 @@ file class ProcessMovementSystem : QuerySystem<MovementAction> {
         var newPos = gridPos.Value + new Vec2I(action.Dx, action.Dy);
 
         // Check if move is valid
-        if (!grid.IsInsideGrid(newPos))
+        if (!grid.IsInside(newPos))
             return false;
 
         if (!IsTileFree(grid, newPos, action.Entity))

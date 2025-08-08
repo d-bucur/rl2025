@@ -39,6 +39,7 @@ public class Game {
 			new Level(),
 			new Main(),
 			new TurnsManagement(),
+			new PathfinderModule(),
 			new InputModule(),
 			new EnemyAIModule(),
 			new Movement(),
