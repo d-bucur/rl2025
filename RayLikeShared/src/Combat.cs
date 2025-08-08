@@ -26,7 +26,7 @@ struct Fighter : IComponent {
 }
 record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IComponent { }
 
-struct DeathSignal { }
+struct DeathSignal;
 
 class Combat : IModule {
 	public void Init(EntityStore world) {
@@ -34,14 +34,29 @@ class Combat : IModule {
 	}
 
 	internal static void EnemyDeath(Signal<DeathSignal> signal) {
-		Singleton.Entity.GetComponent<Grid>()
-			.RemoveCharacter(signal.Entity.GetComponent<GridPosition>().Value);
-		signal.Entity.DeleteEntity();
+		TurnToCorpse(signal.Entity);
 	}
 
 	internal static void PlayerDeath(Signal<DeathSignal> signal) {
-		signal.Entity.RemoveComponent<InputReceiver>();
-		MessageLog.Print($"You are dead!", Color.Red);
+		TurnToCorpse(signal.Entity);
+	}
+
+	private static void TurnToCorpse(Entity entity) {
+		Vec2I pos = entity.GetComponent<GridPosition>().Value;
+		Grid grid = Singleton.Entity.GetComponent<Grid>();
+		grid.RemoveCharacter(pos);
+		grid.AddOther(entity, pos);
+
+		entity.Remove<EnemyAI, InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
+		entity.AddTag<Corpse>();
+		ref var name = ref entity.GetComponent<Name>();
+		name.Value = $"Corpse of {name.Value}";
+
+		if (entity.HasComponent<Billboard>()) {
+			ref var bill = ref entity.GetComponent<Billboard>();
+			bill.Up = new Vector3(0, 0, -1);
+		}
+		entity.AddComponent(new RotationSingle(Random.Shared.Next(15, 25)));
 	}
 }
 

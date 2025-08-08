@@ -93,8 +93,10 @@ public class Game {
 		aot.RegisterComponent<Name>();
 		aot.RegisterComponent<EnemyAI>();
 		aot.RegisterComponent<MessageLog>();
+		aot.RegisterComponent<RotationSingle>();
 
 		aot.RegisterTag<Character>();
+		aot.RegisterTag<Corpse>();
 		aot.RegisterTag<Player>();
 		aot.RegisterTag<Enemy>();
 		aot.RegisterTag<BlocksFOV>();

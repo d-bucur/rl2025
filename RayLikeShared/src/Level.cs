@@ -42,23 +42,21 @@ class Level : IModule {
 			new InputReceiver(),
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
+			new RotationSingle(0f),
 			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
-			// new Cube() { Color = Palette.Colors[0] },
-			// new Mesh(Assets.characterModel),
-			// new Billboard(), new TextureWithSource(Assets.rayLogoTexture),
 			new Billboard(), new TextureWithSource(Assets.heroesTexture) {
 				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(2, 2)
 			},
 			new ColorComp(),
-			new Energy() { GainPerTick = 5 },
-			new VisionSource() { Range = 6 },
-			new Fighter(10, 2, 3),
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 		// max 10 components per method...
 		Singleton.Player.Add(
-			new Name { Value = "Hero" }
+			new Name { Value = "Hero" },
+			new Energy() { GainPerTick = 5 },
+			new VisionSource() { Range = 6 },
+			new Fighter(10, 2, 3)
 		);
 		Singleton.Player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
 	}
@@ -82,6 +80,7 @@ class Level : IModule {
 			var entt = world.CreateEntity(
 				new GridPosition(pos.X, pos.Y),
 				new Position(pos.X, 0, pos.Y),
+				new RotationSingle(0f),
 				new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
 				new Billboard(),
 				new ColorComp(),

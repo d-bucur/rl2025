@@ -6,7 +6,9 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 struct Cube() : IComponent { }
-struct Billboard : IComponent { }
+struct Billboard : IComponent {
+	public Vector3? Up;
+}
 struct TextureWithSource : IComponent {
 	public TextureWithSource(Texture2D texture, Rectangle? source = null) {
 		Texture = texture;
@@ -109,7 +111,7 @@ file class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 	}
 }
 
-file class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWithSource, ColorComp> {
+file class RenderBillboards : QuerySystem<Position, RotationSingle, Billboard, TextureWithSource, ColorComp> {
 	public RenderBillboards() => Filter.AnyTags(Tags.Get<IsVisible>());
 
 	protected override void OnUpdate() {
@@ -120,13 +122,14 @@ file class RenderBillboards : QuerySystem<Position, Scale3, Billboard, TextureWi
 		// camera up vector is second row of view matrix
 		var cameraUp = new Vector3(matrix.M21, matrix.M22, matrix.M23);
 
-		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Billboard billboard, ref TextureWithSource tex, ref ColorComp color, Entity e) => {
+		Query.ForEachEntity((ref Position pos, ref RotationSingle rot, ref Billboard billboard, ref TextureWithSource tex, ref ColorComp color, Entity e) => {
 			Raylib.DrawBillboardPro(
 				camera,
 				tex.Texture,
 				tex.Source,
 				pos.value,
-				cameraUp, Vector2.One, Vector2.UnitX, 0, color.Value
+				billboard.Up ?? cameraUp,
+				Vector2.One, Vector2.UnitX, rot.Value, color.Value
 			);
 		});
 

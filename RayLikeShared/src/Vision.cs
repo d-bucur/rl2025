@@ -161,15 +161,15 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 	}
 
 	// Old, simple visibility algorithm marking all tiles in a square radius around the source
-	void SimpleVisionWalk(GridPosition source, VisionSource vision) {
-		var grid = Singleton.Entity.GetComponent<Grid>();
-		for (int i = -vision.Range; i < vision.Range + 1; i++) {
-			for (int j = -vision.Range; j < vision.Range + 1; j++) {
-				var pos = source.Value + new Vec2I(i, j);
-				grid.MarkVisible(pos, CommandBuffer);
-			}
-		}
-	}
+	// void SimpleVisionWalk(GridPosition source, VisionSource vision) {
+	// 	var grid = Singleton.Entity.GetComponent<Grid>();
+	// 	for (int i = -vision.Range; i < vision.Range + 1; i++) {
+	// 		for (int j = -vision.Range; j < vision.Range + 1; j++) {
+	// 			var pos = source.Value + new Vec2I(i, j);
+	// 			grid.MarkVisible(pos, CommandBuffer);
+	// 		}
+	// 	}
+	// }
 
 	internal static void MarkAllTiles<T>() where T : struct, ITag {
 		var grid = Singleton.Entity.GetComponent<Grid>();

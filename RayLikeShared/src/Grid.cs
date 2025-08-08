@@ -6,10 +6,16 @@ namespace RayLikeShared;
 
 // Similar to GameMap in tutorial
 struct Grid(int sizeX, int sizeY) : IComponent {
+	// Combine into one array with a struct?
 	internal Entity[,] Tile = new Entity[sizeX, sizeY];
 	internal Entity[,] Character = new Entity[sizeX, sizeY];
+	internal Other?[,] Others = new Other?[sizeX, sizeY];
 
-	internal bool IsInsideGrid(Vec2I pos) {
+	internal struct Other() {
+		internal List<Entity> Value = new();
+	}
+
+	internal readonly bool IsInsideGrid(Vec2I pos) {
 		return pos.X < sizeX && pos.X >= 0
 			&& pos.Y < sizeY && pos.Y >= 0;
 	}
@@ -21,13 +27,13 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		Character[newPos.X, newPos.Y] = character;
 	}
 
-	internal bool IsBlocking(Vec2I pos) {
+	internal readonly bool IsBlocking(Vec2I pos) {
 		if (!IsInsideGrid(pos))
 			return true;
 		return Tile[pos.X, pos.Y].Tags.Has<BlocksFOV>();
 	}
 
-	internal bool IsVisible(Vec2I pos) {
+	internal readonly bool IsVisible(Vec2I pos) {
 		if (!IsInsideGrid(pos))
 			return false;
 		return Tile[pos.X, pos.Y].Tags.Has<IsVisible>();
@@ -50,6 +56,10 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 			Entity character = Character[pos.X, pos.Y];
 			if (!character.IsNull)
 				cmds.AddTag<IsVisible>(character.Id);
+			var other = Others[pos.X, pos.Y];
+			foreach (var e in other?.Value ?? []) {
+				cmds.AddTag<IsVisible>(e.Id);
+			}
 		}
 	}
 
@@ -57,12 +67,14 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		Character[pos.X, pos.Y] = new Entity();
 	}
 
-	// internal bool TryMovePos(Vec2I oldPos, Vec2I newPos) {
-	// 	if (!IsInsideGrid(newPos))
-	// 		return false;
-	// 	MoveCharacterPos(oldPos, newPos);
-	// 	return true;
-	// }
+	internal void AddOther(Entity entity, Vec2I pos) {
+		ref var other = ref Others[pos.X, pos.Y];
+		if (!other.HasValue) {
+			other = new Other();
+		}
+		other.Value.Value.Add(entity);
+	}
+
 	internal static readonly Vec2I[] NeighborsCardinal = [(0, -1), (-1, 0), (1, 0), (0, 1)];
 	internal static readonly Vec2I[] NeighborsDiagonal = [(-1, -1), (1, -1), (-1, 1), (1, 1)];
 }

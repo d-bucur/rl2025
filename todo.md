@@ -1,9 +1,9 @@
 - pathfindding
-- corpses
 - damage overhead fx
 - event handlers for different game states?
 - log history
 - in game health bars
+- click mouse to move to position
 
 ## Other
 - show vision colors in minimap?

@@ -58,6 +58,8 @@ static class GUI {
 file static class GUIValues {
 	public const int HealthHeight = 30;
 	public const int Padding = 10;
+	public const int TextHeight = 20;
+	public const int LineHeight = 25;
 }
 
 file class RenderHealth : QuerySystem<Fighter> {
@@ -83,32 +85,28 @@ file class RenderHealth : QuerySystem<Fighter> {
 
 file class RenderMessageLog : QuerySystem<MessageLog> {
 	protected override void OnUpdate() {
-		int TextHeight = 20;
-		int LineHeight = 25;
 		Query.ForEachEntity((ref MessageLog log, Entity entt) => {
-			int pos = GUIValues.HealthHeight + GUIValues.Padding + LineHeight;
+			int pos = GUIValues.HealthHeight + GUIValues.Padding + GUIValues.LineHeight;
 			for (int i = Math.Max(0, log.Messages.Count - log.DisplayCount); i < log.Messages.Count; i++) {
 				var message = log.Messages[i];
-				Raylib.DrawText(message.Text, GUIValues.Padding, pos, TextHeight, message.Color);
-				pos += LineHeight;
+				Raylib.DrawText(message.Text, GUIValues.Padding, pos, GUIValues.TextHeight, message.Color);
+				pos += GUIValues.LineHeight;
 			}
 		});
 	}
 }
 
-file class RenderGameOver : QuerySystem<Fighter> {
-	public RenderGameOver() => Filter.AllTags(Tags.Get<Player>());
+file class RenderGameOver : QuerySystem<Name> {
+	public RenderGameOver() => Filter.AllTags(Tags.Get<Player, Corpse>());
 
 	protected override void OnUpdate() {
-		Query.ForEachEntity((ref Fighter fighter, Entity playerEntt) => {
-			if (fighter.HP <= 0) {
-				GUI.RenderText(
-					"You're dead!",
-					Raylib.GetScreenWidth() / 2 - 140,
-					Raylib.GetScreenHeight() / 2 + 100,
-					50
-				);
-			}
+		Query.ForEachEntity((ref Name name, Entity playerEntt) => {
+			GUI.RenderText(
+				"You're dead!",
+				Raylib.GetScreenWidth() / 2 - 140,
+				Raylib.GetScreenHeight() / 2 + 100,
+				50
+			);
 		});
 	}
 }
@@ -160,38 +158,56 @@ file class RenderMinimap : QuerySystem {
 }
 
 file class MouseSelect : QuerySystem {
+	List<string> InspectStrings = new();
+
 	protected override void OnUpdate() {
 		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
 		var ray = Raylib.GetScreenToWorldRay(Raylib.GetMousePosition(), camera);
 
-		if (Math.Abs(ray.Direction.Y) > 1e-6) {
-			Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
-			float t = -ray.Position.Y / ray.Direction.Y;
-			Vector3 intersection = ray.Position + t * ray.Direction + tileOffset;
-			Vec2I posI = Vec2I.FromWorldPos(intersection);
-			Grid grid = Singleton.Entity.GetComponent<Grid>();
+		// Avoid div0
+		if (Math.Abs(ray.Direction.Y) < 1e-6)
+			return;
 
-			if (!grid.IsInsideGrid(posI))
-				return;
+		// Get plane intersection
+		Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
+		float t = -ray.Position.Y / ray.Direction.Y;
+		Vector3 intersection = ray.Position + t * ray.Direction + tileOffset;
+		Vec2I posI = Vec2I.FromWorldPos(intersection);
+		Grid grid = Singleton.Entity.GetComponent<Grid>();
 
-			Raylib.BeginMode3D(camera);
-			Raylib.DrawCubeWiresV(
-				posI.ToWorldPos() - tileOffset,
-				new Vector3(1.1f, 1f, 1.1f),
-				Raylib.Fade(Color.Red, 0.3f));
-			Raylib.EndMode3D();
+		if (!grid.IsInsideGrid(posI))
+			return;
 
-			var charAtPos = grid.Character[posI.X, posI.Y];
-			if (!charAtPos.IsNull) {
-				string name = charAtPos.GetComponent<Name>().Value;
-				var fighter = charAtPos.GetComponent<Fighter>();
-				GUI.RenderText(
-					$"{name} {fighter.HP}/{fighter.MaxHP} HP",
-					GUIValues.Padding,
-					Raylib.GetScreenHeight() - 20 - GUIValues.Padding,
-					20
-				);
-			}
+		// Draw outline at tile
+		Raylib.BeginMode3D(camera);
+		Raylib.DrawCubeWiresV(
+			posI.ToWorldPos() - tileOffset,
+			new Vector3(1.1f, 1f, 1.1f),
+			Raylib.Fade(Color.Red, 0.3f));
+		Raylib.EndMode3D();
+
+		// Get all entities at position
+		InspectStrings.Clear();
+		var charAtPos = grid.Character[posI.X, posI.Y];
+		if (!charAtPos.IsNull) {
+			string name = charAtPos.GetComponent<Name>().Value;
+			var fighter = charAtPos.GetComponent<Fighter>();
+			InspectStrings.Add($"{name} {fighter.HP}/{fighter.MaxHP} HP");
+		}
+
+		var others = grid.Others[posI.X, posI.Y];
+		foreach (var other in others?.Value ?? [])
+			InspectStrings.Add($"{other.GetComponent<Name>().Value}");
+
+		// Render text of objects at position
+		for (int i = 0; i < InspectStrings.Count; i++) {
+			GUI.RenderText(
+				InspectStrings[i],
+				GUIValues.Padding,
+				Raylib.GetScreenHeight() - GUIValues.TextHeight - GUIValues.Padding - i * GUIValues.LineHeight,
+				GUIValues.TextHeight
+			);
 		}
 	}
+
 }
