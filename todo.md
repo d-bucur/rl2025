@@ -1,6 +1,7 @@
 - pathfindding
 - event handlers for different game states?
 - log history
+- revisit enemy and room generation
 - in game health bars
 - click mouse to move to position
 

@@ -29,7 +29,6 @@ struct MessageLog() : IComponent {
 struct TextFX : IComponent {
 	public string Text;
 	public RenderTexture2D RenderTex;
-	// TODO release texture to pool on destroy
 }
 
 class GuiModule : IModule {
@@ -66,6 +65,7 @@ static class GUI {
 		var renderTex = Raylib.LoadRenderTexture(Size, Size);
 		// Draw text to texture
 		Raylib.BeginTextureMode(renderTex);
+		Raylib.ClearBackground(new Color(0, 0, 0, 0));
 		RenderText($"{damage}", 0, 0, Size, 1, color);
 		Raylib.EndTextureMode();
 
@@ -78,7 +78,9 @@ static class GUI {
 			startPos,
 			startScale
 		);
-		Animations.DamageFx(fxEntt, startPos, startScale, dir);
+		Animations.DamageFx(fxEntt, startPos, startScale, dir,
+			() => Raylib.UnloadRenderTexture(fxEntt.GetComponent<TextFX>().RenderTex)
+		);
 	}
 }
 
@@ -249,6 +251,7 @@ file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 			Raylib.DrawBillboardPro(
 				camera.Value,
 				fx.RenderTex.Texture,
+				// height has to be inverted because weird opengl stuff
 				new Rectangle(0, 0, fx.RenderTex.Texture.Width, -fx.RenderTex.Texture.Height),
 				pos.value, camera.GetUpVec(),
 				new Vector2(scale.x, scale.z), new Vector2(0.5f, 0), 0, Color.Orange

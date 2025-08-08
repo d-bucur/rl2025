@@ -52,7 +52,7 @@ static class Animations {
 		// ).RegisterEcs();
 	}
 
-	internal static void DamageFx(Entity fxEntt, Position startPos, Scale3 startScale, Vector3 dir) {
+	internal static void DamageFx(Entity fxEntt, Position startPos, Scale3 startScale, Vector3 dir, Action? onEnd = null) {
 		dir *= 0.75f;
 		const float halfTime = 0.25f;
 		// TODO should do parallel tween to handle all these
@@ -78,7 +78,10 @@ static class Animations {
 			(ref Position pos, float v) => pos.y = v,
 			startPos.value.Y, startPos.value.Y + 0.5f,
 			halfTime, Ease.QuartOut, Tween.LerpFloat,
-			(ref Position p) => fxEntt.DeleteEntity(),
+			(ref Position p) => {
+				onEnd?.Invoke();
+				fxEntt.DeleteEntity();
+			},
 			AutoReverse: true
 		).RegisterEcs();
 	}
