@@ -44,8 +44,8 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 				}
 				else {
 					var action = new MovementAction(enemyEntt, diff.X, diff.Y);
-					TurnsManagement.QueueAction(cmds, action, false);
-					Console.WriteLine($"{enemyEntt.GetComponent<Name>().Value} moving towards {ai.LastFollowPos.Value}");
+					TurnsManagement.QueueAction(cmds, action, enemyEntt.Tags.Has<IsVisible>());
+					// Console.WriteLine($"{enemyEntt.GetComponent<Name>().Value} moving towards {ai.LastFollowPos.Value}");
 				}
 			}
 			else {
@@ -55,7 +55,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 					var action = new MovementAction(
 						enemyEntt, Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)
 					);
-					TurnsManagement.QueueAction(cmds, action, false);
+					TurnsManagement.QueueAction(cmds, action, enemyEntt.Tags.Has<IsVisible>());
 				}
 			}
 

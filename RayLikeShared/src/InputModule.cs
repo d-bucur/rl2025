@@ -113,7 +113,6 @@ file class GameInputSystem : QuerySystem {
 }
 
 file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
-    // TODO Experimental top down view. Billboards should always render above 3d geometry
     Vector3 prevOffset = new Vector3(0, 30, 1);
     float prevCameraTargetFollow = 1f;
     // CameraProjection prevProjection = CameraProjection.Orthographic;

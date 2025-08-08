@@ -94,6 +94,7 @@ public class Game {
 		aot.RegisterComponent<EnemyAI>();
 		aot.RegisterComponent<MessageLog>();
 		aot.RegisterComponent<RotationSingle>();
+		aot.RegisterComponent<TextFX>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();

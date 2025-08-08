@@ -56,7 +56,7 @@ class Level : IModule {
 			new Name { Value = "Hero" },
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
-			new Fighter(10, 2, 3)
+			new Fighter(20, 2, 3)
 		);
 		Singleton.Player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
 	}

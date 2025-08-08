@@ -1,5 +1,4 @@
 // copied with minor modifications from https://github.com/d-bucur/flecs-survivors/blob/main/src/Tween.cs
-
 using Friflo.Engine.ECS;
 
 interface IPropertyTween {
@@ -11,7 +10,12 @@ interface IPropertyTween {
 delegate void ComponentSetter<C, P>(ref C component, P property);
 delegate void EndCallback<C>(ref C comp);
 
-record struct PropertyTween<C, P> (
+// TODO change API for better composition in helper methods:
+// - basic params that user has to set using <P>: From, To, etc. Passed in constructor
+// - params that can be added by helper methods that use <C>: Setter, LerpFunc.
+// - optional params can be set using struct field syntax. can have an extra end CB without params
+// should allow for easier to use call sites, like DOTween
+record struct PropertyTween<C, P>(
 	ComponentSetter<C, P> Setter,
 	P From,
 	P To,
@@ -25,29 +29,30 @@ record struct PropertyTween<C, P> (
 	float CurrentTime = 0;
 	int CurrentRepetitions = 0;
 	readonly int Repetitions = AutoReverse ? Repetitions * 2 : Repetitions;
+	bool IsReversed = false;
 
 	public void Tick(float delta, Entity ent) {
 		if (IsFinished()) return;
 		CurrentTime += delta;
-		var t = EasingFunc(CurrentTime / RunTime);
+		float x = CurrentTime / RunTime;
+		var t = IsReversed ? EasingFunc(1 - x) : EasingFunc(x);
 		var val = LerpFunc(From, To, t);
 		ref var comp = ref ent.GetComponent<C>();
 		Setter(ref comp, val);
 		if (CurrentTime > RunTime) {
 			CurrentRepetitions++;
-			if (AutoReverse) {
-				Reverse();
-			}
 			if (ShouldRepeat()) {
 				CurrentTime = 0;
+				if (AutoReverse) {
+					Reverse();
+				}
 			}
 		}
 	}
 
 	void Reverse() {
-		// Not a proper flip
 		CurrentTime = 0;
-		(To, From) = (From, To);
+		IsReversed = !IsReversed;
 	}
 
 	readonly bool ShouldRepeat() {
@@ -59,6 +64,8 @@ record struct PropertyTween<C, P> (
 	}
 
 	public void Finish(Entity ent) {
+		// Make sure final value is set
+		Setter(ref ent.GetComponent<C>(), IsReversed ? From : To);
 		OnEnd?.Invoke(ref ent.GetComponent<C>());
 	}
 }
@@ -119,7 +126,7 @@ record struct Tween(Entity target) : IComponent {
 	#endregion
 
 	#region typed properties
-	public float LerpFloat(float v0, float v1, float t) {
+	public static float LerpFloat(float v0, float v1, float t) {
 		return v0 + t * (v1 - v0);
 	}
 	public Tween With<C>(
@@ -170,4 +177,22 @@ public class Ease {
 		return -(MathF.Cos(MathF.PI * x) - 1) / 2;
 	}
 	#endregion
+}
+
+// Project specific convenience methods
+static class TweenExtensions {
+	public static Tween TweenPosition(this Entity entt,
+		System.Numerics.Vector3 From,
+		System.Numerics.Vector3 To,
+		float Time,
+		Func<float, float> EasingFunc,
+		EndCallback<Position>? OnEnd = null,
+		bool AutoReverse = false,
+		int Repetitions = 1
+	) {
+		return new Tween(entt).With(
+			(ref Position pos, System.Numerics.Vector3 v) => pos.value = v,
+			From, To, Time, EasingFunc, System.Numerics.Vector3.Lerp, OnEnd, AutoReverse, Repetitions
+		);
+	}
 }

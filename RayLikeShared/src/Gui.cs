@@ -12,7 +12,7 @@ struct MessageLog() : IComponent {
 	}
 	public List<Message> Messages = new();
 	public int MaxCount = 200;
-	public int DisplayCount = 4;
+	public int DisplayCount = 3;
 
 	public void Add(string message, Color? color = null) {
 		Messages.Add(new Message {
@@ -26,6 +26,12 @@ struct MessageLog() : IComponent {
 	}
 }
 
+struct TextFX : IComponent {
+	public string Text;
+	public RenderTexture2D RenderTex;
+	// TODO release texture to pool on destroy
+}
+
 class GuiModule : IModule {
 	public void Init(EntityStore world) {
 		Singleton.Entity.AddComponent(new MessageLog());
@@ -35,23 +41,44 @@ class GuiModule : IModule {
 		RenderPhases.Render.Add(new RenderGameOver());
 		RenderPhases.Render.Add(new RenderMessageLog());
 		RenderPhases.Render.Add(new MouseSelect());
+		RenderPhases.Render.Add(new RenderDamageFx());
 	}
 }
 
 static class GUI {
-	internal static void RenderText(string text, int posX, int posY, int FontSize, int offset = 5) {
+	internal static void RenderText(string text, int posX, int posY, int FontSize, int offset = 5, Color? fgColor = null, Color? bgColor = null) {
 		Raylib.DrawText(
 			text,
 			posX + offset,
 			posY + offset,
-			FontSize, Color.Black
+			FontSize, bgColor ?? Raylib.Fade(Color.Black, 0.75f)
 		);
 		Raylib.DrawText(
 			text,
 			posX,
 			posY,
-			FontSize, Color.White
+			FontSize, fgColor ?? Color.White
 		);
+	}
+
+	internal static void SpawnDamageFx(int damage, Position originPos, Color color, Vector3 dir) {
+		const int Size = 20;
+		var renderTex = Raylib.LoadRenderTexture(Size, Size);
+		// Draw text to texture
+		Raylib.BeginTextureMode(renderTex);
+		RenderText($"{damage}", 0, 0, Size, 1, color);
+		Raylib.EndTextureMode();
+
+		Vector3 fxPos = originPos.value + new Vector3(0, 1f, 0);
+		Position startPos = new(fxPos.X, fxPos.Y, fxPos.Z);
+		Scale3 startScale = new(0, 0, 0);
+		var fxEntt = Singleton.World.CreateEntity(
+			new TextFX() { Text = $"{damage}", RenderTex = renderTex },
+			new Billboard(),
+			startPos,
+			startScale
+		);
+		Animations.DamageFx(fxEntt, startPos, startScale, dir);
 	}
 }
 
@@ -205,9 +232,30 @@ file class MouseSelect : QuerySystem {
 				InspectStrings[i],
 				GUIValues.Padding,
 				Raylib.GetScreenHeight() - GUIValues.TextHeight - GUIValues.Padding - i * GUIValues.LineHeight,
-				GUIValues.TextHeight
+				GUIValues.TextHeight,
+				3
 			);
 		}
 	}
+}
 
+file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
+	protected override void OnUpdate() {
+		Query.ForEachEntity((ref TextFX fx, ref Billboard bill, ref Position pos, ref Scale3 scale, Entity entt) => {
+			Camera camera = Singleton.Camera.GetComponent<Camera>();
+			Raylib.BeginMode3D(camera.Value);
+			Raylib.BeginShaderMode(Assets.billboardShader);
+
+			Raylib.DrawBillboardPro(
+				camera.Value,
+				fx.RenderTex.Texture,
+				new Rectangle(0, 0, fx.RenderTex.Texture.Width, -fx.RenderTex.Texture.Height),
+				pos.value, camera.GetUpVec(),
+				new Vector2(scale.x, scale.z), new Vector2(0.5f, 0), 0, Color.Orange
+			);
+
+			Raylib.EndShaderMode();
+			Raylib.EndMode3D();
+		});
+	}
 }

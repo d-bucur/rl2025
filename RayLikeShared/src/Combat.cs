@@ -69,10 +69,11 @@ file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 		Query.ForEachEntity((ref MeleeAction action, Entity actionEntt) => {
 			CommandBuffer.RemoveTag<IsActionWaiting>(actionEntt.Id);
 			Vector3 startPos = action.Source.GetComponent<GridPosition>().Value.ToWorldPos();
+			Vector3 actionDir = new(action.Dx, 0, action.Dy);
 			Animations.Bump(
 				action.Source,
 				startPos,
-				startPos + new Vector3(action.Dx, 0, action.Dy) / 2,
+				startPos + actionDir / 2,
 				(ref Position p) => actionEntt.AddTag<IsActionFinished>()
 			);
 
@@ -91,6 +92,8 @@ file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 				}
 				else
 					MessageLog.Print($"{desc} for {damage} HP", color);
+				GUI.SpawnDamageFx(damage, action.Target.GetComponent<Position>(),
+					isTargetPlayer ? Color.Red : Color.Orange, actionDir);
 			}
 			else
 				MessageLog.Print($"{desc} but does no damage", color);

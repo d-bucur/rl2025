@@ -66,6 +66,12 @@ struct IsSeeThrough : ITag;
 
 struct Camera() : IComponent {
 	public required Camera3D Value;
+
+	public Vector3 GetUpVec() {
+		// camera up vector is second row of view matrix
+		var matrix = Raylib.GetCameraMatrix(Value);
+		return new Vector3(matrix.M21, matrix.M22, matrix.M23);
+	}
 }
 
 class Render : IModule {
@@ -107,7 +113,6 @@ file class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 		});
 
 		Raylib.EndMode3D();
-
 	}
 }
 
@@ -116,19 +121,16 @@ file class RenderBillboards : QuerySystem<Position, RotationSingle, Billboard, T
 
 	protected override void OnUpdate() {
 		Raylib.BeginShaderMode(Assets.billboardShader);
-		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
-		Raylib.BeginMode3D(camera);
-		var matrix = Raylib.GetCameraMatrix(camera);
-		// camera up vector is second row of view matrix
-		var cameraUp = new Vector3(matrix.M21, matrix.M22, matrix.M23);
+		Camera camera = Singleton.Camera.GetComponent<Camera>();
+		Raylib.BeginMode3D(camera.Value);
 
 		Query.ForEachEntity((ref Position pos, ref RotationSingle rot, ref Billboard billboard, ref TextureWithSource tex, ref ColorComp color, Entity e) => {
 			Raylib.DrawBillboardPro(
-				camera,
+				camera.Value,
 				tex.Texture,
 				tex.Source,
 				pos.value,
-				billboard.Up ?? cameraUp,
+				billboard.Up ?? camera.GetUpVec(),
 				Vector2.One, Vector2.UnitX, rot.Value, color.Value
 			);
 		});
@@ -206,7 +208,7 @@ file class FadeScenery : QuerySystem<GridPosition> {
 }
 
 file class RenderInGameUI : QuerySystem<Energy, Position> {
-	// buggy rendering of energy bars
+	// TODO buggy rendering of energy bars
 	RenderTexture2D ForegroundTex;
 	RenderTexture2D BackgroundTex;
 
