@@ -60,7 +60,7 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
         Vec2I prevPos = entt.GetComponent<GridPosition>().Value;
         var newPos = prevPos + keyMovement;
         var grid = Singleton.Entity.GetComponent<Grid>();
-        if (grid.BlocksPathing(newPos)) {
+        if (grid.CheckTile<BlocksPathing>(newPos)) {
             // TODO Should turn into blocking action
             Animations.Bump(entt, prevPos.ToWorldPos(), prevPos.ToWorldPos() + keyMovement.ToWorldPos() * 0.3f);
             return;
