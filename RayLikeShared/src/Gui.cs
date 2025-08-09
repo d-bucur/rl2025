@@ -213,7 +213,7 @@ file class MouseSelect : QuerySystem {
 			mousePosI.ToWorldPos() - tileOffset,
 			new Vector3(1.1f, 1f, 1.1f),
 			Raylib.Fade(Color.Red, 0.3f));
-		if (grid.Check<IsExplored>(mousePosI))
+		if (grid.CheckTile<IsExplored>(mousePosI))
 			PathTo(mousePosI);
 		Raylib.EndMode3D();
 
@@ -249,7 +249,8 @@ file class MouseSelect : QuerySystem {
 			pathfinder.Reset();
 		IEnumerable<Vec2I> path = pathfinder.PathFrom(posI);
 		foreach (var p in path.SkipLast(1)) {
-			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f, Raylib.Fade(Color.Green, 0.3f));
+			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f,
+				Raylib.Fade(Color.RayWhite, 0.3f));
 		}
 	}
 }

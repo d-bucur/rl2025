@@ -73,6 +73,7 @@ class Level : IModule {
 		var monsterTypes = Enum.GetValues(typeof(MonsterType));
 
 		for (int i = 0; i <= Config.MAX_ENEMIES_PER_ROOM; i++) {
+			// TODO BUG need to check tile for walls!
 			var pos = new Vec2I(Random.Shared.Next(room.StartX + 1, room.EndX), Random.Shared.Next(room.StartY + 1, room.EndY));
 			if (!grid.Character[pos.X, pos.Y].IsNull)
 				continue;
@@ -86,6 +87,7 @@ class Level : IModule {
 				new Billboard(),
 				new ColorComp(),
 				new EnemyAI(),
+				// new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
 				Tags.Get<Enemy, Character, BlocksPathing>()
 			);
 			switch (enemyType) {

@@ -26,20 +26,31 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 			}
 
 			// If in range of player visibility then set that as a target
-			if (grid.Check<IsVisible>(enemyPos.Value)) {
-				var playerPos = Singleton.Player.GetComponent<GridPosition>();
+			var playerPos = Singleton.Player.GetComponent<GridPosition>();
+			if (grid.CheckTile<IsVisible>(enemyPos.Value)) {
 				ai.LastFollowPos = playerPos.Value;
 			}
 
 			if (ai.LastFollowPos.HasValue) {
 				// If has a target go towards that
 				// TODO pathfinding caching
-				// TODO sometimes empty sequence?
-				var dest = new Pathfinder(grid)
+				Pathfinder pathfinder = new(grid);
+				var path = pathfinder
 					.Goal(ai.LastFollowPos.Value)
 					.PathFrom(enemyPos.Value)
-					.Skip(1).First();
-				var diff = dest - enemyPos.Value;
+					.Skip(1).ToArray();
+				if (path.Length == 0) {
+					// TODO handle this better. Sometimes enemies are inside a wall tile??
+					var debugPath = new Pathfinder(grid)
+						.Goal(ai.LastFollowPos.Value)
+						.PathFrom(enemyPos.Value)
+						.ToArray();
+					Console.WriteLine($"Probalby a bug: Couldn't find path from {enemyPos.Value} to {ai.LastFollowPos.Value}. Path: {debugPath}");
+					cmds.RemoveTag<CanAct>(enemyEntt.Id);
+					return;
+				}
+				Vec2I dest = path.First();
+				Vec2I diff = dest - enemyPos.Value;
 
 				Entity destEntt = grid.Character[dest.X, dest.Y];
 				if (!destEntt.IsNull && !destEntt.Tags.Has<Enemy>()) {
@@ -48,7 +59,9 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 				}
 				else {
 					var action = new MovementAction(enemyEntt, diff.X, diff.Y);
-					bool isActionBlocking = enemyEntt.Tags.Has<IsVisible>();
+					var distance = Pathfinder.DiagonalDistance(enemyPos.Value, playerPos.Value);
+					bool isClose = distance <= 6; 
+					bool isActionBlocking = enemyEntt.Tags.Has<IsVisible>() && isClose;
 					TurnsManagement.QueueAction(cmds, action, isActionBlocking);
 				}
 			}

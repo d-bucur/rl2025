@@ -33,7 +33,7 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		return Tile[pos.X, pos.Y].Tags.Has<BlocksFOV>();
 	}
 
-	internal readonly bool Check<T>(Vec2I pos) where T : struct, ITag {
+	internal readonly bool CheckTile<T>(Vec2I pos) where T : struct, ITag {
 		if (!IsInside(pos))
 			return false;
 		return Tile[pos.X, pos.Y].Tags.Has<T>();

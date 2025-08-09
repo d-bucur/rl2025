@@ -44,8 +44,8 @@ struct Pathfinder : IComponent {
 	/// Iterates path from start to goal
 	/// </summary>
 	internal IEnumerable<Vec2I> PathFrom(Vec2I start) {
-		if (grid.IsBlocking(start)) {
-			// No point, as this would calculate the entire grid
+		if (grid.CheckTile<BlocksPathing>(start)) {
+			// No point to continue, as this would calculate the entire grid
 			return [];
 		}
 		Recalculate(start);
@@ -116,12 +116,12 @@ struct Pathfinder : IComponent {
 	int Heuristic(Vec2I a, Vec2I b) => ManhattanDistance(a, b);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	int ManhattanDistance(Vec2I a, Vec2I b) {
+	public static int ManhattanDistance(Vec2I a, Vec2I b) {
 		return (Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y)) * Config.COST_HORIZONTAL;
 	}
 	
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	int DiagonalDistance(Vec2I a, Vec2I b) {
+	public static int DiagonalDistance(Vec2I a, Vec2I b) {
 		var dx = Math.Abs(a.X - b.X);
 		var dy = Math.Abs(a.Y - b.Y);
 		return Config.COST_HORIZONTAL * Math.Max(dx, dy)
@@ -130,8 +130,11 @@ struct Pathfinder : IComponent {
 
 	int GetCost(Vec2I to, Vec2I dir) {
 		// wall
-		if (grid.Tile[to.X, to.Y].Tags.Has<BlocksPathing>())
+		if (grid.CheckTile<BlocksPathing>(to))
 			return 1000;
+		// avoid unexplored
+		else if (!grid.CheckTile<IsExplored>(to))
+			return 900;
 		// avoid other characters
 		else if (!grid.Character[to.X, to.Y].IsNull)
 			return 5;

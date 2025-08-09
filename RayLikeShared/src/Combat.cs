@@ -50,13 +50,13 @@ class Combat : IModule {
 		entity.Remove<EnemyAI, InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
 		entity.AddTag<Corpse>();
 		ref var name = ref entity.GetComponent<Name>();
-		name.Value = $"Corpse of {name.Value}";
+		name.Value = $"Remains of {name.Value}";
 
 		if (entity.HasComponent<Billboard>()) {
 			ref var bill = ref entity.GetComponent<Billboard>();
 			bill.Up = new Vector3(0, 0, -1);
 		}
-		entity.AddComponent(new RotationSingle(Random.Shared.Next(15, 25)));
+		entity.AddComponent(new RotationSingle(Random.Shared.Next(25, 35)));
 	}
 }
 
