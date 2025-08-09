@@ -4,8 +4,8 @@
 - in game health bars
 
 ## Pathfinding
-- click to move player
 - improve cache usage
+- stop auto move after one turn if enemies in sight
 - incremental cache produces slightly different paths that full rebuild (not sure if this is solvable)
 
 ## Other

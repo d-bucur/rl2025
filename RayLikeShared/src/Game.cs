@@ -97,6 +97,7 @@ public class Game {
 		aot.RegisterComponent<RotationSingle>();
 		aot.RegisterComponent<TextFX>();
 		aot.RegisterComponent<Pathfinder>();
+		aot.RegisterComponent<PathMovement>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();

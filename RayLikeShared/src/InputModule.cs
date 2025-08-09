@@ -45,15 +45,12 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
             }
             else if (IsActionPressed(KeyboardKey.R)) {
                 // TurnsManagement.QueueAction(cmd, new RestAction(), true);
-                TurnsManagement.QueueAction(cmd, new MovementAction(entt, 0, 0), true);
+                TurnsManagement.QueueAction(cmd, new MovementAction(entt, 0, 0), entt);
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
 
-            if (Raylib.IsMouseButtonPressed(MouseButton.Left))
-                Console.WriteLine($"Mouse press");
-
             if (Raylib.IsKeyDown(KeyboardKey.Backspace)) {
-                TurnsManagement.QueueAction(cmd, new EscapeAction(), false);
+                TurnsManagement.QueueAction(cmd, new EscapeAction(), entt);
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
         });
@@ -71,11 +68,11 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
         Entity charAtPos = grid.Character[newPos.X, newPos.Y];
         if (charAtPos.IsNull) {
             var action = new MovementAction(entt, keyMovement.X, keyMovement.Y);
-            TurnsManagement.QueueAction(cmd, action, true);
+            TurnsManagement.QueueAction(cmd, action, entt);
         }
         else {
             var action = new MeleeAction(entt, charAtPos, keyMovement.X, keyMovement.Y);
-            TurnsManagement.QueueAction(cmd, action, true);
+            TurnsManagement.QueueAction(cmd, action, entt);
         }
         cmd.RemoveTag<CanAct>(entt.Id);
     }

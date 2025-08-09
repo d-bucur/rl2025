@@ -4,7 +4,7 @@ using Friflo.Engine.ECS.Systems;
 namespace RayLikeShared;
 
 struct EnemyAI : IComponent {
-	public Vec2I? LastFollowPos;
+	// add ai logic here
 }
 
 class EnemyAIModule : IModule {
@@ -13,56 +13,53 @@ class EnemyAIModule : IModule {
 	}
 }
 
-file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
+file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement> {
 	public EnemyMovementSystem() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {
 		var cmds = CommandBuffer;
-		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, Entity enemyEntt) => {
+		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, Entity enemyEntt) => {
 			var grid = Singleton.Entity.GetComponent<Grid>();
 			// Clear target if it's been reached
-			if (ai.LastFollowPos.HasValue && enemyPos.Value == ai.LastFollowPos.Value) {
-				ai.LastFollowPos = null;
+			if (path.Destination.HasValue && enemyPos.Value == path.Destination.Value) {
+				path.Destination = null;
 			}
 
 			// If in range of player visibility then set that as a target
 			var playerPos = Singleton.Player.GetComponent<GridPosition>();
 			if (grid.CheckTile<IsVisible>(enemyPos.Value)) {
-				ai.LastFollowPos = playerPos.Value;
+				path.Destination = playerPos.Value;
 			}
 
-			if (ai.LastFollowPos.HasValue) {
+			if (path.Destination.HasValue) {
 				// If has a target go towards that
 				// TODO pathfinding caching
 				Pathfinder pathfinder = new(grid);
-				var path = pathfinder
-					.Goal(ai.LastFollowPos.Value)
+				var newPath = pathfinder
+					.Goal(path.Destination.Value)
 					.PathFrom(enemyPos.Value)
 					.Skip(1).ToArray();
-				if (path.Length == 0) {
+				if (newPath.Length == 0) {
 					// TODO handle this better. Sometimes enemies are inside a wall tile??
 					var debugPath = new Pathfinder(grid)
-						.Goal(ai.LastFollowPos.Value)
+						.Goal(path.Destination.Value)
 						.PathFrom(enemyPos.Value)
 						.ToArray();
-					Console.WriteLine($"Probalby a bug: Couldn't find path from {enemyPos.Value} to {ai.LastFollowPos.Value}. Path: {debugPath}");
+					Console.WriteLine($"Usually a bug: Couldn't find path from {enemyPos.Value} to {path.Destination.Value}. Path: {debugPath}");
 					cmds.RemoveTag<CanAct>(enemyEntt.Id);
 					return;
 				}
-				Vec2I dest = path.First();
+				Vec2I dest = newPath.First();
 				Vec2I diff = dest - enemyPos.Value;
 
 				Entity destEntt = grid.Character[dest.X, dest.Y];
 				if (!destEntt.IsNull && !destEntt.Tags.Has<Enemy>()) {
 					TurnsManagement.QueueAction(cmds,
-						new MeleeAction(enemyEntt, destEntt, diff.X, diff.Y), true);
+						new MeleeAction(enemyEntt, destEntt, diff.X, diff.Y), enemyEntt);
 				}
 				else {
 					var action = new MovementAction(enemyEntt, diff.X, diff.Y);
-					var distance = Pathfinder.DiagonalDistance(enemyPos.Value, playerPos.Value);
-					bool isClose = distance <= 6; 
-					bool isActionBlocking = enemyEntt.Tags.Has<IsVisible>() && isClose;
-					TurnsManagement.QueueAction(cmds, action, isActionBlocking);
+					TurnsManagement.QueueAction(cmds, action, enemyEntt);
 				}
 			}
 			else {
@@ -72,7 +69,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 					var action = new MovementAction(
 						enemyEntt, Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)
 					);
-					TurnsManagement.QueueAction(cmds, action, enemyEntt.Tags.Has<IsVisible>());
+					TurnsManagement.QueueAction(cmds, action, enemyEntt);
 				}
 			}
 

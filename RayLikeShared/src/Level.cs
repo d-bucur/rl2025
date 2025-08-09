@@ -57,7 +57,8 @@ class Level : IModule {
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
 			new Fighter(20, 2, 3),
-			new Pathfinder(Singleton.Entity.GetComponent<Grid>())
+			new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
+			new PathMovement()
 		);
 		Singleton.Player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
 	}
@@ -88,6 +89,7 @@ class Level : IModule {
 				new ColorComp(),
 				new EnemyAI(),
 				// new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
+				new PathMovement(),
 				Tags.Get<Enemy, Character, BlocksPathing>()
 			);
 			switch (enemyType) {

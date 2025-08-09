@@ -29,13 +29,23 @@ class TurnsManagement : IModule {
 		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
 	}
 
-	internal static void QueueAction<T>(CommandBuffer cmd, T movementAction, bool isActionBlocking = false) where T : struct, IComponent {
+	internal static void QueueAction<T>(CommandBuffer cmd, T movementAction, Entity entt) where T : struct, IComponent {
 		var a = cmd.CreateEntity();
 		cmd.AddComponent(a, movementAction);
-		if (isActionBlocking)
+		if (IsEntityImporant(entt))
 			cmd.AddTags(a, Tags.Get<IsActionWaiting, IsActionBlocking>());
 		else
 			cmd.AddTags(a, Tags.Get<IsActionWaiting>());
+	}
+
+	internal static bool IsEntityImporant(Entity entt) {
+		if (entt == Singleton.Player)
+			return true;
+		var enttPos = entt.GetComponent<GridPosition>().Value;
+		var playerPos = Singleton.Player.GetComponent<GridPosition>().Value;
+
+		return entt.Tags.Has<IsVisible>()
+			&& Pathfinder.DiagonalDistance(enttPos, playerPos) <= 6;
 	}
 }
 

@@ -7,10 +7,50 @@ namespace RayLikeShared;
 record struct MovementAction(Entity Entity, int Dx, int Dy) : IComponent { }
 record struct RestAction(Entity Entity) : IComponent { }
 
+struct PathMovement() : IComponent {
+    internal Vec2I? Destination;
+    internal List<Vec2I> Path = new();
+    internal int PathIndex;
+
+    internal bool ShouldMove() {
+        return Destination.HasValue && PathIndex < Path.Count;
+    }
+
+    internal Vec2I NextPoint() {
+        return Path[PathIndex++];
+    }
+
+    internal void NewDestination(Vec2I posI, List<Vec2I> path) {
+        Destination = posI;
+        Path = path;
+        PathIndex = 0;
+    }
+}
+
 class Movement : IModule {
     public void Init(EntityStore world) {
+        UpdatePhases.Input.Add(new ProcessPathMovement());
         UpdatePhases.ApplyActions.Add(new ProcessMovementSystem());
         // UpdatePhases.ApplyActions.Add(new ProcessRestSystem());
+    }
+}
+
+file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition> {
+    public ProcessPathMovement() => Filter.AllTags(Tags.Get<CanAct>());
+
+    protected override void OnUpdate() {
+        Query.ForEachEntity((ref PathMovement path, ref GridPosition pos, Entity entt) => {
+            if (!path.ShouldMove())
+                return;
+            var next = path.NextPoint();
+            var diff = next - pos.Value;
+            Console.WriteLine($"Path movement from {pos.Value} to {next}");
+            TurnsManagement.QueueAction(CommandBuffer,
+                new MovementAction(entt, diff.X, diff.Y),
+                entt
+            );
+            CommandBuffer.RemoveTag<CanAct>(entt.Id);
+        });
     }
 }
 

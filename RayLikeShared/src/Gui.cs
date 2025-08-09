@@ -39,7 +39,7 @@ class GuiModule : IModule {
 		RenderPhases.Render.Add(new RenderHealth());
 		RenderPhases.Render.Add(new RenderGameOver());
 		RenderPhases.Render.Add(new RenderMessageLog());
-		RenderPhases.Render.Add(new MouseSelect());
+		RenderPhases.Render.Add(new MouseSelect()); // should be in input phase
 		RenderPhases.Render.Add(new RenderDamageFx());
 	}
 }
@@ -186,6 +186,7 @@ file class RenderMinimap : QuerySystem {
 	}
 }
 
+// TODO Move to input module?
 file class MouseSelect : QuerySystem {
 	List<string> InspectStrings = new();
 
@@ -247,10 +248,15 @@ file class MouseSelect : QuerySystem {
 		ref var pathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
 		if (Raylib.IsMouseButtonPressed(MouseButton.Right))
 			pathfinder.Reset();
-		IEnumerable<Vec2I> path = pathfinder.PathFrom(posI);
-		foreach (var p in path.SkipLast(1)) {
+		var path = pathfinder.PathFrom(posI).Reverse().Skip(1).ToList(); // garbage
+		foreach (var p in path) {
 			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f,
 				Raylib.Fade(Color.RayWhite, 0.3f));
+		}
+		if (Raylib.IsMouseButtonPressed(MouseButton.Left)) {
+			// move player to target destination
+			ref var movement = ref Singleton.Player.GetComponent<PathMovement>();
+			movement.NewDestination(posI, path);
 		}
 	}
 }
