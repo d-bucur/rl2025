@@ -1,16 +1,22 @@
+using System.Numerics;
+using System.Runtime.CompilerServices;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using Raylib_cs;
 
 namespace RayLikeShared;
 
+// TODO pathfinding and PathFrom generate a lot of garbage
 struct Pathfinder : IComponent {
 	Grid grid;
-	Vec2I goal;
-	Dictionary<Vec2I, Visited> visited = new();
-
-	struct Visited {
+	internal Vec2I goal;
+	internal PriorityQueue<Vec2I, int> frontier = new();
+	internal HashSet<Vec2I> frontierItems = new();
+	internal Dictionary<Vec2I, Visited> visited = new();
+	internal struct Visited {
 		public Vec2I cameFrom;
 		public int costSoFar;
+		public int priority;
 	}
 
 	public Pathfinder(Grid grid) {
@@ -18,54 +24,111 @@ struct Pathfinder : IComponent {
 	}
 
 	public Pathfinder Goal(Vec2I goal) {
+		if (this.goal == goal)
+			return this;
 		this.goal = goal;
-		visited.Clear();
+		Reset();
 		return this;
 	}
 
-	public IEnumerable<Vec2I> PathFrom(Vec2I start) {
-		Recalculate(start);
-		var p = goal;
-		while (p != start) {
-			yield return p;
-			p = visited[p].cameFrom;
-		}
-		yield return start;
+	internal void Reset() {
+		visited.Clear();
+		frontier.Clear();
+		frontierItems.Clear();
+		frontier.Enqueue(goal, 0);
+		frontierItems.Add(goal);
+		visited[goal] = new Visited { cameFrom = Vec2I.Zero, costSoFar = 0 };
 	}
 
-	private void Recalculate(Vec2I start) {
-		// astar
-		PriorityQueue<Vec2I, int> frontier = new();
+	/// <summary>
+	/// Iterates path from start to goal
+	/// </summary>
+	internal IEnumerable<Vec2I> PathFrom(Vec2I start) {
+		if (grid.IsBlocking(start)) {
+			// No point, as this would calculate the entire grid
+			return [];
+		}
+		Recalculate(start);
+		return PathFromIterator(start);
+	}
 
-		frontier.Enqueue(start, 0);
-		visited[start] = new Visited { cameFrom = Vec2I.Zero, costSoFar = 0 };
+	IEnumerable<Vec2I> PathFromIterator(Vec2I start) {
+		var p = start;
+		while (p != goal) {
+			yield return p;
+			if (!visited.ContainsKey(p)) {
+				// This sometimes happens when the mouse is in weird poisitions, like at the start of the game
+				// Console.WriteLine($"Invalid point {p} start: {start} to {goal}");
+				yield break;
+			}
+			p = visited[p].cameFrom;
+		}
+		yield return goal;
+	}
+
+	void Recalculate(Vec2I start) {
+		// Exit early if path already available
+		if (visited.ContainsKey(start) && !frontierItems.Contains(start))
+			return;
+
+		// Recalculate priorities for frontier, since start can be different
+		RebuildFrontier(start);
+
+		// astar
+		int visitedCount = 0;
 		while (frontier.Count > 0) {
 			var current = frontier.Dequeue();
-			if (current == goal)
-				break;
+			frontierItems.Remove(current);
+			visitedCount++;
 
 			foreach (var nextDir in Grid.NeighborsCardinal.Concat(Grid.NeighborsDiagonal)) {
 				var next = current + nextDir;
 				if (!grid.IsInside(next))
 					continue;
-				var newCost = visited[current].costSoFar + GetCost(next, nextDir);
+				int nextCost = GetCost(next, nextDir);
+				if (nextCost >= 1000)
+					continue;
+				var newCost = visited[current].costSoFar + nextCost;
 				if (!visited.ContainsKey(next) || newCost < visited[next].costSoFar) {
-					visited[next] = new Visited { cameFrom = current, costSoFar = newCost };
-					var priority = newCost + Heuristic(goal, next);
+					var priority = newCost + Heuristic(start, next);
+					visited[next] = new Visited { cameFrom = current, costSoFar = newCost, priority = priority };
 					frontier.Enqueue(next, priority);
+					frontierItems.Add(next);
 				}
 			}
+			// make sure to add neighbors to frontier before to allow incremental builds
+			if (current == start)
+				break;
+		}
+		// Console.WriteLine($"Recalculate Path incremental {visitedCount}, visited: {visited.Count}, frontier: {frontier.Count}");
+	}
+
+	void RebuildFrontier(Vec2I start) {
+		frontier.Clear();
+		foreach (var next in frontierItems) {
+			var priority = visited[next].costSoFar + Heuristic(start, next);
+			frontier.Enqueue(next, priority);
 		}
 	}
 
-	private int Heuristic(Vec2I a, Vec2I b) {
-		// diagonal distance
-		return Math.Max(a.X - b.X, a.Y - b.Y);
-		// Manhattan distance
-		// return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
+	// other heuristics: https://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#heuristics-for-grid-maps
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	int Heuristic(Vec2I a, Vec2I b) => ManhattanDistance(a, b);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	int ManhattanDistance(Vec2I a, Vec2I b) {
+		return (Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y)) * Config.COST_HORIZONTAL;
+	}
+	
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	int DiagonalDistance(Vec2I a, Vec2I b) {
+		var dx = Math.Abs(a.X - b.X);
+		var dy = Math.Abs(a.Y - b.Y);
+		return Config.COST_HORIZONTAL * Math.Max(dx, dy)
+			+ (Config.COST_DIAGONAL - 2* Config.COST_HORIZONTAL) * Math.Min(dx, dy);
 	}
 
-	private int GetCost(Vec2I to, Vec2I dir) {
+	int GetCost(Vec2I to, Vec2I dir) {
 		// wall
 		if (grid.Tile[to.X, to.Y].Tags.Has<BlocksPathing>())
 			return 1000;
@@ -74,22 +137,23 @@ struct Pathfinder : IComponent {
 			return 5;
 		// diagonal
 		else if (Math.Abs(dir.X) > 0 && Math.Abs(dir.Y) > 0)
-			return 3;
+			return Config.COST_DIAGONAL;
 		// normal
 		else
-			return 2;
+			return Config.COST_HORIZONTAL;
 	}
 }
 
 class PathfinderModule : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.TurnStart.Add(new ResetPaths());
+		RenderPhases.Render.Add(new DebugPathfinding());
 	}
 }
 
 // TODO only reset when gridposition changes
 internal class ResetPaths : QuerySystem<Pathfinder, GridPosition> {
-	private ArchetypeQuery actionQuery;
+	ArchetypeQuery actionQuery;
 
 	protected override void OnAddStore(EntityStore store) {
 		actionQuery = store.Query().AllTags(Tags.Get<IsActionFinished>());
@@ -103,5 +167,56 @@ internal class ResetPaths : QuerySystem<Pathfinder, GridPosition> {
 			pathfinder.Goal(pos.Value);
 			Console.WriteLine($"Reset Paths");
 		});
+	}
+}
+
+internal class DebugPathfinding : QuerySystem<Pathfinder> {
+	RenderTexture2D renderTex;
+	Camera camera;
+
+	public DebugPathfinding() {
+		Filter.AllTags(Tags.Get<Player>());
+		const int Size = 30;
+		renderTex = Raylib.LoadRenderTexture(Size, Size);
+	}
+
+	protected override void OnUpdate() {
+		if (!Singleton.Entity.GetComponent<Settings>().DebugPathfinding)
+			return;
+
+		camera = Singleton.Camera.GetComponent<Camera>();
+		Raylib.BeginShaderMode(Assets.billboardShader);
+		Query.ForEachEntity((ref Pathfinder pathfinder, Entity e) => {
+			// super inefficient 3 drawcalls per letter, but its for debug only
+			var frontierItems = pathfinder.frontier.UnorderedItems;
+			foreach (var (pos, visited) in pathfinder.visited) {
+				DrawTileValue(pos, $"{visited.costSoFar}", Color.RayWhite, new Vector3(0.3f, 0, 0.3f));
+				DrawTileValue(pos, $"{visited.priority}", Color.Orange, new Vector3(-0.3f, 0, -0.3f));
+			}
+			foreach (var (pos, prio) in frontierItems) {
+				DrawTileValue(pos, $"{prio}", Color.SkyBlue);
+			}
+		});
+		Raylib.EndShaderMode();
+	}
+
+	void DrawTileValue(Vec2I k, string drawValue, Color color, Vector3 offset = default) {
+		// Draw text to texture
+		Raylib.BeginTextureMode(renderTex);
+		Raylib.ClearBackground(new Color(0, 0, 0, 0));
+		Raylib.DrawText(drawValue, 0, 0, 15, Color.White);
+		Raylib.EndTextureMode();
+
+		// draw texture in 3d space
+		Raylib.BeginMode3D(camera.Value);
+		Raylib.DrawBillboardPro(
+			camera.Value,
+			renderTex.Texture,
+			// height has to be inverted because weird opengl stuff
+			new Rectangle(0, 0, renderTex.Texture.Width, -renderTex.Texture.Height),
+			k.ToWorldPos() - new Vector3(0.5f, 0, -0.0f) + offset,
+			-Vector3.UnitZ,
+			Vector2.One / 2, new Vector2(0.0f, 0.0f), 0, color);
+		Raylib.EndMode3D();
 	}
 }

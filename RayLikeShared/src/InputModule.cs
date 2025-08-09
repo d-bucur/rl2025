@@ -94,6 +94,9 @@ file class GameInputSystem : QuerySystem {
         // Debug colors
         if (Raylib.IsKeyPressed(KeyboardKey.K) && IsDevKeyModifier())
             settings.DebugColorsEnabled = !settings.DebugColorsEnabled;
+        // Debug pathfinding
+        if (Raylib.IsKeyPressed(KeyboardKey.P) && IsDevKeyModifier())
+            settings.DebugPathfinding = !settings.DebugPathfinding;
         // Visibiltiy hack
         if (Raylib.IsKeyPressed(KeyboardKey.J) && IsDevKeyModifier()) {
             settings.VisibilityHack = !settings.VisibilityHack;

@@ -13,5 +13,9 @@
 - http://www.adammil.net/blog/v125_Roguelike_Vision_Algorithms.html
 - https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
 
+## Pathfinding
+- https://www.redblobgames.com/pathfinding/a-star/introduction.html
+- https://theory.stanford.edu/~amitp/GameProgramming/
+
 ## More articles
 - https://www.roguebasin.com/index.php?title=Articles

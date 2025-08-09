@@ -201,33 +201,33 @@ file class MouseSelect : QuerySystem {
 		Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
 		float t = -ray.Position.Y / ray.Direction.Y;
 		Vector3 intersection = ray.Position + t * ray.Direction + tileOffset;
-		Vec2I posI = Vec2I.FromWorldPos(intersection);
+		Vec2I mousePosI = Vec2I.FromWorldPos(intersection);
 		Grid grid = Singleton.Entity.GetComponent<Grid>();
 
-		if (!grid.IsInside(posI))
+		if (!grid.IsInside(mousePosI))
 			return;
 
 		// Draw outline at tile
 		Raylib.BeginMode3D(camera);
 		Raylib.DrawCubeWiresV(
-			posI.ToWorldPos() - tileOffset,
+			mousePosI.ToWorldPos() - tileOffset,
 			new Vector3(1.1f, 1f, 1.1f),
 			Raylib.Fade(Color.Red, 0.3f));
-			if (grid.Check<IsExplored>(posI))
-				PathTo(posI);
+		if (grid.Check<IsExplored>(mousePosI))
+			PathTo(mousePosI);
 		Raylib.EndMode3D();
 
 
 		// Get all entities at position
 		InspectStrings.Clear();
-		var charAtPos = grid.Character[posI.X, posI.Y];
+		var charAtPos = grid.Character[mousePosI.X, mousePosI.Y];
 		if (!charAtPos.IsNull) {
 			string name = charAtPos.GetComponent<Name>().Value;
 			var fighter = charAtPos.GetComponent<Fighter>();
 			InspectStrings.Add($"{name} {fighter.HP}/{fighter.MaxHP} HP");
 		}
 
-		var others = grid.Others[posI.X, posI.Y];
+		var others = grid.Others[mousePosI.X, mousePosI.Y];
 		foreach (var other in others?.Value ?? [])
 			InspectStrings.Add($"{other.GetComponent<Name>().Value}");
 
@@ -244,21 +244,22 @@ file class MouseSelect : QuerySystem {
 	}
 
 	private void PathTo(Vec2I posI) {
-		var pathfinder = new Pathfinder(Singleton.Entity.GetComponent<Grid>());
-		pathfinder.Goal(Singleton.Player.GetComponent<GridPosition>().Value);
-		foreach (var p in pathfinder.PathFrom(posI).Skip(1)) {
-			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f, Raylib.Fade(Color.RayWhite, 0.3f));
+		ref var pathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
+		if (Raylib.IsMouseButtonPressed(MouseButton.Right))
+			pathfinder.Reset();
+		IEnumerable<Vec2I> path = pathfinder.PathFrom(posI);
+		foreach (var p in path.SkipLast(1)) {
+			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f, Raylib.Fade(Color.Green, 0.3f));
 		}
 	}
 }
 
 file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 	protected override void OnUpdate() {
+		Camera camera = Singleton.Camera.GetComponent<Camera>();
+		Raylib.BeginMode3D(camera.Value);
+		Raylib.BeginShaderMode(Assets.billboardShader);
 		Query.ForEachEntity((ref TextFX fx, ref Billboard bill, ref Position pos, ref Scale3 scale, Entity entt) => {
-			Camera camera = Singleton.Camera.GetComponent<Camera>();
-			Raylib.BeginMode3D(camera.Value);
-			Raylib.BeginShaderMode(Assets.billboardShader);
-
 			Raylib.DrawBillboardPro(
 				camera.Value,
 				fx.RenderTex.Texture,
@@ -267,9 +268,8 @@ file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 				pos.value, camera.GetUpVec(),
 				new Vector2(scale.x, scale.z), new Vector2(0.5f, 0), 0, Color.Orange
 			);
-
-			Raylib.EndShaderMode();
-			Raylib.EndMode3D();
 		});
+		Raylib.EndShaderMode();
+		Raylib.EndMode3D();
 	}
 }

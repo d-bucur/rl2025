@@ -19,10 +19,14 @@ static class Config {
     internal const int MAX_ENEMIES_PER_ROOM = 3;
 
     internal const float VIS_SENSITIVITY = 0.4f; // range: 0 .. 0.5f
+
+    internal const int COST_HORIZONTAL = 2;
+    internal const int COST_DIAGONAL = 3;
 }
 
 struct Settings() : IComponent {
     internal bool DebugColorsEnabled = false;
     internal bool MinimapEnabled = true;
     internal bool VisibilityHack = false;
+    internal bool DebugPathfinding = false;
 }

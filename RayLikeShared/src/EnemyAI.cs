@@ -34,11 +34,11 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI> {
 			if (ai.LastFollowPos.HasValue) {
 				// If has a target go towards that
 				// TODO pathfinding caching
+				// TODO sometimes empty sequence?
 				var dest = new Pathfinder(grid)
 					.Goal(ai.LastFollowPos.Value)
 					.PathFrom(enemyPos.Value)
-					.SkipLast(1)
-					.Last();
+					.Skip(1).First();
 				var diff = dest - enemyPos.Value;
 
 				Entity destEntt = grid.Character[dest.X, dest.Y];
