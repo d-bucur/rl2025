@@ -128,6 +128,8 @@ file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
                 // (cam.Value.Projection, prevProjection) = (prevProjection, cam.Value.Projection);
                 // (cam.Value.FovY, prevFov) = (prevFov, cam.Value.FovY);
             });
+            ref var settings = ref Singleton.Entity.GetComponent<Settings>();
+            settings.IsOverhead = !settings.IsOverhead;
         }
         Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
             follow.Offset.Y -= Raylib.GetMouseWheelMoveV().Y;

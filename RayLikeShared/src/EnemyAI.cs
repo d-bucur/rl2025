@@ -38,8 +38,8 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 				var newPath = pathfinder
 					.Goal(path.Destination.Value)
 					.PathFrom(enemyPos.Value)
-					.Skip(1).ToArray();
-				if (newPath.Length == 0) {
+					.Skip(1).ToList();
+				if (newPath.Count == 0) {
 					// TODO handle this better. Sometimes enemies are inside a wall tile??
 					var debugPath = new Pathfinder(grid)
 						.Goal(path.Destination.Value)
@@ -49,18 +49,8 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 					cmds.RemoveTag<CanAct>(enemyEntt.Id);
 					return;
 				}
-				Vec2I dest = newPath.First();
-				Vec2I diff = dest - enemyPos.Value;
-
-				Entity destEntt = grid.Character[dest.X, dest.Y];
-				if (!destEntt.IsNull && !destEntt.Tags.Has<Enemy>()) {
-					TurnsManagement.QueueAction(cmds,
-						new MeleeAction(enemyEntt, destEntt, diff.X, diff.Y), enemyEntt);
-				}
-				else {
-					var action = new MovementAction(enemyEntt, diff.X, diff.Y);
-					TurnsManagement.QueueAction(cmds, action, enemyEntt);
-				}
+				path.NewDestination(path.Destination.Value, newPath);
+				return;
 			}
 			else {
 				// Random movement

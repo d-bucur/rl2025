@@ -1,6 +1,7 @@
 - event handlers for different game states?
 - log history
 - revisit enemy and room generation
+- bug: combat damage not working in web
 - in game health bars
 
 ## Pathfinding

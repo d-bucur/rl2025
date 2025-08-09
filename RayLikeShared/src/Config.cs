@@ -29,4 +29,5 @@ struct Settings() : IComponent {
     internal bool MinimapEnabled = true;
     internal bool VisibilityHack = false;
     internal bool DebugPathfinding = false;
+    internal bool IsOverhead = false;
 }

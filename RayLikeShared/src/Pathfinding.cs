@@ -137,7 +137,7 @@ struct Pathfinder : IComponent {
 			return 900;
 		// avoid other characters
 		else if (!grid.Character[to.X, to.Y].IsNull)
-			return 5;
+			return 10;
 		// diagonal
 		else if (Math.Abs(dir.X) > 0 && Math.Abs(dir.Y) > 0)
 			return Config.COST_DIAGONAL;

@@ -25,6 +25,9 @@ struct Fighter : IComponent {
 	}
 }
 record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IComponent { }
+struct Team : IComponent {
+	required public int Value;
+}
 
 struct DeathSignal;
 

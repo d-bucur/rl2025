@@ -13,16 +13,37 @@ struct PathMovement() : IComponent {
     internal int PathIndex;
 
     internal bool ShouldMove() {
-        return Destination.HasValue && PathIndex < Path.Count;
-    }
-
-    internal Vec2I NextPoint() {
-        return Path[PathIndex++];
+        return Destination.HasValue;
     }
 
     internal void NewDestination(Vec2I posI, List<Vec2I> path) {
         Destination = posI;
         Path = path;
+        PathIndex = 0;
+    }
+
+    // Progress to next point in the path
+    internal Vec2I NextPoint() {
+        if (Destination.HasValue && PathIndex >= Path.Count) {
+            Vec2I d = Destination.Value;
+            Clear();
+            return d;
+        }
+        Vec2I p = Path[PathIndex++];
+        if (PathIndex >= Path.Count) {
+            Clear();
+        }
+        return p;
+    }
+
+    // Use to go back when forward action has failed for some reason
+    internal void PrevPoint() {
+        // Doesn't work if action was cleared before
+        PathIndex--;
+    }
+
+    internal void Clear() {
+        Destination = null;
         PathIndex = 0;
     }
 }
@@ -35,20 +56,29 @@ class Movement : IModule {
     }
 }
 
-file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition> {
+file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
     public ProcessPathMovement() => Filter.AllTags(Tags.Get<CanAct>());
 
     protected override void OnUpdate() {
-        Query.ForEachEntity((ref PathMovement path, ref GridPosition pos, Entity entt) => {
+        Query.ForEachEntity((ref PathMovement path, ref GridPosition pos, ref Team team, Entity entt) => {
             if (!path.ShouldMove())
                 return;
-            var next = path.NextPoint();
-            var diff = next - pos.Value;
-            Console.WriteLine($"Path movement from {pos.Value} to {next}");
-            TurnsManagement.QueueAction(CommandBuffer,
-                new MovementAction(entt, diff.X, diff.Y),
-                entt
-            );
+            Vec2I next = path.NextPoint();
+            Vec2I diff = next - pos.Value;
+            // Console.WriteLine($"Path movement from {pos.Value} to {next} for {entt}");
+
+            var grid = Singleton.Entity.GetComponent<Grid>();
+            Entity destEntt = grid.Character[next.X, next.Y];
+
+            if (!destEntt.IsNull && team.Value != destEntt.GetComponent<Team>().Value) {
+                TurnsManagement.QueueAction(CommandBuffer,
+                    new MeleeAction(entt, destEntt, diff.X, diff.Y), entt);
+                path.Clear();
+            }
+            else {
+                TurnsManagement.QueueAction(CommandBuffer,
+                    new MovementAction(entt, diff.X, diff.Y), entt);
+            }
             CommandBuffer.RemoveTag<CanAct>(entt.Id);
         });
     }
