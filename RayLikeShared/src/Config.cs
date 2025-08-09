@@ -28,6 +28,7 @@ struct Settings() : IComponent {
     internal bool DebugColorsEnabled = false;
     internal bool MinimapEnabled = true;
     internal bool VisibilityHack = false;
+    internal bool ExplorationHack = false;
     internal bool DebugPathfinding = false;
     internal bool IsOverhead = false;
 }

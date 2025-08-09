@@ -27,10 +27,17 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		Character[newPos.X, newPos.Y] = character;
 	}
 
-	internal readonly bool IsBlocking(Vec2I pos) {
+	internal readonly bool BlocksFOV(Vec2I pos) {
 		if (!IsInside(pos))
 			return true;
 		return Tile[pos.X, pos.Y].Tags.Has<BlocksFOV>();
+	}
+
+	internal readonly bool BlocksPathing(Vec2I pos) {
+		if (!IsInside(pos))
+			return true;
+		var c = Character[pos.X, pos.Y];
+		return (!c.IsNull && c.Tags.Has<BlocksPathing>()) || Tile[pos.X, pos.Y].Tags.Has<BlocksPathing>();
 	}
 
 	internal readonly bool CheckTile<T>(Vec2I pos) where T : struct, ITag {

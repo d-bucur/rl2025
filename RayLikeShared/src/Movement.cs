@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Numerics;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
@@ -65,7 +66,8 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
                 return;
             Vec2I next = path.NextPoint();
             Vec2I diff = next - pos.Value;
-            // Console.WriteLine($"Path movement from {pos.Value} to {next} for {entt}");
+            Debug.Assert(Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2, 
+                $"BUG: Movement is too big: from {pos.Value} to {next}");
 
             var grid = Singleton.Entity.GetComponent<Grid>();
             Entity destEntt = grid.Character[next.X, next.Y];
@@ -91,7 +93,6 @@ file class ProcessMovementSystem : QuerySystem<MovementAction> {
         var cmds = CommandBuffer;
         Query.ThrowOnStructuralChange = false;
         Query.ForEachEntity((ref MovementAction action, Entity entt) => {
-            // Console.WriteLine($"Executing action: {action} --- {entt}");
             cmds.RemoveTag<IsActionWaiting>(entt.Id);
             var oldPos = action.Entity.GetComponent<GridPosition>().Value;
             if (!TryPerformMove(action)) {

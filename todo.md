@@ -1,13 +1,10 @@
-- event handlers for different game states?
-- log history
 - revisit enemy and room generation
 - bug: combat damage not working in web
+- log history
 - in game health bars
-
-## Pathfinding
-- improve cache usage
+- aggro nearby enemies when one is alerted
 - stop auto move after one turn if enemies in sight
-- incremental cache produces slightly different paths that full rebuild (not sure if this is solvable)
+- event handlers for different game states?
 
 ## Other
 - display turn order as a number on characters

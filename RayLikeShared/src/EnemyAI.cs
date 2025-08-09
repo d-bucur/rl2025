@@ -13,57 +13,55 @@ class EnemyAIModule : IModule {
 	}
 }
 
-file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement> {
+file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement, Pathfinder> {
 	public EnemyMovementSystem() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {
 		var cmds = CommandBuffer;
-		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, Entity enemyEntt) => {
+		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, ref Pathfinder pathfinder, Entity enemyEntt) => {
 			var grid = Singleton.Entity.GetComponent<Grid>();
-			// Clear target if it's been reached
-			if (path.Destination.HasValue && enemyPos.Value == path.Destination.Value) {
-				path.Destination = null;
-			}
-
+			ref var usedPathfinder = ref pathfinder;
 			// If in range of player visibility then set that as a target
-			var playerPos = Singleton.Player.GetComponent<GridPosition>();
-			if (grid.CheckTile<IsVisible>(enemyPos.Value)) {
-				path.Destination = playerPos.Value;
+			bool shouldChasePlayer = grid.CheckTile<IsVisible>(enemyPos.Value);
+			if (shouldChasePlayer) {
+				path.Destination = Singleton.Player.GetComponent<GridPosition>().Value;
+				usedPathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
+				usedPathfinder.Goal(path.Destination.Value);
 			}
-
 			if (path.Destination.HasValue) {
-				// If has a target go towards that
-				// TODO pathfinding caching
-				Pathfinder pathfinder = new(grid);
-				var newPath = pathfinder
+				// If destination is set follow path towards it
+				var newPath = usedPathfinder
 					.Goal(path.Destination.Value)
 					.PathFrom(enemyPos.Value)
 					.Skip(1).ToList();
 				if (newPath.Count == 0) {
-					// TODO handle this better. Sometimes enemies are inside a wall tile??
-					var debugPath = new Pathfinder(grid)
+					// TODO still a bug here?
+					var debugPath = usedPathfinder
 						.Goal(path.Destination.Value)
 						.PathFrom(enemyPos.Value)
-						.ToArray();
+						.ToList();
 					Console.WriteLine($"Usually a bug: Couldn't find path from {enemyPos.Value} to {path.Destination.Value}. Path: {debugPath}");
 					cmds.RemoveTag<CanAct>(enemyEntt.Id);
 					return;
 				}
 				path.NewDestination(path.Destination.Value, newPath);
-				return;
 			}
 			else {
 				// Random movement
-				// TODO don't bump into walls
-				if (Random.Shared.NextSingle() < 0.5) {
-					var action = new MovementAction(
-						enemyEntt, Random.Shared.Next(-1, 2), Random.Shared.Next(-1, 2)
-					);
-					TurnsManagement.QueueAction(cmds, action, enemyEntt);
-				}
-			}
+				if (Random.Shared.NextSingle() < 0.75) {
+					var pos = enemyPos.Value;
+					var moves = Grid.NeighborsCardinal.Concat(Grid.NeighborsDiagonal)
+						.Where(p => !grid.BlocksPathing(pos + p))
+						.ToList();
 
-			cmds.RemoveTag<CanAct>(enemyEntt.Id);
+					if (moves.Count > 0) {
+						var randomMove = moves[Random.Shared.Next(moves.Count)];
+						TurnsManagement.QueueAction(CommandBuffer,
+							new MovementAction(enemyEntt, randomMove.X, randomMove.Y), enemyEntt);
+					}
+				}
+				cmds.RemoveTag<CanAct>(enemyEntt.Id);
+			}
 		});
 	}
 }

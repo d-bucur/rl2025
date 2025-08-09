@@ -68,11 +68,11 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 
 			grid.MarkVisible(currPos, cmds);
 
-			if (grid.IsBlocking(currPos)) {
+			if (grid.BlocksFOV(currPos)) {
 				// Is a wall. Check if it's an FOV corner
 				var corners = GetCorners(currPos, fromDir);
-				var isFOVCorner = !grid.IsBlocking(corners.Item1)
-					|| !grid.IsBlocking(corners.Item2);
+				var isFOVCorner = !grid.BlocksFOV(corners.Item1)
+					|| !grid.BlocksFOV(corners.Item2);
 				if (!isFOVCorner)
 					continue;
 				grid.SetDebugColor(currPos, Palette.DebugFOVCorner);
@@ -117,7 +117,7 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 			if (cornerPos == linePoint)
 				continue;
 			// Exit early if hit another wall. It will block vision on its own
-			if (grid.IsBlocking(linePoint))
+			if (grid.BlocksFOV(linePoint))
 				continue;
 			fovBlocked.Add(linePoint);
 			grid.SetDebugColor(linePoint, Palette.DebugFOVBlocked);

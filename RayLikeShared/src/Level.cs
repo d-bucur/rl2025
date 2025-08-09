@@ -57,7 +57,7 @@ class Level : IModule {
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
 			new Fighter(20, 2, 3),
-			new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
+			new Pathfinder(Singleton.Entity.GetComponent<Grid>()).Goal(pos),
 			new PathMovement(),
 			new Team { Value = 1 }
 		);
@@ -75,9 +75,8 @@ class Level : IModule {
 		var monsterTypes = Enum.GetValues(typeof(MonsterType));
 
 		for (int i = 0; i <= Config.MAX_ENEMIES_PER_ROOM; i++) {
-			// TODO BUG need to check tile for walls!
 			var pos = new Vec2I(Random.Shared.Next(room.StartX + 1, room.EndX), Random.Shared.Next(room.StartY + 1, room.EndY));
-			if (!grid.Character[pos.X, pos.Y].IsNull)
+			if (!grid.Character[pos.X, pos.Y].IsNull || grid.CheckTile<BlocksPathing>(pos))
 				continue;
 			var enemyType = (MonsterType)monsterTypes.GetValue(Random.Shared.Next(monsterTypes.Length))!;
 
@@ -89,7 +88,7 @@ class Level : IModule {
 				new Billboard(),
 				new ColorComp(),
 				new EnemyAI(),
-				// new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
+				new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
 				new PathMovement(),
 				new Team{ Value = 2},
 				Tags.Get<Enemy, Character, BlocksPathing>()

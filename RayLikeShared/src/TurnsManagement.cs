@@ -14,7 +14,7 @@ struct CanAct : ITag;
 
 // Is waiting for execution, similar to a queue. Will be removed once the action is processed (once)
 struct IsActionWaiting : ITag;
-// Has been cleared for execution. Not that it can be both waiting and executing at the same time
+// Has been cleared for execution. Note that it can be both waiting and executing at the same time
 struct IsActionExecuting : ITag;
 // Is added once the action has finished everything like animations etc
 struct IsActionFinished : ITag;
@@ -29,9 +29,9 @@ class TurnsManagement : IModule {
 		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
 	}
 
-	internal static void QueueAction<T>(CommandBuffer cmd, T movementAction, Entity entt) where T : struct, IComponent {
+	internal static void QueueAction<T>(CommandBuffer cmd, T action, Entity entt) where T : struct, IComponent {
 		var a = cmd.CreateEntity();
-		cmd.AddComponent(a, movementAction);
+		cmd.AddComponent(a, action);
 		if (IsEntityImporant(entt))
 			cmd.AddTags(a, Tags.Get<IsActionWaiting, IsActionBlocking>());
 		else

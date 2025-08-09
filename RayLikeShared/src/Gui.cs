@@ -145,6 +145,7 @@ file class RenderGameOver : QuerySystem<Name> {
 file class RenderMinimap : QuerySystem {
 	Image MinimapImage;
 	Texture2D MinimapTexture;
+	private static bool explorationHack;
 
 	protected override void OnAddStore(EntityStore store) {
 		MinimapImage = Raylib.GenImageColor(Config.MAP_SIZE_X, Config.MAP_SIZE_Y, Palette.Transparent);
@@ -154,6 +155,7 @@ file class RenderMinimap : QuerySystem {
 	protected override unsafe void OnUpdate() {
 		if (!Singleton.Entity.GetComponent<Settings>().MinimapEnabled)
 			return;
+		explorationHack = Singleton.Entity.GetComponent<Settings>().ExplorationHack;
 
 		var grid = Singleton.Entity.GetComponent<Grid>();
 		for (int x = 0; x < grid.Tile.GetLength(0); x++) {
@@ -180,7 +182,7 @@ file class RenderMinimap : QuerySystem {
 		if (!character.IsNull) {
 			if (character.Tags.Has<Player>())
 				color = Color.Green;
-			if (character.Tags.Has<Enemy>() && tile.Tags.Has<IsVisible>())
+			if (character.Tags.Has<Enemy>() && (tile.Tags.Has<IsVisible>() || explorationHack))
 				color = Color.Red;
 		}
 		return color;
@@ -249,7 +251,10 @@ file class MouseSelect : QuerySystem {
 		ref var pathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
 		if (Raylib.IsMouseButtonPressed(MouseButton.Right))
 			pathfinder.Reset();
-		var path = pathfinder.PathFrom(posI).Reverse().Skip(1).ToList(); // garbage
+		var path = pathfinder
+			.Goal(Singleton.Player.GetComponent<GridPosition>().Value)
+			.PathFrom(posI)
+			.Reverse().Skip(1).ToList(); // garbage
 		foreach (var p in path) {
 			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f,
 				Raylib.Fade(Color.RayWhite, 0.3f));

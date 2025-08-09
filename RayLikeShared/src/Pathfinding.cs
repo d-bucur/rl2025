@@ -32,6 +32,7 @@ struct Pathfinder : IComponent {
 	}
 
 	internal void Reset() {
+		// Console.WriteLine($"Path reset");
 		visited.Clear();
 		frontier.Clear();
 		frontierItems.Clear();
@@ -149,7 +150,7 @@ struct Pathfinder : IComponent {
 
 class PathfinderModule : IModule {
 	public void Init(EntityStore world) {
-		UpdatePhases.TurnStart.Add(new ResetPaths());
+		// UpdatePhases.TurnStart.Add(new ResetPaths());
 		RenderPhases.Render.Add(new DebugPathfinding());
 	}
 }
