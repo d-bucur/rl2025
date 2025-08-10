@@ -5,13 +5,23 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
+record struct Dice(int Count = 1, int Faces = 6) {
+	public int Roll() {
+		int total = 0;
+		for (int i = 0; i < Count; i++) {
+			total += Random.Shared.Next(Faces) + 1;
+		}
+		return total;
+	}
+}
+
 struct Fighter : IComponent {
 	public int MaxHP;
 	public int HP;
-	public int Defense;
+	public Dice Defense;
 	public int Power;
 
-	public Fighter(int maxHP, int defense, int power) {
+	public Fighter(int maxHP, Dice defense, int power) {
 		MaxHP = maxHP;
 		HP = maxHP;
 		Defense = defense;
@@ -83,7 +93,8 @@ file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 			// Do the actual damage
 			ref var sourceFighter = ref action.Source.GetComponent<Fighter>();
 			ref var targetFighter = ref action.Target.GetComponent<Fighter>();
-			var damage = sourceFighter.Power - targetFighter.Defense;
+			var damage = sourceFighter.Power
+				- targetFighter.Defense.Roll();
 			var desc = $"{action.Source.GetComponent<Name>().Value} attacks {action.Target.GetComponent<Name>().Value}";
 			var isTargetPlayer = action.Target.Tags.Has<Player>();
 			var color = isTargetPlayer ? Color.Red : Color.Orange;

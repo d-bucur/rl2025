@@ -56,7 +56,7 @@ class Level : IModule {
 			new Name { Value = "Hero" },
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
-			new Fighter(20, 2, 3),
+			new Fighter(40, new Dice(3, 2), 6),
 			new Pathfinder(Singleton.Entity.GetComponent<Grid>()).Goal(pos),
 			new PathMovement(),
 			new Team { Value = 1 }
@@ -101,7 +101,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(0, 4)
 						},
-						new Fighter(4, 1, 3),
+						new Fighter(6, new Dice(1, 2), 6),
 						new Energy() { GainPerTick = 5 }
 					);
 					break;
@@ -112,7 +112,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(1, 5)
 						},
-						new Fighter(5, 0, 5),
+						new Fighter(8, new Dice(0, 1), 9),
 						new Energy() { GainPerTick = 6 }
 					);
 					break;
@@ -123,7 +123,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(3, 0)
 						},
-						new Fighter(5, 1, 4),
+						new Fighter(10, new Dice(2, 2), 7),
 						new Energy() { GainPerTick = 4 }
 					);
 					break;
@@ -134,7 +134,7 @@ class Level : IModule {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(0, 1)
 						},
-						new Fighter(10, 2, 3),
+						new Fighter(13, new Dice(2, 3), 8),
 						new Energy() { GainPerTick = 3 }
 					);
 					break;
