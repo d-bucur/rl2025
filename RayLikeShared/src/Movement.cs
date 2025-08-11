@@ -66,6 +66,7 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
                 return;
             Vec2I next = path.NextPoint();
             Vec2I diff = next - pos.Value;
+            // TODO BUG: asserts when clicking to move into a wall
             Debug.Assert(Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2, 
                 $"BUG: Movement is too big: from {pos.Value} to {next}");
 

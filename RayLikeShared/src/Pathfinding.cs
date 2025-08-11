@@ -180,7 +180,7 @@ internal class DebugPathfinding : QuerySystem<Pathfinder> {
 
 	public DebugPathfinding() {
 		Filter.AllTags(Tags.Get<Player>());
-		const int Size = 30;
+		const int Size = 20;
 		renderTex = Raylib.LoadRenderTexture(Size, Size);
 	}
 
@@ -191,36 +191,31 @@ internal class DebugPathfinding : QuerySystem<Pathfinder> {
 		camera = Singleton.Camera.GetComponent<Camera>();
 		Raylib.BeginShaderMode(Assets.billboardShader);
 		Query.ForEachEntity((ref Pathfinder pathfinder, Entity e) => {
-			// super inefficient 3 drawcalls per letter, but its for debug only
 			var frontierItems = pathfinder.frontier.UnorderedItems;
 			foreach (var (pos, visited) in pathfinder.visited) {
-				DrawTileValue(pos, $"{visited.costSoFar}", Color.RayWhite, new Vector3(0.3f, 0, 0.3f));
-				DrawTileValue(pos, $"{visited.priority}", Color.Orange, new Vector3(-0.3f, 0, -0.3f));
-			}
-			foreach (var (pos, prio) in frontierItems) {
-				DrawTileValue(pos, $"{prio}", Color.SkyBlue);
+				// Draw text to texture
+				Raylib.BeginTextureMode(renderTex);
+				Raylib.ClearBackground(new Color(0, 0, 0, 0));
+				Raylib.DrawText($"{visited.costSoFar}", 0, 0, 10, Color.RayWhite);
+				Raylib.DrawText($"{visited.priority}", 10, 10, 10,
+					pathfinder.frontierItems.Contains(pos) ? Color.SkyBlue : Color.Orange);
+				Raylib.EndTextureMode();
+
+				// draw texture in 3d space
+				Raylib.BeginMode3D(camera.Value);
+				Raylib.DrawBillboardPro(
+					camera.Value,
+					renderTex.Texture,
+					// height has to be inverted because weird opengl stuff
+					new Rectangle(0, renderTex.Texture.Height, renderTex.Texture.Width, -renderTex.Texture.Height),
+					pos.ToWorldPos() - Vector3.UnitX,
+					-Vector3.UnitZ,
+					Vector2.One, Vector2.Zero, 0, Color.White
+				);
+
+				Raylib.EndMode3D();
 			}
 		});
 		Raylib.EndShaderMode();
-	}
-
-	void DrawTileValue(Vec2I k, string drawValue, Color color, Vector3 offset = default) {
-		// Draw text to texture
-		Raylib.BeginTextureMode(renderTex);
-		Raylib.ClearBackground(new Color(0, 0, 0, 0));
-		Raylib.DrawText(drawValue, 0, 0, 15, Color.White);
-		Raylib.EndTextureMode();
-
-		// draw texture in 3d space
-		Raylib.BeginMode3D(camera.Value);
-		Raylib.DrawBillboardPro(
-			camera.Value,
-			renderTex.Texture,
-			// height has to be inverted because weird opengl stuff
-			new Rectangle(0, 0, renderTex.Texture.Width, -renderTex.Texture.Height),
-			k.ToWorldPos() - new Vector3(0.5f, 0, -0.0f) + offset,
-			-Vector3.UnitZ,
-			Vector2.One / 2, new Vector2(0.0f, 0.0f), 0, color);
-		Raylib.EndMode3D();
 	}
 }

@@ -134,6 +134,13 @@ file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
         }
         Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
             follow.Offset.Y -= Raylib.GetMouseWheelMoveV().Y;
+            // TODO handle rotation around target
+            // Raylib.UpdateCamera(ref cam.Value, CameraMode.Orbital);
+            // Vector3 dir = Vector3.Normalize(cam.Value.Position - cam.Value.Target);
+            // var angle = MathF.Atan2(dir.Z, dir.X);
+            // angle += 0;
+            // cam.Value.Position.X = MathF.Sin(angle);
+            // cam.Value.Position.Z = MathF.Cos(angle);
         });
     }
 }

@@ -12,6 +12,7 @@
 - https://www.roguebasin.com/index.php?title=Comparative_study_of_field_of_view_algorithms_for_2D_grid_based_worlds
 - http://www.adammil.net/blog/v125_Roguelike_Vision_Algorithms.html
 - https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
+- https://www.albertford.com/shadowcasting/
 
 ## Pathfinding
 - https://www.redblobgames.com/pathfinding/a-star/introduction.html

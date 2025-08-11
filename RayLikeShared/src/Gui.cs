@@ -270,19 +270,19 @@ file class MouseSelect : QuerySystem {
 file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 	protected override void OnUpdate() {
 		Camera camera = Singleton.Camera.GetComponent<Camera>();
-		Raylib.BeginMode3D(camera.Value);
 		Raylib.BeginShaderMode(Assets.billboardShader);
+		Raylib.BeginMode3D(camera.Value);
 		Query.ForEachEntity((ref TextFX fx, ref Billboard bill, ref Position pos, ref Scale3 scale, Entity entt) => {
 			Raylib.DrawBillboardPro(
 				camera.Value,
 				fx.RenderTex.Texture,
 				// height has to be inverted because weird opengl stuff
-				new Rectangle(0, 0, fx.RenderTex.Texture.Width, -fx.RenderTex.Texture.Height),
+				new Rectangle(0, fx.RenderTex.Texture.Height, fx.RenderTex.Texture.Width, -fx.RenderTex.Texture.Height),
 				pos.value, camera.GetUpVec(),
 				new Vector2(scale.x, scale.z), new Vector2(0.5f, 0), 0, Color.Orange
 			);
 		});
-		Raylib.EndShaderMode();
 		Raylib.EndMode3D();
+		Raylib.EndShaderMode();
 	}
 }

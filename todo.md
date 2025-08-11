@@ -1,15 +1,16 @@
+- bug: crash when clicking on wall
 - revisit enemy and room generation
-- bug: combat dmg fx not working in web
+- in game health bars
+- stop auto move after one turn if enemies in sight
 - some bugs with enemy visibility. should recalculate on each move
 - log history
-- in game health bars
-- aggro nearby enemies when one is alerted
-- stop auto move after one turn if enemies in sight
 - event handlers for different game states?
 
 ## Other
+- camera rotation
 - blood under corpses
 - display turn order as a number on characters
+- aggro nearby enemies when one is alerted
 - show vision colors in minimap?
 - biomes with different tiles
 - character shaders:
