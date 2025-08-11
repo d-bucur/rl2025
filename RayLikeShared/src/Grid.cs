@@ -46,6 +46,13 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 		return Tile[pos.X, pos.Y].Tags.Has<T>();
 	}
 
+	internal readonly bool CheckCharacter<T>(Vec2I pos) where T : struct, ITag {
+		if (!IsInside(pos))
+			return false;
+		Entity entity = Character[pos.X, pos.Y];
+		return !entity.IsNull && entity.Tags.Has<T>();
+	}
+
 	// Used only for debugging
 	internal void SetDebugColor(Vec2I pos, Raylib_cs.Color color) {
 		if (IsInside(pos)) {

@@ -212,14 +212,16 @@ file class MouseSelect : QuerySystem {
 			return;
 
 		// Draw outline at tile
-		Raylib.BeginMode3D(camera);
-		Raylib.DrawCubeWiresV(
-			mousePosI.ToWorldPos() - tileOffset,
-			new Vector3(1.1f, 1f, 1.1f),
-			Raylib.Fade(Color.Red, 0.3f));
-		if (grid.CheckTile<IsExplored>(mousePosI))
-			PathTo(mousePosI);
-		Raylib.EndMode3D();
+		if (grid.CheckTile<IsExplored>(mousePosI)) {
+			Raylib.BeginMode3D(camera);
+			Color color = grid.CheckCharacter<Enemy>(mousePosI) ? Color.Red : Color.Green;
+			Raylib.DrawCubeWiresV(
+				mousePosI.ToWorldPos() - tileOffset,
+				new Vector3(1.1f, 1f, 1.1f),
+				Raylib.Fade(color, 0.3f));
+			PathTo(mousePosI, color);
+			Raylib.EndMode3D();
+		}
 
 
 		// Get all entities at position
@@ -247,7 +249,7 @@ file class MouseSelect : QuerySystem {
 		}
 	}
 
-	private void PathTo(Vec2I posI) {
+	private void PathTo(Vec2I posI, Color color) {
 		ref var pathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
 		if (Raylib.IsMouseButtonPressed(MouseButton.Right))
 			pathfinder.Reset();
@@ -257,12 +259,12 @@ file class MouseSelect : QuerySystem {
 			.Reverse().Skip(1).ToList(); // garbage
 		foreach (var p in path) {
 			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f,
-				Raylib.Fade(Color.RayWhite, 0.3f));
+				Raylib.Fade(color, 0.3f));
 		}
 		if (Raylib.IsMouseButtonPressed(MouseButton.Left)) {
 			// move player to target destination
 			ref var movement = ref Singleton.Player.GetComponent<PathMovement>();
-			movement.NewDestination(posI, path);
+			if (!Singleton.Entity.GetComponent<Grid>().CheckTile<BlocksPathing>(posI)) movement.NewDestination(posI, path);
 		}
 	}
 }

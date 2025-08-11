@@ -1,4 +1,3 @@
-- bug: crash when clicking on wall
 - revisit enemy and room generation
 - in game health bars
 - stop auto move after one turn if enemies in sight
