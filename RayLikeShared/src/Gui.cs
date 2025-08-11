@@ -211,10 +211,12 @@ file class MouseSelect : QuerySystem {
 		if (!grid.IsInside(mousePosI))
 			return;
 
+		var isTileVisible = grid.CheckTile<IsVisible>(mousePosI);
+		var charAtPos = grid.Character[mousePosI.X, mousePosI.Y];
 		// Draw outline at tile
 		if (grid.CheckTile<IsExplored>(mousePosI)) {
 			Raylib.BeginMode3D(camera);
-			Color color = grid.CheckCharacter<Enemy>(mousePosI) ? Color.Red : Color.Green;
+			Color color = (!charAtPos.IsNull && isTileVisible) ? Color.Red : Color.Green;
 			Raylib.DrawCubeWiresV(
 				mousePosI.ToWorldPos() - tileOffset,
 				new Vector3(1.1f, 1f, 1.1f),
@@ -223,19 +225,19 @@ file class MouseSelect : QuerySystem {
 			Raylib.EndMode3D();
 		}
 
-
 		// Get all entities at position
 		InspectStrings.Clear();
-		var charAtPos = grid.Character[mousePosI.X, mousePosI.Y];
-		if (!charAtPos.IsNull) {
+		if (!charAtPos.IsNull && isTileVisible) {
 			string name = charAtPos.GetComponent<Name>().Value;
 			var fighter = charAtPos.GetComponent<Fighter>();
 			InspectStrings.Add($"{name} {fighter.HP}/{fighter.MaxHP} HP");
 		}
 
-		var others = grid.Others[mousePosI.X, mousePosI.Y];
-		foreach (var other in others?.Value ?? [])
-			InspectStrings.Add($"{other.GetComponent<Name>().Value}");
+		if (isTileVisible) {
+			var others = grid.Others[mousePosI.X, mousePosI.Y];
+			foreach (var other in others?.Value ?? [])
+				InspectStrings.Add($"{other.GetComponent<Name>().Value}");
+		}
 
 		// Render text of objects at position
 		for (int i = 0; i < InspectStrings.Count; i++) {

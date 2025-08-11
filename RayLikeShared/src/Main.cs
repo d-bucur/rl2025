@@ -20,7 +20,10 @@ struct BlocksFOV : ITag; // transparent in tutorial
 
 struct CameraFollowTarget() : IComponent {
 	public Entity Target;
-	public Vector3 Offset = default;
+	public Vector3 Offset;
+	public float Angle;
+	public float Distance;
+	public float Height;
 	public float SpeedPos = 0.03f;
 	public float SpeedTargetFact = 2f;
 }
@@ -36,7 +39,9 @@ class Main : IModule {
 		Singleton.Camera.AddComponent(
 			new CameraFollowTarget() {
 				Target = Singleton.Player,
-				Offset = new Vector3(0f, 10f, 10f)
+				Distance = 10f,
+				Height = 10f,
+				Offset = new Vector3(0f, 10f, 10f),
 			});
 		UpdatePhases.Animations.Add(LambdaSystems.New((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
 			var targetPos = follow.Target.GetComponent<Position>();

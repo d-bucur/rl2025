@@ -116,31 +116,33 @@ file class GameInputSystem : QuerySystem {
 file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
     Vector3 prevOffset = new Vector3(0, 30, 1);
     float prevCameraTargetFollow = 1f;
+    int? DragStart;
     // CameraProjection prevProjection = CameraProjection.Orthographic;
     // float prevFov = 10;
 
     protected override void OnUpdate() {
-        // Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
-        if (Raylib.IsKeyPressed(KeyboardKey.Space)) {
-            // camera.Position
-            Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+        Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+            follow.Offset.Y -= Raylib.GetMouseWheelMoveV().Y;
+            if (Raylib.IsKeyPressed(KeyboardKey.Space)) {
                 (follow.Offset, prevOffset) = (prevOffset, follow.Offset);
                 (follow.SpeedTargetFact, prevCameraTargetFollow) = (prevCameraTargetFollow, follow.SpeedTargetFact);
                 // (cam.Value.Projection, prevProjection) = (prevProjection, cam.Value.Projection);
                 // (cam.Value.FovY, prevFov) = (prevFov, cam.Value.FovY);
-            });
-            ref var settings = ref Singleton.Entity.GetComponent<Settings>();
-            settings.IsOverhead = !settings.IsOverhead;
-        }
-        Query.ForEachEntity((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
-            follow.Offset.Y -= Raylib.GetMouseWheelMoveV().Y;
-            // TODO handle rotation around target
-            // Raylib.UpdateCamera(ref cam.Value, CameraMode.Orbital);
-            // Vector3 dir = Vector3.Normalize(cam.Value.Position - cam.Value.Target);
-            // var angle = MathF.Atan2(dir.Z, dir.X);
-            // angle += 0;
-            // cam.Value.Position.X = MathF.Sin(angle);
-            // cam.Value.Position.Z = MathF.Cos(angle);
+                ref var settings = ref Singleton.Entity.GetComponent<Settings>();
+                settings.IsOverhead = !settings.IsOverhead;
+            }
+
+            // TODO cam rotation is pretty buggy and not very useful. Remove?
+            if (Raylib.IsMouseButtonPressed(MouseButton.Middle)) DragStart = Raylib.GetMouseX();
+            if (DragStart is int start) {
+				const float maxAngle = MathF.PI / 4;
+				follow.Angle = MathF.Min(MathF.Max(follow.Angle + Raylib.GetMouseDelta().X / 400f, -maxAngle), maxAngle);
+                follow.Offset = new Vector3(MathF.Sin(follow.Angle), 0, MathF.Cos(follow.Angle)) * follow.Distance;
+                follow.Offset.Y = follow.Height;
+                var playerPos = Singleton.Player.GetComponent<Position>();
+                cam.Value.Position = playerPos.value + follow.Offset;
+            }
+            if (Raylib.IsMouseButtonReleased(MouseButton.Middle)) DragStart = null;
         });
     }
 }

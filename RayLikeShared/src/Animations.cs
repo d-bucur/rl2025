@@ -19,14 +19,17 @@ static class Animations {
 		).RegisterEcs();
 	}
 
-	internal static void Move(Entity Target, Entity actionEntt, Vec2I startPos, Vector3 endPos) {
+	internal static void Move(Entity Target, Entity actionEntt, Vec2I startPos, Vector3 endPos, Action? onEnd = null) {
 		// xz anim
 		new Tween(Target).With(
 			(ref Position p, Vector3 v) => { p.x = v.X; p.z = v.Z; },
 			startPos.ToWorldPos(),
 			endPos,
 			0.2f, Ease.SineInOut, Vector3.Lerp,
-			OnEnd: (ref Position p) => actionEntt.AddTag<IsActionFinished>()
+			OnEnd: (ref Position p) => {
+				actionEntt.AddTag<IsActionFinished>();
+				onEnd?.Invoke();
+			}
 		).RegisterEcs();
 
 		// y anim

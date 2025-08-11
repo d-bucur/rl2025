@@ -129,9 +129,9 @@ file class RenderBillboards : QuerySystem<Position, RotationSingle, Billboard, T
 				camera.Value,
 				tex.Texture,
 				tex.Source,
-				pos.value,
+				pos.value - new Vector3(0.5f, 0, 0f),
 				billboard.Up ?? camera.GetUpVec(),
-				Vector2.One, Vector2.UnitX, rot.Value, color.Value
+				Vector2.One, new Vector2(0.5f, 0f), rot.Value, color.Value
 			);
 		});
 

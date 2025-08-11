@@ -66,8 +66,7 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
                 return;
             Vec2I next = path.NextPoint();
             Vec2I diff = next - pos.Value;
-            // TODO BUG: asserts when clicking to move into a wall
-            Debug.Assert(Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2, 
+            Debug.Assert(Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2,
                 $"BUG: Movement is too big: from {pos.Value} to {next}");
 
             var grid = Singleton.Entity.GetComponent<Grid>();
@@ -95,35 +94,37 @@ file class ProcessMovementSystem : QuerySystem<MovementAction> {
         Query.ThrowOnStructuralChange = false;
         Query.ForEachEntity((ref MovementAction action, Entity entt) => {
             cmds.RemoveTag<IsActionWaiting>(entt.Id);
-            var oldPos = action.Entity.GetComponent<GridPosition>().Value;
-            if (!TryPerformMove(action)) {
+            var grid = Singleton.Entity.GetComponent<Grid>();
+            ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
+            var oldPos = gridPos.Value;
+            var newPos = oldPos + new Vec2I(action.Dx, action.Dy);
+
+            // Check if move is valid
+            if (!grid.IsInside(newPos) || !IsTileFree(grid, newPos, action.Entity)) {
                 // Could play a fail animation here
                 cmds.AddTag<IsActionFinished>(entt.Id);
                 return;
             }
+
+            // Perform the move
+            grid.MoveCharacterPos(gridPos.Value, newPos);
+            gridPos.Value = newPos;
+            action.Entity.Set(gridPos); // triggers update hooks
+
+            // Calculate vision
+            var wasVisible = grid.CheckTile<IsVisible>(oldPos);
+            var isVisible = grid.CheckTile<IsVisible>(newPos);
+            if (wasVisible != isVisible) {
+                Console.WriteLine($"Entity {action.Entity} entered or exited vision");
+                action.Entity.AddTag<IsVisible>();
+            }
+
             // Add movement animations
             Vector3 currPos = action.Entity.GetComponent<GridPosition>().Value.ToWorldPos();
-            Animations.Move(action.Entity, entt, oldPos, currPos);
+            var actionEntt = action.Entity;
+            Animations.Move(action.Entity, entt, oldPos, currPos,
+                () => { if (!isVisible) actionEntt.RemoveTag<IsVisible>(); });
         });
-    }
-
-    bool TryPerformMove(MovementAction action) {
-        var grid = Singleton.Entity.GetComponent<Grid>();
-        ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
-        var newPos = gridPos.Value + new Vec2I(action.Dx, action.Dy);
-
-        // Check if move is valid
-        if (!grid.IsInside(newPos))
-            return false;
-
-        if (!IsTileFree(grid, newPos, action.Entity))
-            return false;
-
-        // Perform the move
-        grid.MoveCharacterPos(gridPos.Value, newPos);
-        gridPos.Value = newPos;
-        action.Entity.Set(gridPos); // trigger update hooks
-        return true;
     }
 
     static bool IsTileFree(Grid grid, Vec2I pos, Entity entt) {
