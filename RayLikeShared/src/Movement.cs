@@ -114,10 +114,7 @@ file class ProcessMovementSystem : QuerySystem<MovementAction> {
             // Calculate vision
             var wasVisible = grid.CheckTile<IsVisible>(oldPos);
             var isVisible = grid.CheckTile<IsVisible>(newPos);
-            if (wasVisible != isVisible) {
-                Console.WriteLine($"Entity {action.Entity} entered or exited vision");
-                action.Entity.AddTag<IsVisible>();
-            }
+            if (wasVisible != isVisible) action.Entity.AddTag<IsVisible>();
 
             // Add movement animations
             Vector3 currPos = action.Entity.GetComponent<GridPosition>().Value.ToWorldPos();

@@ -4,11 +4,11 @@ namespace RayLikeShared;
 
 static class Config {
     internal const float GRID_SIZE = 1;
-    internal const int MAP_SIZE_X = 50;
-    internal const int MAP_SIZE_Y = 50;
-    internal const int MAX_ROOM_COUNT = 40;
+    internal const int MAP_SIZE_X = 40;
+    internal const int MAP_SIZE_Y = 40;
+    internal const int MAX_ROOM_COUNT = 80;
     internal const int ROOM_SIZE_MIN = 5;
-    internal const int ROOM_SIZE_MAX = 8;
+    internal const int ROOM_SIZE_MAX = 9;
 
     internal const int CA_DEATH_LIMIT = 3;
     internal const int CA_BIRTH_LIMIT = 5;

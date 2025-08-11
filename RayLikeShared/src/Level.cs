@@ -90,7 +90,7 @@ class Level : IModule {
 				new EnemyAI(),
 				new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
 				new PathMovement(),
-				new Team{ Value = 2},
+				new Team { Value = 2 },
 				Tags.Get<Enemy, Character, BlocksPathing>()
 			);
 			switch (enemyType) {
@@ -162,9 +162,8 @@ class Level : IModule {
 	}
 
 	List<Room> GenerateRooms(bool[,] map, int roomCount) {
-		List<Room> rooms = new();
-
 		// Generate rooms and tunnels and save them to a grid
+		List<Room> rooms = new();
 		for (int i = 0; i < roomCount; i++) {
 			int width = Rand.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
 			int height = Rand.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
@@ -178,17 +177,18 @@ class Level : IModule {
 				continue;
 			DigRoom(map, room);
 			if (i > 0)
-				DigTunnel(map, rooms.Last().Center(), room.Center());
+				DigTunnel(map, rooms.Last().Center(), room.Center(), true);
 			rooms.Add(room);
 		}
-
 		return rooms;
 	}
 
 	void DigTunnelsBetweenRooms(bool[,] map, List<Room> rooms) {
-		// TODO allow separate high/low dig
 		for (int i = 1; i < rooms.Count; i++) {
-			DigTunnel(map, rooms[i].Center(), rooms[i - 1].Center());
+			float r = Random.Shared.NextSingle();
+			// middle intersection of 33% will draw both high and low tunnel
+			if (r < 0.6) DigTunnel(map, rooms[i].Center(), rooms[i - 1].Center(), true);
+			if (r > 0.4) DigTunnel(map, rooms[i].Center(), rooms[i - 1].Center(), false);
 		}
 	}
 
@@ -200,14 +200,16 @@ class Level : IModule {
 		}
 	}
 
-	void DigTunnel(bool[,] map, Vec2I start, Vec2I end) {
-		for (int i = Math.Min(start.X, end.X); i <= Math.Max(start.X, end.X); i++) {
-			map[i, Math.Min(start.Y, end.Y)] = true;
-			map[i, Math.Max(start.Y, end.Y)] = true;
+	void DigTunnel(bool[,] map, Vec2I start, Vec2I end, bool high) {
+		var highest = start.Y >= end.Y ? start : end;
+		var lowest = start.Y < end.Y ? start : end;
+		var fixedX = high ? lowest : highest;
+		var fixedY = high ? highest : lowest;
+		for (int x = Math.Min(start.X, end.X); x <= Math.Max(start.X, end.X); x++) {
+			map[x, fixedY.Y] = true;
 		}
-		for (int j = Math.Min(start.Y, end.Y); j <= Math.Max(start.Y, end.Y); j++) {
-			map[Math.Min(start.X, end.X), j] = true;
-			map[Math.Max(start.X, end.X), j] = true;
+		for (int y = lowest.Y; y <= highest.Y; y++) {
+			map[fixedX.X, y] = true;
 		}
 	}
 
