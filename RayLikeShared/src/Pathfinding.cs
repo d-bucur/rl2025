@@ -73,6 +73,10 @@ struct Pathfinder : IComponent {
 			return;
 
 		// Recalculate priorities for frontier, since start can be different
+		// Doesn't make a lot of sense to recalculate existing ones
+		// since expanding them all could be done in the same time
+		// and would have the same effect of having an up to date frontier.
+		// Or could just skip rebuilding, but then the path would not be guaranteed optimal
 		RebuildFrontier(start);
 
 		// astar

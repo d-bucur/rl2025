@@ -1,9 +1,10 @@
+- more stable enemy generation
 - in game health bars
 - log history
 - event handlers for different game states?
 
 ## Other
-- more stable enemy generation
+- bug: pressing keys during path movement
 - blood under corpses
 - camera rotation is buggy
 - display turn order as a number on characters

@@ -18,5 +18,10 @@
 - https://www.redblobgames.com/pathfinding/a-star/introduction.html
 - https://theory.stanford.edu/~amitp/GameProgramming/
 
-## More articles
+## Others
 - https://www.roguebasin.com/index.php?title=Articles
+
+## Terminal-like graphics:
+- https://ratatui.rs/
+- https://github.com/ppkfs/bearlibterminal-hs
+- https://youtu.be/jviNpRGuCIU?t=1015
