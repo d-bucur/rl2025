@@ -57,7 +57,9 @@ class Movement : IModule {
     }
 
     internal static void OnEnemyVisibilityChange(TagsChanged changed) {
-        if (changed.AddedTags.Has<IsVisible>() && !changed.OldTags.Has<IsVisible>()) {
+        if (changed.AddedTags.Has<IsVisible>()
+            && !changed.OldTags.Has<IsVisible>()
+            && !changed.Entity.Tags.Has<Corpse>()) {
             ref var path = ref Singleton.Player.GetComponent<PathMovement>();
             path.Clear();
         }
