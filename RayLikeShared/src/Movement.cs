@@ -123,13 +123,16 @@ file class ProcessMovementSystem : QuerySystem<MovementAction> {
             // Calculate vision. Not ideal here but would be much harder to move this into Vision
             var wasVisible = grid.CheckTile<IsVisible>(oldPos);
             var isVisible = grid.CheckTile<IsVisible>(newPos);
-            if (wasVisible != isVisible) action.Entity.AddTag<IsVisible>();
+            if (wasVisible || isVisible) action.Entity.AddTag<IsVisible>();
 
             // Add movement animations
             Vector3 currPos = action.Entity.GetComponent<GridPosition>().Value.ToWorldPos();
             var actionEntt = action.Entity;
             Animations.Move(action.Entity, entt, oldPos, currPos,
-                () => { if (!isVisible) actionEntt.RemoveTag<IsVisible>(); });
+                () => {
+					Vec2I vgridPos = actionEntt.GetComponent<GridPosition>().Value;
+					if (!Singleton.Entity.GetComponent<Grid>().CheckTile<IsVisible>(vgridPos))
+                        actionEntt.RemoveTag<IsVisible>(); });
         });
     }
 
