@@ -82,8 +82,8 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 				var dir = Vector3.Normalize(center - source.Value.ToWorldPos());
 				var d1 = Vector3.Normalize(new Vector3(dir.Z, 0, -dir.X));
 				var d2 = Vector3.Normalize(new Vector3(-dir.Z, 0, dir.X));
-				var p1 = center + d1 * Config.VIS_SENSITIVITY;
-				var p2 = center + d2 * Config.VIS_SENSITIVITY;
+				var p1 = center + d1 * Config.VisionSensitivity;
+				var p2 = center + d2 * Config.VisionSensitivity;
 
 				// Given a line from source to an edge, blocks tiles on the line continued behind it, clamped by distance
 				BlockVisionBehind(source.Value, p1, currPos, vision.Range, grid, fovBlocked);

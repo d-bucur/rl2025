@@ -16,8 +16,8 @@ public class Game {
 			Console.WriteLine($"Setting ResizableWindow");
 			Raylib.SetConfigFlags(ConfigFlags.ResizableWindow);
 		}
-		Raylib.SetWindowMinSize(Config.WIN_SIZE_X, Config.WIN_SIZE_Y);
-		Raylib.InitWindow(Config.WIN_SIZE_X, Config.WIN_SIZE_Y, "RaygueLike Challenge");
+		Raylib.SetWindowMinSize(Config.WinSizeX, Config.WinSizeY);
+		Raylib.InitWindow(Config.WinSizeX, Config.WinSizeY, "RaygueLike Challenge");
 		RegisterComponentsForNativeAot();
 
 		World = new EntityStore();

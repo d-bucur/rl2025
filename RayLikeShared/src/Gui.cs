@@ -148,7 +148,7 @@ file class RenderMinimap : QuerySystem {
 	private static bool explorationHack;
 
 	protected override void OnAddStore(EntityStore store) {
-		MinimapImage = Raylib.GenImageColor(Config.MAP_SIZE_X, Config.MAP_SIZE_Y, Palette.Transparent);
+		MinimapImage = Raylib.GenImageColor(Config.MapSizeX, Config.MapSizeY, Palette.Transparent);
 		MinimapTexture = Raylib.LoadTextureFromImage(MinimapImage);
 	}
 

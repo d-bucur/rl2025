@@ -7,7 +7,7 @@ class Level : IModule {
 	Random Rand;
 	public void Init(EntityStore world) {
 		Rand = new Random();
-		Grid grid = new(Config.MAP_SIZE_X, Config.MAP_SIZE_Y);
+		Grid grid = new(Config.MapSizeX, Config.MapSizeY);
 		Singleton.Entity.AddComponent(grid);
 
 		world.OnComponentAdded += OnGridPositionAdded;
@@ -57,7 +57,7 @@ class Level : IModule {
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
 			new RotationSingle(0f),
-			new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+			new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
 			new Billboard(), new TextureWithSource(Assets.heroesTexture) {
 				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(2, 2)
@@ -88,7 +88,7 @@ class Level : IModule {
 	static void SpawnEnemy(EntityStore world, Room room, ref Grid grid) {
 		var monsterTypes = Enum.GetValues(typeof(MonsterType));
 
-		for (int i = 0; i <= Config.MAX_ENEMIES_PER_ROOM; i++) {
+		for (int i = 0; i <= Config.MaxEnemiesPerRoom; i++) {
 			var pos = new Vec2I(Random.Shared.Next(room.StartX + 1, room.EndX), Random.Shared.Next(room.StartY + 1, room.EndY));
 			if (!grid.Character[pos.X, pos.Y].IsNull || grid.CheckTile<BlocksPathing>(pos))
 				continue;
@@ -98,7 +98,7 @@ class Level : IModule {
 				new GridPosition(pos.X, pos.Y),
 				new Position(pos.X, 0, pos.Y),
 				new RotationSingle(0f),
-				new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+				new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
 				new Billboard(),
 				new ColorComp(),
 				new EnemyAI(),
@@ -163,7 +163,7 @@ class Level : IModule {
 	void SpawnItems(ref Grid grid, ref EntityStore world) {
 		var walkableTilesQuery = world.Query().AllTags(Tags.Get<Walkable>());
 		var walkableTiles = walkableTilesQuery.ToEntityList();
-		for (int i = 0; i < Config.MAX_ITEMS; i++) {
+		for (int i = 0; i < Config.MaxItemsPerLevel; i++) {
 			var entt = walkableTiles[Random.Shared.Next(walkableTiles.Count)];
 			var pos = entt.GetComponent<GridPosition>().Value;
 			if (grid.Character[pos.X, pos.Y].IsNull
@@ -174,7 +174,7 @@ class Level : IModule {
 					new GridPosition(pos.X, pos.Y),
 					new Position(pos.X, 0, pos.Y),
 					new RotationSingle(0f),
-					new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+					new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
 					new Billboard(), new TextureWithSource(Assets.itemsTexture) {
 						TileSize = new Vec2I(32, 32),
 						TileIdx = new Vec2I(1, 19)
@@ -189,15 +189,15 @@ class Level : IModule {
 
 	List<Room> GenerateDungeon(EntityStore world) {
 		// true if tile is empty, false if walled
-		var map = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
+		var map = new bool[Config.MapSizeX, Config.MapSizeY];
 
 		RandomizeTiles(map, 0.7);
 		List<Room> rooms = GenerateRooms(map, 3);
 		// DigTunnelsBetweenRooms(map, rooms);
-		for (int i = 0; i < Config.CA_SIM_STEPS; i++) {
+		for (int i = 0; i < Config.CASimSteps; i++) {
 			map = CASimStep(map);
 		}
-		GenerateRooms(map, Config.MAX_ROOM_COUNT);
+		GenerateRooms(map, Config.MaxRoomCount);
 		DigTunnelsBetweenRooms(map, rooms);
 
 		SpawnTiles(world, map);
@@ -208,11 +208,11 @@ class Level : IModule {
 		// Generate rooms and tunnels and save them to a grid
 		List<Room> rooms = new();
 		for (int i = 0; i < roomCount; i++) {
-			int width = Rand.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
-			int height = Rand.Next(Config.ROOM_SIZE_MIN, Config.ROOM_SIZE_MAX);
+			int width = Rand.Next(Config.RoomSizeMin, Config.RoomSizeMax);
+			int height = Rand.Next(Config.RoomSizeMin, Config.RoomSizeMax);
 			var room = new Room(
-				Rand.Next(0, Config.MAP_SIZE_X - width),
-				Rand.Next(0, Config.MAP_SIZE_Y - height),
+				Rand.Next(0, Config.MapSizeX - width),
+				Rand.Next(0, Config.MapSizeY - height),
 				width,
 				height
 			);
@@ -258,8 +258,8 @@ class Level : IModule {
 
 	void RandomizeTiles(bool[,] map, double emptyChance) {
 		// Randomize map for cellular automata
-		for (int i = 0; i < Config.MAP_SIZE_X; i++) {
-			for (int j = 0; j < Config.MAP_SIZE_Y; j++) {
+		for (int i = 0; i < Config.MapSizeX; i++) {
+			for (int j = 0; j < Config.MapSizeY; j++) {
 				if (Rand.NextSingle() > emptyChance)
 					map[i, j] = true;
 			}
@@ -268,16 +268,16 @@ class Level : IModule {
 
 	// Single simulation step of the cellular automata
 	bool[,] CASimStep(bool[,] map) {
-		var newMap = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
-		for (int i = 0; i < Config.MAP_SIZE_X; i++) {
-			for (int j = 0; j < Config.MAP_SIZE_Y; j++) {
+		var newMap = new bool[Config.MapSizeX, Config.MapSizeY];
+		for (int i = 0; i < Config.MapSizeX; i++) {
+			for (int j = 0; j < Config.MapSizeY; j++) {
 				var count = CountEmptyNeighbors(map, i, j);
 				if (map[i, j])
 					// cell is empty
-					newMap[i, j] = !(count <= Config.CA_DEATH_LIMIT);
+					newMap[i, j] = !(count <= Config.CADeathLimit);
 				else
 					// cell is walled
-					newMap[i, j] = count >= Config.CA_BIRTH_LIMIT;
+					newMap[i, j] = count >= Config.CABirthLimit;
 			}
 		}
 		return newMap;
@@ -307,7 +307,7 @@ class Level : IModule {
 					world.CreateEntity(
 						new GridPosition(i, j),
 						new Position(i, 0.4f, j),
-						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
+						new Scale3(Config.GridSize / 2, Config.GridSize / 2, Config.GridSize / 2),
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),
 						new ColorComp(Palette.Wall),
@@ -318,7 +318,7 @@ class Level : IModule {
 					world.CreateEntity(
 						new GridPosition(i, j),
 						new Position(i, -0.5f, j),
-						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
+						new Scale3(Config.GridSize / 2, Config.GridSize / 2, Config.GridSize / 2),
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),
 						new ColorComp(Palette.Floor),

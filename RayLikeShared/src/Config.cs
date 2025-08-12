@@ -3,27 +3,26 @@ using Friflo.Engine.ECS;
 namespace RayLikeShared;
 
 static class Config {
-    // TODO lowercase everything
-    internal const float GRID_SIZE = 1;
-    internal const int MAP_SIZE_X = 40;
-    internal const int MAP_SIZE_Y = 40;
-    internal const int MAX_ROOM_COUNT = 80;
-    internal const int ROOM_SIZE_MIN = 5;
-    internal const int ROOM_SIZE_MAX = 9;
-    internal const int MAX_ENEMIES_PER_ROOM = 3;
-	internal const int MAX_ITEMS = 3;
+    internal const float GridSize = 1;
+    internal const int MapSizeX = 40;
+    internal const int MapSizeY = 40;
+    internal const int MaxRoomCount = 80;
+    internal const int RoomSizeMin = 5;
+    internal const int RoomSizeMax = 9;
+    internal const int MaxEnemiesPerRoom = 3;
+	internal const int MaxItemsPerLevel = 3;
 
-    internal const int CA_DEATH_LIMIT = 3;
-    internal const int CA_BIRTH_LIMIT = 5;
-    internal const int CA_SIM_STEPS = 4;
+    internal const int CADeathLimit = 3;
+    internal const int CABirthLimit = 5;
+    internal const int CASimSteps = 4;
 
-    internal const int WIN_SIZE_X = 1024;
-    internal const int WIN_SIZE_Y = 600;
+    internal const int WinSizeX = 1024;
+    internal const int WinSizeY = 600;
 
-    internal const float VIS_SENSITIVITY = 0.4f; // range: 0 .. 0.5f
+    internal const float VisionSensitivity = 0.4f; // range: 0 .. 0.5f
 
-    internal const int COST_HORIZONTAL = 2;
-    internal const int COST_DIAGONAL = 3;
+    internal const int CostHorizontal = 2;
+    internal const int CostDiagonal = 3;
 }
 
 struct Settings() : IComponent {

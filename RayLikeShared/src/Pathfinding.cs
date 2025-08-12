@@ -124,15 +124,15 @@ struct Pathfinder : IComponent {
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int ManhattanDistance(Vec2I a, Vec2I b) {
-		return (Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y)) * Config.COST_HORIZONTAL;
+		return (Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y)) * Config.CostHorizontal;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static int DiagonalDistance(Vec2I a, Vec2I b) {
 		var dx = Math.Abs(a.X - b.X);
 		var dy = Math.Abs(a.Y - b.Y);
-		return Config.COST_HORIZONTAL * Math.Max(dx, dy)
-			+ (Config.COST_DIAGONAL - 2 * Config.COST_HORIZONTAL) * Math.Min(dx, dy);
+		return Config.CostHorizontal * Math.Max(dx, dy)
+			+ (Config.CostDiagonal - 2 * Config.CostHorizontal) * Math.Min(dx, dy);
 	}
 
 	int GetCost(Vec2I to, Vec2I dir) {
@@ -147,10 +147,10 @@ struct Pathfinder : IComponent {
 			return 10;
 		// diagonal
 		else if (Math.Abs(dir.X) > 0 && Math.Abs(dir.Y) > 0)
-			return Config.COST_DIAGONAL;
+			return Config.CostDiagonal;
 		// normal
 		else
-			return Config.COST_HORIZONTAL;
+			return Config.CostHorizontal;
 	}
 }
 

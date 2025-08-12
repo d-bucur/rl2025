@@ -108,7 +108,7 @@ file class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
 		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Cube cube, ref ColorComp color, Entity e) => {
-			var posWithOffset = pos.value + new Vector3(Config.GRID_SIZE) / 2;
+			var posWithOffset = pos.value + new Vector3(Config.GridSize) / 2;
 			Raylib.DrawCubeV(posWithOffset, scale.value, color.Value);
 			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Raylib.Fade(Color.Black, 0.2f));
 		});
@@ -150,7 +150,7 @@ file class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
 
 		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Mesh mesh, ref ColorComp color, Entity e) => {
-			var posWithOffset = pos.value - new Vector3(Config.GRID_SIZE, 0, Config.GRID_SIZE) / 2 + mesh.Offset;
+			var posWithOffset = pos.value - new Vector3(Config.GridSize, 0, Config.GridSize) / 2 + mesh.Offset;
 			var normalColor = e.Tags.Has<IsVisible>()
 				? Raylib.ColorTint(color.Value, Color.White)
 				: Raylib.ColorBrightness(color.Value, Palette.NotVisibleFade);
