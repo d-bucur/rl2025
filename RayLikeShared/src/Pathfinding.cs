@@ -109,6 +109,8 @@ struct Pathfinder : IComponent {
 		foreach (var next in frontierItems) {
 			var priority = visited[next].costSoFar + Heuristic(start, next);
 			frontier.Enqueue(next, priority);
+			Visited v = visited[next];
+			visited[next] = v with { priority = priority };
 		}
 	}
 
@@ -197,8 +199,9 @@ internal class DebugPathfinding : QuerySystem<Pathfinder> {
 				Raylib.BeginTextureMode(renderTex);
 				Raylib.ClearBackground(new Color(0, 0, 0, 0));
 				Raylib.DrawText($"{visited.costSoFar}", 0, 0, 10, Color.RayWhite);
-				Raylib.DrawText($"{visited.priority}", 10, 10, 10,
-					pathfinder.frontierItems.Contains(pos) ? Color.SkyBlue : Color.Orange);
+				if (pathfinder.frontierItems.Contains(pos)) {
+					Raylib.DrawText($"{visited.priority}", 8, 10, 10, Color.SkyBlue);
+				}
 				Raylib.EndTextureMode();
 
 				// draw texture in 3d space
