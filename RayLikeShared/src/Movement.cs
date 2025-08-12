@@ -52,7 +52,7 @@ struct PathMovement() : IComponent {
 class Movement : IModule {
 	public void Init(EntityStore world) {
         UpdatePhases.Input.Add(new ProcessPathMovement());
-        UpdatePhases.ApplyActions.Add(new ProcessMovementSystem());
+        UpdatePhases.ApplyActions.Add(new ProcessMovementActions());
         // UpdatePhases.ApplyActions.Add(new ProcessRestSystem());
     }
 
@@ -95,8 +95,8 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
     }
 }
 
-file class ProcessMovementSystem : QuerySystem<MovementAction> {
-    public ProcessMovementSystem() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
+file class ProcessMovementActions : QuerySystem<MovementAction> {
+    public ProcessMovementActions() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
 
     protected override void OnUpdate() {
         var cmds = CommandBuffer;

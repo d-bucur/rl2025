@@ -8,15 +8,14 @@ struct Character : ITag; // Entity in tutorial, but name would conflict with ECS
 struct Player : ITag;
 struct Enemy : ITag;
 struct Corpse : ITag;
-struct Name : IComponent {
-	public string Value;
-}
+
 struct RotationSingle(float Value) : IComponent {
 	public float Value = Value;
 }
 
 struct BlocksPathing : ITag; // walkable in tutorial
 struct BlocksFOV : ITag; // transparent in tutorial
+struct Walkable : ITag;
 
 struct CameraFollowTarget() : IComponent {
 	public Entity Target;

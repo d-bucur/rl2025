@@ -33,6 +33,12 @@ struct Fighter : IComponent {
 		HP -= damage;
 		// HP = Math.Max(HP - damage, 0);
 	}
+
+	internal int Heal(int amount) {
+		var oldHP = HP;
+		HP = Math.Min(MaxHP, HP + amount);
+		return HP - oldHP;
+	}
 }
 record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IComponent { }
 struct Team : IComponent {
@@ -62,8 +68,8 @@ class Combat : IModule {
 
 		entity.Remove<EnemyAI, InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
 		entity.AddTag<Corpse>();
-		ref var name = ref entity.GetComponent<Name>();
-		name.Value = $"Remains of {name.Value}";
+		ref var name = ref entity.GetComponent<EntityName>();
+		name.value = $"Remains of {name.value}";
 
 		if (entity.HasComponent<Billboard>()) {
 			ref var bill = ref entity.GetComponent<Billboard>();
@@ -95,7 +101,7 @@ file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 			ref var targetFighter = ref action.Target.GetComponent<Fighter>();
 			var damage = sourceFighter.Power
 				- targetFighter.Defense.Roll();
-			var desc = $"{action.Source.GetComponent<Name>().Value} attacks {action.Target.GetComponent<Name>().Value}";
+			var desc = $"{action.Source.GetComponent<EntityName>().value} attacks {action.Target.GetComponent<EntityName>().value}";
 			var isTargetPlayer = action.Target.Tags.Has<Player>();
 			var color = isTargetPlayer ? Color.Red : Color.Orange;
 			if (damage > 0) {

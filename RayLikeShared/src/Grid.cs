@@ -6,7 +6,7 @@ namespace RayLikeShared;
 
 // Similar to GameMap in tutorial
 struct Grid(int sizeX, int sizeY) : IComponent {
-	// Combine into one array with a struct?
+	// TODO Combine into a single array with a list of entities. Simplify all the checks below
 	internal Entity[,] Tile = new Entity[sizeX, sizeY];
 	internal Entity[,] Character = new Entity[sizeX, sizeY];
 	internal Other?[,] Others = new Other?[sizeX, sizeY];
@@ -51,6 +51,18 @@ struct Grid(int sizeX, int sizeY) : IComponent {
 			return false;
 		Entity entity = Character[pos.X, pos.Y];
 		return !entity.IsNull && entity.Tags.Has<T>();
+	}
+
+	internal readonly bool CheckOthers<T>(Vec2I pos) where T : struct, ITag {
+		if (!IsInside(pos))
+			return false;
+		Other? o = Others[pos.X, pos.Y];
+		if (o is Other entity) {
+			foreach (var e in entity.Value) {
+				if (!e.IsNull && e.Tags.Has<T>()) return true;
+			}
+		}
+		return false;
 	}
 
 	// Used only for debugging

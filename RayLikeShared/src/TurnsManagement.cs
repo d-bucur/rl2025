@@ -21,8 +21,6 @@ struct IsActionFinished : ITag;
 // Marks that other actions should not be executed until this is finished
 struct IsActionBlocking : ITag;
 
-struct EscapeAction : IComponent {}
-
 class TurnsManagement : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.ProgressTurns.Add(new TickEnergySystem());

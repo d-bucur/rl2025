@@ -126,11 +126,11 @@ file class RenderMessageLog : QuerySystem<MessageLog> {
 	}
 }
 
-file class RenderGameOver : QuerySystem<Name> {
+file class RenderGameOver : QuerySystem<EntityName> {
 	public RenderGameOver() => Filter.AllTags(Tags.Get<Player, Corpse>());
 
 	protected override void OnUpdate() {
-		Query.ForEachEntity((ref Name name, Entity playerEntt) => {
+		Query.ForEachEntity((ref EntityName name, Entity playerEntt) => {
 			GUI.RenderText(
 				"You're dead!",
 				Raylib.GetScreenWidth() / 2 - 140,
@@ -178,6 +178,7 @@ file class RenderMinimap : QuerySystem {
 		if (!tile.Tags.Has<IsExplored>())
 			return Palette.Transparent;
 		var color = grid.Tile[x, y].GetComponent<ColorComp>().Value;
+		if (grid.CheckOthers<ItemTag>((x, y))) color = Color.Yellow;
 		Entity character = grid.Character[x, y];
 		if (!character.IsNull) {
 			if (character.Tags.Has<Player>())
@@ -228,7 +229,7 @@ file class MouseSelect : QuerySystem {
 		// Get all entities at position
 		InspectStrings.Clear();
 		if (!charAtPos.IsNull && isTileVisible) {
-			string name = charAtPos.GetComponent<Name>().Value;
+			string name = charAtPos.GetComponent<EntityName>().value;
 			var fighter = charAtPos.GetComponent<Fighter>();
 			InspectStrings.Add($"{name} {fighter.HP}/{fighter.MaxHP} HP");
 		}
@@ -236,7 +237,7 @@ file class MouseSelect : QuerySystem {
 		if (isTileVisible) {
 			var others = grid.Others[mousePosI.X, mousePosI.Y];
 			foreach (var other in others?.Value ?? [])
-				InspectStrings.Add($"{other.GetComponent<Name>().Value}");
+				InspectStrings.Add($"{other.GetComponent<EntityName>().value}");
 		}
 
 		// Render text of objects at position

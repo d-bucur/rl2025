@@ -45,6 +45,7 @@ public class Game {
 			new Movement(),
 			new Vision(),
 			new Combat(),
+			new Items(),
 		];
 		Modules.ForEach(m => m.Init(World));
 	}
@@ -74,6 +75,7 @@ public class Game {
 		var aot = new NativeAOT();
 		// TODO always remember to register new components here
 		// would be cool to have this codegened from interfaces
+		aot.RegisterComponent<EntityName>();
 		aot.RegisterComponent<Position>();
 		aot.RegisterComponent<Scale3>();
 		aot.RegisterComponent<Cube>();
@@ -91,7 +93,6 @@ public class Game {
 		aot.RegisterComponent<VisionSource>();
 		aot.RegisterComponent<Settings>();
 		aot.RegisterComponent<Fighter>();
-		aot.RegisterComponent<Name>();
 		aot.RegisterComponent<EnemyAI>();
 		aot.RegisterComponent<MessageLog>();
 		aot.RegisterComponent<RotationSingle>();
@@ -99,6 +100,7 @@ public class Game {
 		aot.RegisterComponent<Pathfinder>();
 		aot.RegisterComponent<PathMovement>();
 		aot.RegisterComponent<Team>();
+		aot.RegisterComponent<Item>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();
@@ -110,18 +112,22 @@ public class Game {
 		aot.RegisterTag<IsSeeThrough>();
 		aot.RegisterTag<IsVisible>();
 		aot.RegisterTag<IsExplored>();
+		aot.RegisterTag<ItemTag>();
+		aot.RegisterTag<Walkable>();
 
 		aot.RegisterComponent<MovementAction>();
-		aot.RegisterComponent<EscapeAction>();
 		aot.RegisterComponent<MeleeAction>();
 		aot.RegisterComponent<RestAction>();
+		aot.RegisterComponent<ConsumeItemAction>();
+		aot.RegisterComponent<PickupAction>();
 
 		aot.RegisterTag<IsActionWaiting>();
 		aot.RegisterTag<IsActionExecuting>();
 		aot.RegisterTag<IsActionFinished>();
 		aot.RegisterTag<IsActionBlocking>();
 
-		// aot.RegisterScript   <MyScript>();
+		aot.RegisterLinkRelation<InventoryItem>();
+
 		var schema = aot.CreateSchema();
 	}
 }

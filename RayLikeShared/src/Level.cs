@@ -10,16 +10,8 @@ class Level : IModule {
 		Grid grid = new(Config.MAP_SIZE_X, Config.MAP_SIZE_Y);
 		Singleton.Entity.AddComponent(grid);
 
-		world.OnComponentAdded += (change) => {
-			if (change.Action == ComponentChangedAction.Add && change.Type == typeof(GridPosition)) {
-				var grid = Singleton.Entity.GetComponent<Grid>();
-				var pos = change.Component<GridPosition>();
-				if (change.Entity.Tags.Has<Character>())
-					grid.Character[pos.Value.X, pos.Value.Y] = change.Entity;
-				else
-					grid.Tile[pos.Value.X, pos.Value.Y] = change.Entity;
-			}
-		};
+		world.OnComponentAdded += OnGridPositionAdded;
+		world.OnComponentRemoved += OnGridPositionRemoved;
 
 		var rooms = GenerateDungeon(world);
 		var center = rooms[0].Center();
@@ -34,6 +26,28 @@ class Level : IModule {
 		Console.WriteLine($"Total rooms: {rooms.Count}");
 		foreach (var room in rooms[1..]) {
 			SpawnEnemy(world, room, ref grid);
+		}
+		SpawnItems(ref grid, ref world);
+	}
+
+	static void OnGridPositionAdded(ComponentChanged change) {
+		if (change.Type != typeof(GridPosition) || change.Action != ComponentChangedAction.Add) return;
+		var grid = Singleton.Entity.GetComponent<Grid>();
+		var pos = change.Component<GridPosition>().Value;
+		if (change.Entity.Tags.Has<Character>())
+			grid.Character[pos.X, pos.Y] = change.Entity;
+		else if (change.Entity.HasComponent<Item>())
+			grid.AddOther(change.Entity, pos);
+		else
+			grid.Tile[pos.X, pos.Y] = change.Entity;
+	}
+
+	private void OnGridPositionRemoved(ComponentChanged change) {
+		if (change.Type != typeof(GridPosition) || change.Action != ComponentChangedAction.Remove) return;
+		var grid = Singleton.Entity.GetComponent<Grid>();
+		var pos = change.OldComponent<GridPosition>().Value;
+		if (change.Entity.HasComponent<Item>()) {
+			grid.Others[pos.X, pos.Y].GetValueOrDefault().Value.Remove(change.Entity);
 		}
 	}
 
@@ -53,7 +67,7 @@ class Level : IModule {
 		);
 		// max 10 components per method...
 		Singleton.Player.Add(
-			new Name { Value = "Hero" },
+			new EntityName { value = "Hero" },
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
 			new Fighter(40, new Dice(3, 2), 6),
@@ -97,7 +111,7 @@ class Level : IModule {
 			switch (enemyType) {
 				case MonsterType.Skeleton:
 					entt.Add(
-						new Name { Value = "Skeleton" },
+						new EntityName { value = "Skeleton" },
 						new TextureWithSource(Assets.monsterTexture) {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(0, 4)
@@ -108,7 +122,7 @@ class Level : IModule {
 					break;
 				case MonsterType.Banshee:
 					entt.Add(
-						new Name { Value = "Banshee" },
+						new EntityName { value = "Banshee" },
 						new TextureWithSource(Assets.monsterTexture) {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(1, 5)
@@ -119,7 +133,7 @@ class Level : IModule {
 					break;
 				case MonsterType.Orc:
 					entt.Add(
-						new Name { Value = "Orc" },
+						new EntityName { value = "Orc" },
 						new TextureWithSource(Assets.monsterTexture) {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(3, 0)
@@ -130,7 +144,7 @@ class Level : IModule {
 					break;
 				case MonsterType.Ogre:
 					entt.Add(
-						new Name { Value = "Ogre" },
+						new EntityName { value = "Ogre" },
 						new TextureWithSource(Assets.monsterTexture) {
 							TileSize = new Vec2I(32, 32),
 							TileIdx = new Vec2I(0, 1)
@@ -142,6 +156,34 @@ class Level : IModule {
 			}
 			entt.AddSignalHandler<DeathSignal>(Combat.EnemyDeath);
 			Console.WriteLine($"Spawned {enemyType} in {room}");
+		}
+	}
+
+	// TODO make generic and use for enemy spawns
+	void SpawnItems(ref Grid grid, ref EntityStore world) {
+		var walkableTilesQuery = world.Query().AllTags(Tags.Get<Walkable>());
+		var walkableTiles = walkableTilesQuery.ToEntityList();
+		for (int i = 0; i < Config.MAX_ITEMS; i++) {
+			var entt = walkableTiles[Random.Shared.Next(walkableTiles.Count)];
+			var pos = entt.GetComponent<GridPosition>().Value;
+			if (grid.Character[pos.X, pos.Y].IsNull
+				&& grid.Others[pos.X, pos.Y] == null) {
+				var health = 10;
+				world.CreateEntity(
+					new EntityName($"Healing potion +{health}HP"),
+					new GridPosition(pos.X, pos.Y),
+					new Position(pos.X, 0, pos.Y),
+					new RotationSingle(0f),
+					new Scale3(Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f, Config.GRID_SIZE * 0.8f),
+					new Billboard(), new TextureWithSource(Assets.itemsTexture) {
+						TileSize = new Vec2I(32, 32),
+						TileIdx = new Vec2I(1, 19)
+					},
+					new ColorComp(),
+					new Item() { Consumable = new HealingConsumable { Amount = health } },
+					Tags.Get<ItemTag>()
+				);
+			}
 		}
 	}
 
@@ -224,6 +266,7 @@ class Level : IModule {
 		}
 	}
 
+	// Single simulation step of the cellular automata
 	bool[,] CASimStep(bool[,] map) {
 		var newMap = new bool[Config.MAP_SIZE_X, Config.MAP_SIZE_Y];
 		for (int i = 0; i < Config.MAP_SIZE_X; i++) {
@@ -278,7 +321,8 @@ class Level : IModule {
 						new Scale3(Config.GRID_SIZE / 2, Config.GRID_SIZE / 2, Config.GRID_SIZE / 2),
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),
-						new ColorComp(Palette.Floor)
+						new ColorComp(Palette.Floor),
+						Tags.Get<Walkable>()
 					);
 			}
 		}

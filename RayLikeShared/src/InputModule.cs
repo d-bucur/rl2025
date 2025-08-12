@@ -48,9 +48,17 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
                 TurnsManagement.QueueAction(cmd, new MovementAction(entt, 0, 0), entt);
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
-
-            if (Raylib.IsKeyDown(KeyboardKey.Backspace)) {
-                TurnsManagement.QueueAction(cmd, new EscapeAction(), entt);
+            else if (Raylib.IsKeyPressed(KeyboardKey.F)) {
+                TurnsManagement.QueueAction(cmd, new PickupAction { Target = entt, Position = entt.GetComponent<GridPosition>().Value }, entt);
+                cmd.RemoveTag<CanAct>(entt.Id);
+            }
+            else if (Raylib.IsKeyPressed(KeyboardKey.V)) {
+                var items = entt.GetRelations<InventoryItem>();
+                if (items.Length > 0) {
+                    TurnsManagement.QueueAction(cmd, new ConsumeItemAction { Target = entt, Item = items[0].Item }, entt);
+                } else {
+                    MessageLog.Print($"No items in inventory");
+                }
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
         });
@@ -135,8 +143,8 @@ file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
             // TODO cam rotation is pretty buggy and not very useful. Remove?
             if (Raylib.IsMouseButtonPressed(MouseButton.Middle)) DragStart = Raylib.GetMouseX();
             if (DragStart is int start) {
-				const float maxAngle = MathF.PI / 4;
-				follow.Angle = MathF.Min(MathF.Max(follow.Angle + Raylib.GetMouseDelta().X / 400f, -maxAngle), maxAngle);
+                const float maxAngle = MathF.PI / 4;
+                follow.Angle = MathF.Min(MathF.Max(follow.Angle + Raylib.GetMouseDelta().X / 400f, -maxAngle), maxAngle);
                 follow.Offset = new Vector3(MathF.Sin(follow.Angle), 0, MathF.Cos(follow.Angle)) * follow.Distance;
                 follow.Offset.Y = follow.Height;
                 var playerPos = Singleton.Player.GetComponent<Position>();

@@ -62,6 +62,7 @@ struct ColorComp : IComponent {
 	}
 }
 
+// Used to fade scenery when rendering
 struct IsSeeThrough : ITag;
 
 struct Camera() : IComponent {
