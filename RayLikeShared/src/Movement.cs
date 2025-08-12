@@ -50,10 +50,17 @@ struct PathMovement() : IComponent {
 }
 
 class Movement : IModule {
-    public void Init(EntityStore world) {
+	public void Init(EntityStore world) {
         UpdatePhases.Input.Add(new ProcessPathMovement());
         UpdatePhases.ApplyActions.Add(new ProcessMovementSystem());
         // UpdatePhases.ApplyActions.Add(new ProcessRestSystem());
+    }
+
+    internal static void OnEnemyVisibilityChange(TagsChanged changed) {
+        if (changed.AddedTags.Has<IsVisible>() && !changed.OldTags.Has<IsVisible>()) {
+            ref var path = ref Singleton.Player.GetComponent<PathMovement>();
+            path.Clear();
+        }
     }
 }
 
@@ -111,7 +118,7 @@ file class ProcessMovementSystem : QuerySystem<MovementAction> {
             gridPos.Value = newPos;
             action.Entity.Set(gridPos); // triggers update hooks
 
-            // Calculate vision
+            // Calculate vision. Not ideal here but would be much harder to move this into Vision
             var wasVisible = grid.CheckTile<IsVisible>(oldPos);
             var isVisible = grid.CheckTile<IsVisible>(newPos);
             if (wasVisible != isVisible) action.Entity.AddTag<IsVisible>();

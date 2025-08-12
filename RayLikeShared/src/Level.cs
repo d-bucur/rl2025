@@ -93,6 +93,7 @@ class Level : IModule {
 				new Team { Value = 2 },
 				Tags.Get<Enemy, Character, BlocksPathing>()
 			);
+			entt.OnTagsChanged += Movement.OnEnemyVisibilityChange;
 			switch (enemyType) {
 				case MonsterType.Skeleton:
 					entt.Add(

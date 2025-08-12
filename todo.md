@@ -1,5 +1,4 @@
 - in game health bars
-- stop auto move after one turn if enemies in sight
 - log history
 - event handlers for different game states?
 
