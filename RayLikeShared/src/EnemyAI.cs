@@ -7,6 +7,10 @@ struct EnemyAI : IComponent {
 	// add ai logic here
 }
 
+struct IsConfused : IComponent {
+	required internal int TurnsRemaining;
+}
+
 class EnemyAIModule : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.Input.Add(new EnemyMovementSystem());
@@ -17,17 +21,38 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 	public EnemyMovementSystem() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {
+		// Should add a proper state machine
 		var cmds = CommandBuffer;
 		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, ref Pathfinder pathfinder, Entity enemyEntt) => {
-			var grid = Singleton.Entity.GetComponent<Grid>();
 			ref var usedPathfinder = ref pathfinder;
+			// TODO refactor: always select closest enemy (different team and set it as destination) for player as well
+			// Select a destination
+			bool isConfused = enemyEntt.HasComponent<IsConfused>();
+			if (isConfused) {
+				ref var confused = ref enemyEntt.GetComponent<IsConfused>();
+				var closest = GetClosestEnemy(enemyEntt, enemyPos.Value);
+				if (!closest.IsNull) {
+					path.Destination = closest.GetComponent<GridPosition>().Value;
+					usedPathfinder.Goal(path.Destination.Value);
+				}
+				// TODO should be separate from ai so it can be applied to player as well
+				// Tick down confusion
+				confused.TurnsRemaining -= 1;
+				if (confused.TurnsRemaining <= 0) {
+					cmds.RemoveComponent<IsConfused>(enemyEntt.Id);
+					cmds.AddComponent(enemyEntt.Id, new Team { Value = 2 });
+					MessageLog.Print($"{enemyEntt.Name.value} is no longer confused");
+				}
+			}
 			// If in range of player visibility then set that as a target
-			bool shouldChasePlayer = grid.CheckTile<IsVisible>(enemyPos.Value);
-			if (shouldChasePlayer) {
+			bool shouldChasePlayer = Singleton.Entity.GetComponent<Grid>().CheckTile<IsVisible>(enemyPos.Value);
+			if (shouldChasePlayer && !isConfused) {
 				path.Destination = Singleton.Player.GetComponent<GridPosition>().Value;
 				usedPathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
 				usedPathfinder.Goal(path.Destination.Value);
 			}
+
+			// Move to destination
 			if (path.Destination.HasValue) {
 				// If destination is set follow path towards it
 				var newPath = usedPathfinder
@@ -51,7 +76,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 				if (Random.Shared.NextSingle() < 0.75) {
 					var pos = enemyPos.Value;
 					var moves = Grid.NeighborsCardinal.Concat(Grid.NeighborsDiagonal)
-						.Where(p => !grid.BlocksPathing(pos + p))
+						.Where(p => !Singleton.Entity.GetComponent<Grid>().BlocksPathing(pos + p))
 						.ToList();
 
 					if (moves.Count > 0) {
@@ -63,5 +88,17 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 				cmds.RemoveTag<CanAct>(enemyEntt.Id);
 			}
 		});
+	}
+
+	private Entity GetClosestEnemy(Entity sourceEntt, Vec2I sourcePos) {
+		var query = Singleton.World.Query<GridPosition, Team>();
+		var closest = (new Entity(), int.MaxValue);
+		var sourceTeam = sourceEntt.GetComponent<Team>().Value;
+		query.ForEachEntity((ref GridPosition targetPos, ref Team targetTeam, Entity targetEntt) => {
+			if (targetTeam.Value == sourceTeam) return;
+			int dist = Pathfinder.DiagonalDistance(sourcePos, targetPos.Value);
+			if (dist < closest.Item2) closest = (targetEntt, dist);
+		});
+		return closest.Item1;
 	}
 }

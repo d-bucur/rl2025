@@ -11,6 +11,7 @@ struct Item : IComponent {
 struct ItemTag : ITag;
 
 internal interface IConsumable {
+	// TODO should add print message to return type?
 	public bool Consume(Entity target, Entity itemEntt);
 }
 struct HealingConsumable : IConsumable {
@@ -49,6 +50,29 @@ struct LightningDamageConsumable : IConsumable {
 		ref var f = ref closest.Item1.GetComponent<Fighter>();
 		Combat.ApplyDamage(closest.Item1, source, Damage);
 		MessageLog.Print($"A lightning bolt strikes {closest.Item1.Name.value} for {Damage} damage!");
+		return true;
+	}
+}
+
+struct ConfusionConsumable : IConsumable {
+	required public int Turns;
+
+	public bool Consume(Entity source, Entity itemEntt) {
+		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
+		if (mouseVal is not Vec2I targetPos) {
+			MessageLog.Print($"No valid target");
+			return false;
+		}
+		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+		var target = grid.Character[targetPos.X, targetPos.Y];
+		if (target.IsNull) {
+			MessageLog.Print($"No valid target");
+			return false;
+		}
+		
+		target.Add(new IsConfused { TurnsRemaining = Turns });
+		target.Add(new Team { Value = source.GetComponent<Team>().Value });
+		MessageLog.Print($"{target.Name.value} is confused");
 		return true;
 	}
 }

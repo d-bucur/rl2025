@@ -6,7 +6,9 @@ namespace RayLikeShared;
 
 static class Prefabs {
 	internal static Entity SpawnPlayer(Vec2I pos) {
-		var startItem = PrefabTransformations.PickupItem(SpawnLightningScroll(pos, 10, 6));
+		var startItem = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos));
+		SpawnConfusionScroll(pos + (1, 1));
+
 		var entt = Singleton.World.CreateEntity(
 			new InputReceiver(),
 			new GridPosition(pos.X, pos.Y),
@@ -14,7 +16,6 @@ static class Prefabs {
 			new RotationSingle(0f),
 			new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
 			new Billboard(), new TextureWithSource(Assets.heroesTexture) {
-				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(2, 2)
 			},
 			new ColorComp(),
@@ -48,7 +49,6 @@ static class Prefabs {
 				entt.Add(
 					new EntityName { value = "Skeleton" },
 					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
 						TileIdx = new Vec2I(0, 4)
 					},
 					new Fighter(6, new Dice(1, 2), 6),
@@ -59,7 +59,6 @@ static class Prefabs {
 				entt.Add(
 					new EntityName { value = "Banshee" },
 					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
 						TileIdx = new Vec2I(1, 5)
 					},
 					new Fighter(8, new Dice(0, 1), 9),
@@ -70,7 +69,6 @@ static class Prefabs {
 				entt.Add(
 					new EntityName { value = "Orc" },
 					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
 						TileIdx = new Vec2I(3, 0)
 					},
 					new Fighter(10, new Dice(2, 2), 7),
@@ -81,7 +79,6 @@ static class Prefabs {
 				entt.Add(
 					new EntityName { value = "Ogre" },
 					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
 						TileIdx = new Vec2I(0, 1)
 					},
 					new Fighter(15, new Dice(2, 3), 9),
@@ -117,11 +114,13 @@ static class Prefabs {
 	internal enum ConsumableTypes {
 		HealingPotion,
 		LightningDamageScroll,
+		ConfusionScroll,
 	};
 	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
 		Helpers.GetRandomEnum<ConsumableTypes>() switch {
 			ConsumableTypes.HealingPotion => SpawnHealingPotion(pos, 10),
 			ConsumableTypes.LightningDamageScroll => SpawnLightningScroll(pos, 10, 6),
+			ConsumableTypes.ConfusionScroll => SpawnConfusionScroll(pos),
 		};
 
 	static Entity PrepConsumableCommon(Vec2I pos) {
@@ -140,7 +139,6 @@ static class Prefabs {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
-				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(0, 21)
 			},
 			new EntityName($"Lightning scroll"),
@@ -153,11 +151,22 @@ static class Prefabs {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
-				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(1, 19)
 			},
 			new EntityName($"Healing potion +{health}HP"),
 			new Item() { Consumable = new HealingConsumable { Amount = health } }
+		);
+		return entt;
+	}
+
+	private static Entity SpawnConfusionScroll(Vec2I pos) {
+		Entity entt = PrepConsumableCommon(pos);
+		entt.Add(
+			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
+				TileIdx = new Vec2I(6, 21)
+			},
+			new EntityName($"Confusion scroll"),
+			new Item() { Consumable = new ConfusionConsumable { Turns = 5 } }
 		);
 		return entt;
 	}

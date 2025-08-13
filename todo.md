@@ -4,12 +4,13 @@
 - ranged scrolls and targeting
   
 ## extra
-- more stable enemy generation
 - log history
 - bug: pressing keys during path movement
 - blood under corpses
+- handle confusion applied to hero
 
 ## idea bin
+- confusion has change to make enemies hit themselves
 - in game health bars
 - camera rotation is buggy
 - character shaders:
@@ -22,6 +23,5 @@
 - biomes with different tiles
 
 ## code refactoring and cleanup
-- move entity spawners to new file
+- no way for an action processor to send a message back (like action invalid, retry your turn).
 - refactor actions to have standard naming. Maybe use standardized processors for each action? ie. map Action -> ActionProcessorSystem
-- no way for an action processor to send a message back (like action invalid, retry your turn)

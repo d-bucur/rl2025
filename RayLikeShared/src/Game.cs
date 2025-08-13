@@ -101,6 +101,8 @@ public class Game {
 		aot.RegisterComponent<PathMovement>();
 		aot.RegisterComponent<Team>();
 		aot.RegisterComponent<Item>();
+		aot.RegisterComponent<MouseTarget>();
+		aot.RegisterComponent<IsConfused>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();
