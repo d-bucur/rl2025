@@ -15,13 +15,17 @@ class Level : IModule {
 		var center = rooms[0].Center();
 
 		Singleton.Player = Prefabs.SpawnPlayer(center);
+		Prefabs.SpawnStartingItems(center, Singleton.Player);
+
 
 		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
 		camera.Value.Position = new Vector3(center.X, 0, center.Y);
 		camera.Value.Target = new Vector3(center.X, 0, center.Y);
 
-		SpawnInEmptyTiles(Config.MaxEnemiesPerLevel, (pos) => Prefabs.SpawnEnemy(pos, Helpers.GetRandomEnum<Prefabs.EnemyType>()));
+		SpawnInEmptyTiles(Config.MaxEnemiesPerLevel, (pos) => Prefabs.SpawnEnemy(pos, Helpers.GetRandomEnum<Prefabs.EnemyType>(0, 4)));
 		SpawnInEmptyTiles(Config.MaxItemsPerLevel, Prefabs.SpawnRandomConsumable);
+		SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Malthael));
+		SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Dragon));
 	}
 
 	static void OnGridPositionAdded(ComponentChanged change) {

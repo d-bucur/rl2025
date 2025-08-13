@@ -36,7 +36,9 @@ struct LightningDamageConsumable : IConsumable {
 	required public int MaximumRange;
 
 	public bool Consume(Entity source, Entity itemEntt) {
-		var query = Singleton.World.Query<GridPosition>().AllTags(Tags.Get<Enemy, IsVisible>());
+		var query = Singleton.World.Query<GridPosition>()
+			.AllTags(Tags.Get<Enemy, IsVisible>())
+			.WithoutAllTags(Tags.Get<Corpse>());
 		var sourcePos = source.GetComponent<GridPosition>();
 		var closest = (new Entity(), int.MaxValue);
 		query.ForEachEntity((ref GridPosition enemyPos, Entity enemyEntt) => {

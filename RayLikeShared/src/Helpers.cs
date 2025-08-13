@@ -1,8 +1,9 @@
 namespace RayLikeShared;
 
 static class Helpers {
-	internal static T GetRandomEnum<T>() {
-		var monsterTypes = Enum.GetValues(typeof(T));
-		return (T)monsterTypes.GetValue(Random.Shared.Next(monsterTypes.Length))!;
+	internal static T GetRandomEnum<T>(int? min = null, int? max = null) {
+		var allValues = Enum.GetValues(typeof(T));
+		int rand = Random.Shared.Next(min ?? 0, max ?? allValues.Length);
+		return (T)allValues.GetValue(rand)!;
 	}
 }

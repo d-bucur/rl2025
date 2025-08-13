@@ -22,14 +22,21 @@
   - both require postprocessing framebuffers
 - display turn order as a number on characters
 - biomes with different tiles
-- air scroll: push enemies and damage everything they hit
-- chain lighting
-- resurrect enemy as minion
 - arena allocator with frame lifetime
+- rogue selection (at least sprite)
 
 ## code refactoring and cleanup
 - no way for an action processor to send a message back (like action invalid, retry your turn).
 - refactor actions to have standard naming. Maybe use standardized processors for each action? ie. map Action -> ActionProcessorSystem
+
+## item ideas
+- air scroll: push enemies and damage everything they hit
+- chain lighting
+- self buff: double energy gain, lose some HP
+- resurrect enemy as minion
+- full map exploration
+- area vision
+- dig through map
 
 ## discarded?
 - show vision colors in minimap?

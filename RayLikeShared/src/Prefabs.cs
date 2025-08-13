@@ -5,6 +5,22 @@ using Friflo.Engine.ECS;
 namespace RayLikeShared;
 
 static class Prefabs {
+	internal enum EnemyType {
+		Skeleton,
+		Banshee,
+		Ogre,
+		Orc,
+		Malthael,
+		Dragon,
+	};
+
+	internal enum ConsumableTypes {
+		HealingPotion,
+		LightningDamageScroll,
+		ConfusionScroll,
+		FireballScroll,
+	};
+
 	internal static Entity SpawnPlayer(Vec2I pos) {
 		var player = Singleton.World.CreateEntity(
 			new InputReceiver(),
@@ -29,11 +45,12 @@ static class Prefabs {
 			new Team { Value = 1 }
 		);
 		player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
-		SpawnStartingItems(pos, player);
 		return player;
 	}
 
-	private static void SpawnStartingItems(Vec2I pos, Entity entt) {
+	internal static void SpawnStartingItems(Vec2I pos, Entity entt) {
+		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
+
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
@@ -42,12 +59,6 @@ static class Prefabs {
 		// SpawnFireballScroll(pos + (-1, -1));
 	}
 
-	internal enum EnemyType {
-		Skeleton,
-		Banshee,
-		Ogre,
-		Orc,
-	};
 	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType) {
 		Entity entt = PrepEnemyCommon(pos);
 		switch (enemyType) {
@@ -91,6 +102,26 @@ static class Prefabs {
 					new Energy() { GainPerTick = 3 }
 				);
 				break;
+			case EnemyType.Malthael:
+				entt.Add(
+					new EntityName { value = "Malthael" },
+					new TextureWithSource(Assets.monsterTexture) {
+						TileIdx = new Vec2I(0, 11)
+					},
+					new Fighter(15, new Dice(2, 2), 13),
+					new Energy() { GainPerTick = 4 }
+				);
+				break;
+			case EnemyType.Dragon:
+				entt.Add(
+					new EntityName { value = "Dragon" },
+					new TextureWithSource(Assets.monsterTexture) {
+						TileIdx = new Vec2I(2, 8)
+					},
+					new Fighter(30, new Dice(3, 3), 15),
+					new Energy() { GainPerTick = 2 }
+				);
+				break;
 			default:
 				Debug.Fail("Unhandled case");
 				break;
@@ -117,16 +148,10 @@ static class Prefabs {
 		return entt;
 	}
 
-	internal enum ConsumableTypes {
-		HealingPotion,
-		LightningDamageScroll,
-		ConfusionScroll,
-		FireballScroll,
-	};
 	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
 		Helpers.GetRandomEnum<ConsumableTypes>() switch {
-			ConsumableTypes.HealingPotion => SpawnHealingPotion(pos, 10),
-			ConsumableTypes.LightningDamageScroll => SpawnLightningScroll(pos, 10, 6),
+			ConsumableTypes.HealingPotion => SpawnHealingPotion(pos),
+			ConsumableTypes.LightningDamageScroll => SpawnLightningScroll(pos),
 			ConsumableTypes.ConfusionScroll => SpawnConfusionScroll(pos),
 			ConsumableTypes.FireballScroll => SpawnFireballScroll(pos),
 		};
@@ -143,7 +168,7 @@ static class Prefabs {
 		);
 	}
 
-	static Entity SpawnLightningScroll(Vec2I pos, int damage, int range) {
+	static Entity SpawnLightningScroll(Vec2I pos, int damage = 10, int range = 6) {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
@@ -155,7 +180,7 @@ static class Prefabs {
 		return entt;
 	}
 
-	static Entity SpawnHealingPotion(Vec2I pos, int health) {
+	static Entity SpawnHealingPotion(Vec2I pos, int health = 15) {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
