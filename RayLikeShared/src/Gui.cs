@@ -194,31 +194,22 @@ file class MouseSelect : QuerySystem {
 	List<string> InspectStrings = new();
 
 	protected override void OnUpdate() {
-		Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
-		var ray = Raylib.GetScreenToWorldRay(Raylib.GetMousePosition(), camera);
-
-		// Avoid div0
-		if (Math.Abs(ray.Direction.Y) < 1e-6)
-			return;
-
-		// Get plane intersection
-		Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
-		float t = -ray.Position.Y / ray.Direction.Y;
-		Vector3 intersection = ray.Position + t * ray.Direction + tileOffset;
-		Vec2I mousePosI = Vec2I.FromWorldPos(intersection);
-		Grid grid = Singleton.Entity.GetComponent<Grid>();
-
-		if (!grid.IsInside(mousePosI))
-			return;
+     	var mouseTarget = Singleton.Entity.GetComponent<MouseTarget>();
+		if (!mouseTarget.Value.HasValue) return;
+		var mousePosI = mouseTarget.Value.Value;
+        ref Grid grid = ref Singleton.Entity.GetComponent<Grid>();
 
 		var isTileVisible = grid.CheckTile<IsVisible>(mousePosI);
 		var charAtPos = grid.Character[mousePosI.X, mousePosI.Y];
-		// Draw outline at tile
+
+		// Draw outline at tile and path to destination
+		// Could separate this part into pathfinding module?
 		if (grid.CheckTile<IsExplored>(mousePosI)) {
+			Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
 			Raylib.BeginMode3D(camera);
 			Color color = (!charAtPos.IsNull && isTileVisible) ? Color.Red : Color.Green;
 			Raylib.DrawCubeWiresV(
-				mousePosI.ToWorldPos() - tileOffset,
+				mousePosI.ToWorldPos() - MouseTarget.tileOffset,
 				new Vector3(1.1f, 1f, 1.1f),
 				Raylib.Fade(color, 0.3f));
 			PathTo(mousePosI, color);

@@ -6,12 +6,42 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 struct InputReceiver : IComponent;
+struct MouseTarget : IComponent {
+    internal Vec2I? Value;
+    internal static readonly Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
+}
 
 class InputModule : IModule {
     public void Init(EntityStore world) {
+        Singleton.Entity.AddComponent<MouseTarget>();
+
         UpdatePhases.Input.Add(new CameraInputSystem());
         UpdatePhases.Input.Add(new PlayerInputSystem());
         UpdatePhases.Input.Add(new GameInputSystem());
+        UpdatePhases.Input.Add(new UpdateMousePosition());
+    }
+}
+
+file class UpdateMousePosition : QuerySystem {
+    protected override void OnUpdate() {
+        ref var mouseTarget = ref Singleton.Entity.GetComponent<MouseTarget>();
+        mouseTarget.Value = null;
+        Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
+        var ray = Raylib.GetScreenToWorldRay(Raylib.GetMousePosition(), camera);
+
+        // Avoid div0
+        if (Math.Abs(ray.Direction.Y) < 1e-6)
+            return;
+
+        // Get plane intersection
+        float t = -ray.Position.Y / ray.Direction.Y;
+        Vector3 intersection = ray.Position + t * ray.Direction + MouseTarget.tileOffset;
+        Vec2I mousePosI = Vec2I.FromWorldPos(intersection);
+        ref Grid grid = ref Singleton.Entity.GetComponent<Grid>();
+
+        if (!grid.IsInside(mousePosI))
+            return;
+        mouseTarget.Value = mousePosI;
     }
 }
 
