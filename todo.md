@@ -1,7 +1,6 @@
 ## week 5
 - fx for items, maybe projectiles too?
 - event handlers for different game states? InputEventHandler component, add and remove as needed.
-- enemies shouldn't spawn in a certain range from start
   
 ## extra
 - log history
@@ -13,7 +12,6 @@
 - billboard don't work on android chrome. They work on android firefox...
 
 ## idea bin
-- confusion has change to make enemies hit themselves
 - in game health bars
 - camera rotation is buggy
 - character shaders:

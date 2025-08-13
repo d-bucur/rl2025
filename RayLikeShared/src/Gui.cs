@@ -13,8 +13,13 @@ struct MessageLog() : IComponent {
 	public List<Message> Messages = new();
 	public int MaxCount = 200;
 	public int DisplayCount = 3;
+	private bool replaceNext = false;
 
 	public void Add(string message, Color? color = null) {
+		if (replaceNext) {
+			replaceNext = false;
+			return;
+		}
 		Messages.Add(new Message {
 			Text = message,
 			Color = color ?? Color.White,
@@ -23,6 +28,22 @@ struct MessageLog() : IComponent {
 
 	internal static void Print(string message, Color? color = null) {
 		Singleton.Entity.GetComponent<MessageLog>().Add(message, color);
+	}
+
+	internal static void ReplaceLast(string message, Color? color = null) {
+		RemoveLast();
+		Singleton.Entity.GetComponent<MessageLog>().Add(message, color);
+	}
+
+	internal static void ReplaceNext(string message, Color? color = null) {
+		ref var messages = ref Singleton.Entity.GetComponent<MessageLog>();
+		messages.Add(message, color);
+		messages.replaceNext = true;
+	}
+
+	internal static void RemoveLast() {
+		ref List<Message> messages = ref Singleton.Entity.GetComponent<MessageLog>().Messages;
+		if (messages.Count > 0) messages.RemoveAt(messages.Count - 1);
 	}
 }
 
@@ -303,7 +324,7 @@ internal class RenderInventory : QuerySystem {
 			var tileRect = new Rectangle(tileStart, itemSize, itemSize);
 			Raylib.DrawRectangleV(tileStart, new Vector2(itemSize), Raylib.Fade(Color.DarkGray, 0.3f));
 			Raylib.DrawRectangleLinesEx(tileRect, 5, Raylib.Fade(Color.LightGray, 0.3f));
-			Raylib.DrawText($"{i+1}", (int)tileStart.X + 5, (int)tileStart.Y + 5, 20, Color.White);
+			Raylib.DrawText($"{i + 1}", (int)tileStart.X + 5, (int)tileStart.Y + 5, 20, Color.White);
 
 			if (i < inventory.Length) {
 				TextureWithSource itemTexture = inventory[i].Item.GetComponent<TextureWithSource>();

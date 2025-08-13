@@ -81,6 +81,15 @@ class Combat : IModule {
 		else
 			MessageLog.Print($"{desc} but does no damage", color);
 	}
+
+	internal static int RollDamage(Entity source, Entity target) {
+		ref var sourceFighter = ref source.GetComponent<Fighter>();
+		ref var targetFighter = ref target.GetComponent<Fighter>();
+		var damage = sourceFighter.Power
+			- targetFighter.Defense.Roll();
+		Combat.ApplyDamage(target, source, damage);
+		return damage;
+	}
 }
 
 file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
@@ -100,12 +109,7 @@ file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 				(ref Position p) => actionEntt.AddTag<IsActionFinished>()
 			);
 
-			// Do the actual damage
-			ref var sourceFighter = ref action.Source.GetComponent<Fighter>();
-			ref var targetFighter = ref action.Target.GetComponent<Fighter>();
-			var damage = sourceFighter.Power
-				- targetFighter.Defense.Roll();
-			Combat.ApplyDamage(action.Target, action.Source, damage);
+			Combat.RollDamage(action.Source, action.Target);
 		});
 	}
 }

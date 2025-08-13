@@ -49,16 +49,22 @@ class Level : IModule {
 		}
 	}
 
-	static void SpawnInEmptyTiles(int count, Func<Vec2I, Entity> SpawnAction) {
+	static void SpawnInEmptyTiles(int count, Func<Vec2I, Entity> SpawnAction, int minDistance = 7) {
+		var playerPos = Singleton.Player.GetComponent<GridPosition>().Value;
 		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
 		var walkableTilesQuery = Singleton.World.Query().AllTags(Tags.Get<Walkable>());
 		var walkableTiles = walkableTilesQuery.ToEntityList();
 		for (int i = 0; i < count; i++) {
 			var entt = walkableTiles[Random.Shared.Next(walkableTiles.Count)];
 			var pos = entt.GetComponent<GridPosition>().Value;
+			var isCloseToPlayer = (playerPos - pos).ToVector2().Length() < minDistance;
 			if (grid.Character[pos.X, pos.Y].IsNull
-				&& grid.Others[pos.X, pos.Y] == null) {
+				&& grid.Others[pos.X, pos.Y] == null
+				&& !isCloseToPlayer) {
 				SpawnAction(pos);
+			}
+			else {
+				i--;
 			}
 		}
 	}

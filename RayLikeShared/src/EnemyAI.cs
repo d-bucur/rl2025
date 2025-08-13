@@ -9,6 +9,7 @@ struct EnemyAI : IComponent {
 
 struct IsConfused : IComponent {
 	required internal int TurnsRemaining;
+	internal const float HurtSelfChance = 0.25f;
 }
 
 class EnemyAIModule : IModule {
@@ -26,16 +27,24 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, ref Pathfinder pathfinder, Entity enemyEntt) => {
 			ref var usedPathfinder = ref pathfinder;
 			// TODO refactor: always select closest enemy (different team and set it as destination) for player as well
-			// Select a destination
 			bool isConfused = enemyEntt.HasComponent<IsConfused>();
 			if (isConfused) {
-				ref var confused = ref enemyEntt.GetComponent<IsConfused>();
-				var closest = GetClosestEnemy(enemyEntt, enemyPos.Value);
-				if (!closest.IsNull) {
-					path.Destination = closest.GetComponent<GridPosition>().Value;
-					usedPathfinder.Goal(path.Destination.Value);
+				// Chance to hurt itself
+				if (Random.Shared.NextSingle() < IsConfused.HurtSelfChance) {
+					TurnsManagement.QueueAction(cmds, new MeleeAction(enemyEntt, enemyEntt, 0, 1), enemyEntt);
+					MessageLog.Print($"{enemyEntt.Name.value} hurt itself in its confusion!", Raylib_cs.Color.Orange);
+					cmds.RemoveTag<CanAct>(enemyEntt.Id);
+					return;
+				}
+				else {
+					var closest = GetClosestEnemy(enemyEntt, enemyPos.Value);
+					if (!closest.IsNull) {
+						path.Destination = closest.GetComponent<GridPosition>().Value;
+						usedPathfinder.Goal(path.Destination.Value);
+					}
 				}
 				// TODO should be separate from ai so it can be applied to player as well
+				ref var confused = ref enemyEntt.GetComponent<IsConfused>();
 				// Tick down confusion
 				confused.TurnsRemaining -= 1;
 				if (confused.TurnsRemaining <= 0) {
