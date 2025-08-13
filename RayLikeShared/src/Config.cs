@@ -23,6 +23,8 @@ static class Config {
 
     internal const int CostHorizontal = 2;
     internal const int CostDiagonal = 3;
+
+    internal const int InventoryLimit = 3;
 }
 
 struct Settings() : IComponent {

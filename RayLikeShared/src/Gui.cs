@@ -36,6 +36,7 @@ class GuiModule : IModule {
 		Singleton.Entity.AddComponent(new MessageLog());
 
 		RenderPhases.Render.Add(new RenderMinimap());
+		RenderPhases.Render.Add(new RenderInventory());
 		RenderPhases.Render.Add(new RenderHealth());
 		RenderPhases.Render.Add(new RenderGameOver());
 		RenderPhases.Render.Add(new RenderMessageLog());
@@ -194,10 +195,10 @@ file class MouseSelect : QuerySystem {
 	List<string> InspectStrings = new();
 
 	protected override void OnUpdate() {
-     	var mouseTarget = Singleton.Entity.GetComponent<MouseTarget>();
+		var mouseTarget = Singleton.Entity.GetComponent<MouseTarget>();
 		if (!mouseTarget.Value.HasValue) return;
 		var mousePosI = mouseTarget.Value.Value;
-        ref Grid grid = ref Singleton.Entity.GetComponent<Grid>();
+		ref Grid grid = ref Singleton.Entity.GetComponent<Grid>();
 
 		var isTileVisible = grid.CheckTile<IsVisible>(mousePosI);
 		var charAtPos = grid.Character[mousePosI.X, mousePosI.Y];
@@ -212,6 +213,14 @@ file class MouseSelect : QuerySystem {
 				mousePosI.ToWorldPos() - MouseTarget.tileOffset,
 				new Vector3(1.1f, 1f, 1.1f),
 				Raylib.Fade(color, 0.3f));
+			// TODO handle targeting better	
+			// var test = new FireballConsumable { Damage = 5, Range = 3 };
+			// foreach (var pos in test.AffectedTiles()) {
+			// 	Raylib.DrawCubeWiresV(
+			// 		pos.ToWorldPos() - MouseTarget.tileOffset,
+			// 		new Vector3(1f, 1f, 1f),
+			// 		Raylib.Fade(Color.Orange, 0.3f));
+			// }
 			PathTo(mousePosI, color);
 			Raylib.EndMode3D();
 		}
@@ -279,5 +288,34 @@ file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 		});
 		Raylib.EndMode3D();
 		Raylib.EndShaderMode();
+	}
+}
+
+internal class RenderInventory : QuerySystem {
+	protected override void OnUpdate() {
+		int itemSize = 64;
+		var inventory = Singleton.Player.GetRelations<InventoryItem>();
+		var anchor = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight())
+			- new Vector2(Config.InventoryLimit * itemSize, itemSize);
+
+		for (int i = 0; i < Config.InventoryLimit; i++) {
+			var tileStart = new Vector2(anchor.X + i * itemSize, anchor.Y);
+			var tileRect = new Rectangle(tileStart, itemSize, itemSize);
+			Raylib.DrawRectangleV(tileStart, new Vector2(itemSize), Raylib.Fade(Color.DarkGray, 0.3f));
+			Raylib.DrawRectangleLinesEx(tileRect, 5, Raylib.Fade(Color.LightGray, 0.3f));
+			Raylib.DrawText($"{i+1}", (int)tileStart.X + 5, (int)tileStart.Y + 5, 20, Color.White);
+
+			if (i < inventory.Length) {
+				TextureWithSource itemTexture = inventory[i].Item.GetComponent<TextureWithSource>();
+				Raylib.DrawTexturePro(
+					itemTexture.Texture,
+					itemTexture.Source,
+					tileRect,
+					Vector2.Zero,
+					0,
+					Color.White
+				);
+			}
+		}
 	}
 }

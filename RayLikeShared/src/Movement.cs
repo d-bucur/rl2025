@@ -137,6 +137,7 @@ file class ProcessMovementActions : QuerySystem<MovementAction> {
     }
 
     static bool IsTileFree(Grid grid, Vec2I pos, Entity entt) {
+        // TODO refactor grid
         var destTile = grid.Tile[pos.X, pos.Y];
         bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
         var destChar = grid.Character[pos.X, pos.Y];

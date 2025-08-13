@@ -82,6 +82,7 @@ struct FireballConsumable : IConsumable {
 	required public int Range;
 
 	public bool Consume(Entity source, Entity itemEntt) {
+		// TODO check if in line of sight
 		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) {
 			MessageLog.Print($"No valid target");
@@ -170,6 +171,11 @@ internal class ProcessPickupActions : QuerySystem<PickupAction> {
 			int pickedCount = 0;
 			foreach (var item in new List<Entity>(others?.Value ?? [])) {
 				if (!item.Tags.Has<ItemTag>()) continue;
+				if (action.Target.GetRelations<InventoryItem>().Length >= Config.InventoryLimit) {
+					MessageLog.Print($"Inventory is full");
+					cmds.AddTag<IsActionFinished>(entt.Id);
+					return;
+				}
 				MessageLog.Print($"You picked up {item.Name.value}");
 				PrefabTransformations.PickupItem(item);
 				action.Target.AddRelation(new InventoryItem { Item = item });

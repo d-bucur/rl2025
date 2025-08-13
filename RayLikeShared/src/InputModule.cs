@@ -82,16 +82,24 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
                 TurnsManagement.QueueAction(cmd, new PickupAction { Target = entt, Position = entt.GetComponent<GridPosition>().Value }, entt);
                 cmd.RemoveTag<CanAct>(entt.Id);
             }
-            else if (Raylib.IsKeyPressed(KeyboardKey.V)) {
+            else CheckInventoryInput(entt, cmd);
+        });
+    }
+
+    private static void CheckInventoryInput(Entity entt, CommandBuffer cmd) {
+        for (int i = 0; i < Config.InventoryLimit; i++) {
+            if (Raylib.IsKeyPressed(i + KeyboardKey.One)) {
                 var items = entt.GetRelations<InventoryItem>();
-                if (items.Length > 0) {
-                    TurnsManagement.QueueAction(cmd, new ConsumeItemAction { Target = entt, Item = items[0].Item }, entt);
-                } else {
-                    MessageLog.Print($"No items in inventory");
+                if (items.Length > i) {
+                    TurnsManagement.QueueAction(cmd, new ConsumeItemAction { Target = entt, Item = items[i].Item }, entt);
+                }
+                else {
+                    MessageLog.Print($"Item slot empty");
                 }
                 cmd.RemoveTag<CanAct>(entt.Id);
+                return;
             }
-        });
+        }
     }
 
     static void HandleMovementInput(Entity entt, CommandBuffer cmd, Vec2I keyMovement) {

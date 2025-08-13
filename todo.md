@@ -1,8 +1,6 @@
 ## week 5
-- add item selection menu
-- event handlers for different game states? InputEventHandler component, add and remove as needed.
-- ranged scrolls and targeting
 - fx for items, maybe projectiles too?
+- event handlers for different game states? InputEventHandler component, add and remove as needed.
 - enemies shouldn't spawn in a certain range from start
   
 ## extra
@@ -27,6 +25,7 @@
 - air scroll: push enemies and damage everything they hit
 - chain lighting
 - resurrect enemy as minion
+- arena allocator with frame lifetime
 
 ## code refactoring and cleanup
 - no way for an action processor to send a message back (like action invalid, retry your turn).
