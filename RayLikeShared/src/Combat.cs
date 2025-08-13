@@ -60,7 +60,7 @@ class Combat : IModule {
 		PrefabTransformations.TurnCharacterToCorpse(signal.Entity);
 	}
 
-	internal static void ApplyDamage(Entity target, Entity source, int damage) {
+	internal static void ApplyDamage(Entity target, Entity source, int damage, Vec2I? direction = null) {
 		var desc = $"{source.GetComponent<EntityName>().value} attacks {target.GetComponent<EntityName>().value}";
 		ref var targetFighter = ref target.GetComponent<Fighter>();
 		var isTargetPlayer = target.Tags.Has<Player>();
@@ -73,10 +73,10 @@ class Combat : IModule {
 			}
 			else
 				MessageLog.Print($"{desc} for {damage} HP", color);
-			var actionDir = target.GetComponent<GridPosition>().Value.ToWorldPos()
-				- source.GetComponent<GridPosition>().Value.ToWorldPos();
+			Vec2I fxdir = direction ?? target.GetComponent<GridPosition>().Value
+				- source.GetComponent<GridPosition>().Value;
 			GUI.SpawnDamageFx(damage, target.GetComponent<Position>(),
-				isTargetPlayer ? Color.Red : Color.Orange, actionDir);
+				isTargetPlayer ? Color.Red : Color.Orange, fxdir.ToWorldPos());
 		}
 		else
 			MessageLog.Print($"{desc} but does no damage", color);

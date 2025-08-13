@@ -6,10 +6,7 @@ namespace RayLikeShared;
 
 static class Prefabs {
 	internal static Entity SpawnPlayer(Vec2I pos) {
-		var startItem = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos));
-		SpawnConfusionScroll(pos + (1, 1));
-
-		var entt = Singleton.World.CreateEntity(
+		var player = Singleton.World.CreateEntity(
 			new InputReceiver(),
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
@@ -22,7 +19,7 @@ static class Prefabs {
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 		// max 10 components per method...
-		entt.Add(
+		player.Add(
 			new EntityName { value = "Hero" },
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
@@ -31,9 +28,18 @@ static class Prefabs {
 			new PathMovement(),
 			new Team { Value = 1 }
 		);
-		entt.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
-		entt.AddRelation(new InventoryItem { Item = startItem });
-		return entt;
+		player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
+		SpawnStartingItems(pos, player);
+		return player;
+	}
+
+	private static void SpawnStartingItems(Vec2I pos, Entity entt) {
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+		// SpawnConfusionScroll(pos + (1, 1));
+		// SpawnLightningScroll(pos + (-1, 1), 10, 3);
+		// SpawnFireballScroll(pos + (-1, -1));
 	}
 
 	internal enum EnemyType {
@@ -115,12 +121,14 @@ static class Prefabs {
 		HealingPotion,
 		LightningDamageScroll,
 		ConfusionScroll,
+		FireballScroll,
 	};
 	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
 		Helpers.GetRandomEnum<ConsumableTypes>() switch {
 			ConsumableTypes.HealingPotion => SpawnHealingPotion(pos, 10),
 			ConsumableTypes.LightningDamageScroll => SpawnLightningScroll(pos, 10, 6),
 			ConsumableTypes.ConfusionScroll => SpawnConfusionScroll(pos),
+			ConsumableTypes.FireballScroll => SpawnFireballScroll(pos),
 		};
 
 	static Entity PrepConsumableCommon(Vec2I pos) {
@@ -139,7 +147,7 @@ static class Prefabs {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
-				TileIdx = new Vec2I(0, 21)
+				TileIdx = new Vec2I(1, 21)
 			},
 			new EntityName($"Lightning scroll"),
 			new Item() { Consumable = new LightningDamageConsumable { Damage = damage, MaximumRange = range } }
@@ -163,10 +171,22 @@ static class Prefabs {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
-				TileIdx = new Vec2I(6, 21)
+				TileIdx = new Vec2I(0, 21)
 			},
 			new EntityName($"Confusion scroll"),
 			new Item() { Consumable = new ConfusionConsumable { Turns = 5 } }
+		);
+		return entt;
+	}
+
+	private static Entity SpawnFireballScroll(Vec2I pos) {
+		Entity entt = PrepConsumableCommon(pos);
+		entt.Add(
+			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
+				TileIdx = new Vec2I(2, 21)
+			},
+			new EntityName($"Fireball scroll"),
+			new Item() { Consumable = new FireballConsumable { Damage = 5, Range = 3 } }
 		);
 		return entt;
 	}

@@ -69,11 +69,51 @@ struct ConfusionConsumable : IConsumable {
 			MessageLog.Print($"No valid target");
 			return false;
 		}
-		
+
 		target.Add(new IsConfused { TurnsRemaining = Turns });
 		target.Add(new Team { Value = source.GetComponent<Team>().Value });
 		MessageLog.Print($"{target.Name.value} is confused");
 		return true;
+	}
+}
+
+struct FireballConsumable : IConsumable {
+	required public int Damage;
+	required public int Range;
+
+	public bool Consume(Entity source, Entity itemEntt) {
+		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
+		if (mouseVal is not Vec2I targetPos) {
+			MessageLog.Print($"No valid target");
+			return false;
+		}
+		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+
+		int hitCount = 0;
+		foreach (var tilePos in AffectedTiles()) {
+			var target = grid.Character[tilePos.X, tilePos.Y];
+			if (target.IsNull) continue;
+			hitCount++;
+			Combat.ApplyDamage(target, source, Damage, tilePos - targetPos);
+			Console.WriteLine($"Damaged {target} for {Damage}");
+		}
+
+		MessageLog.Print($"Hit {hitCount} targets with fireball");
+		return true;
+	}
+
+	public IEnumerable<Vec2I> AffectedTiles() {
+		var grid = Singleton.Entity.GetComponent<Grid>();
+		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
+		if (mouseVal is not Vec2I targetPos) yield break;
+
+		for (int x = -Range + 1; x < Range; x++) {
+			for (int y = -Range + 1; y < Range; y++) {
+				var tilePos = new Vec2I(x + targetPos.X, y + targetPos.Y);
+				if (!grid.IsInside(tilePos)) continue;
+				yield return tilePos;
+			}
+		}
 	}
 }
 

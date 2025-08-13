@@ -254,7 +254,7 @@ file class MouseSelect : QuerySystem {
 			Raylib.DrawSphere(p.ToWorldPos() - new Vector3(0.5f, 0, 0.5f), 0.15f,
 				Raylib.Fade(color, 0.3f));
 		}
-		if (Raylib.IsMouseButtonPressed(MouseButton.Left)) {
+		if (Raylib.IsMouseButtonReleased(MouseButton.Left)) {
 			// move player to target destination
 			ref var movement = ref Singleton.Player.GetComponent<PathMovement>();
 			if (!Singleton.Entity.GetComponent<Grid>().CheckTile<BlocksPathing>(posI)) movement.NewDestination(posI, path);
