@@ -40,7 +40,10 @@ struct Fighter : IComponent {
 		return HP - oldHP;
 	}
 }
-record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IComponent { }
+record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IGameAction {
+	public Entity GetSource() => Source;
+}
+
 struct Team : IComponent {
 	required public int Value;
 }
@@ -49,7 +52,21 @@ struct DeathSignal;
 
 class Combat : IModule {
 	public void Init(EntityStore world) {
-		UpdatePhases.ApplyActions.Add(new ProcessMeleeSystem());
+		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<MeleeAction>(ProcessMeleeAction));
+	}
+
+	private ActionProcessor.Result ProcessMeleeAction(ref MeleeAction action, Entity actionEntt) {
+		Vector3 startPos = action.Source.GetComponent<GridPosition>().Value.ToWorldPos();
+		Vector3 actionDir = new(action.Dx, 0, action.Dy);
+		Animations.Bump(
+			action.Source,
+			startPos,
+			startPos + actionDir / 2,
+			(ref Position p) => actionEntt.AddTag<IsActionFinished>()
+		);
+
+		RollDamage(action.Source, action.Target);
+		return ActionProcessor.Result.Running;
 	}
 
 	internal static void EnemyDeath(Signal<DeathSignal> signal) {
@@ -89,27 +106,5 @@ class Combat : IModule {
 			- targetFighter.Defense.Roll();
 		Combat.ApplyDamage(target, source, damage);
 		return damage;
-	}
-}
-
-file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
-	public ProcessMeleeSystem() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
-
-	protected override void OnUpdate() {
-		// Action entities are disjoint from the entities they operate on. No need to throw on structural changes
-		Query.ThrowOnStructuralChange = false;
-		Query.ForEachEntity((ref MeleeAction action, Entity actionEntt) => {
-			CommandBuffer.RemoveTag<IsActionWaiting>(actionEntt.Id);
-			Vector3 startPos = action.Source.GetComponent<GridPosition>().Value.ToWorldPos();
-			Vector3 actionDir = new(action.Dx, 0, action.Dy);
-			Animations.Bump(
-				action.Source,
-				startPos,
-				startPos + actionDir / 2,
-				(ref Position p) => actionEntt.AddTag<IsActionFinished>()
-			);
-
-			Combat.RollDamage(action.Source, action.Target);
-		});
 	}
 }

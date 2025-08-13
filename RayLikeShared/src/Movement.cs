@@ -5,7 +5,12 @@ using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
-record struct MovementAction(Entity Entity, int Dx, int Dy) : IComponent { }
+record struct MovementAction(Entity Entity, int Dx, int Dy) : IGameAction {
+    public readonly Entity GetSource() => Entity;
+}
+
+// Not used for now. Currently just using 0,0 MovementAction for rest.
+// Might want to use this later if rest has some side effect. Or just add side effect to movement?
 record struct RestAction(Entity Entity) : IComponent { }
 
 struct PathMovement() : IComponent {
@@ -50,10 +55,9 @@ struct PathMovement() : IComponent {
 }
 
 class Movement : IModule {
-	public void Init(EntityStore world) {
+    public void Init(EntityStore world) {
         UpdatePhases.Input.Add(new ProcessPathMovement());
-        UpdatePhases.ApplyActions.Add(new ProcessMovementActions());
-        // UpdatePhases.ApplyActions.Add(new ProcessRestSystem());
+        UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<MovementAction>(ProcessMovementAction));
     }
 
     internal static void OnEnemyVisibilityChange(TagsChanged changed) {
@@ -63,6 +67,61 @@ class Movement : IModule {
             ref var path = ref Singleton.Player.GetComponent<PathMovement>();
             path.Clear();
         }
+    }
+
+    private ActionProcessor.Result ProcessMovementAction(ref MovementAction action, Entity actionEntt) {
+        var source = action.Entity;
+        var grid = Singleton.Entity.GetComponent<Grid>();
+        ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
+        var oldPos = gridPos.Value;
+        Vec2I dir = new(action.Dx, action.Dy);
+        var newPos = oldPos + dir;
+
+        // Check if move is valid
+        if (!grid.IsInside(newPos) || !IsTileFree(grid, newPos, action.Entity)) {
+            // Player can harmlessly bump and not lose the turn if invalid
+            // Enemies will lose their turn
+            if (!source.Tags.Has<Player>()) return ActionProcessor.Result.Done;
+            Animations.Bump(
+                action.Entity,
+                oldPos.ToWorldPos(),
+                oldPos.ToWorldPos() + dir.ToWorldPos() * 0.3f,
+                onEnd: (ref Position p) => {
+                    actionEntt.AddTag<IsActionFinished>();
+                    source.AddTag<CanAct>();
+                }
+            );
+            return ActionProcessor.Result.Running;
+        }
+
+        // Perform the move
+        grid.MoveCharacterPos(gridPos.Value, newPos);
+        gridPos.Value = newPos;
+        action.Entity.Set(gridPos); // triggers update hooks
+
+        // Calculate vision. Not ideal here but would be much harder to move this into Vision
+        var wasVisible = grid.CheckTile<IsVisible>(oldPos);
+        var isVisible = grid.CheckTile<IsVisible>(newPos);
+        if (wasVisible || isVisible) action.Entity.AddTag<IsVisible>();
+
+        // Add movement animations
+        Vector3 currPos = action.Entity.GetComponent<GridPosition>().Value.ToWorldPos();
+        Animations.Move(action.Entity, actionEntt, oldPos, currPos,
+            () => {
+                Vec2I gridPos = source.GetComponent<GridPosition>().Value;
+                if (!Singleton.Entity.GetComponent<Grid>().CheckTile<IsVisible>(gridPos))
+                    source.RemoveTag<IsVisible>();
+            });
+        return ActionProcessor.Result.Running;
+    }
+
+    static bool IsTileFree(Grid grid, Vec2I pos, Entity entt) {
+        // TODO refactor grid
+        var destTile = grid.Tile[pos.X, pos.Y];
+        bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
+        var destChar = grid.Character[pos.X, pos.Y];
+        bool isCharFree = destChar.IsNull || (!destChar.Tags.Has<BlocksPathing>());
+        return isTileFree && (isCharFree || destChar == entt);
     }
 }
 
@@ -94,69 +153,3 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
         });
     }
 }
-
-file class ProcessMovementActions : QuerySystem<MovementAction> {
-    public ProcessMovementActions() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
-
-    protected override void OnUpdate() {
-        var cmds = CommandBuffer;
-        Query.ThrowOnStructuralChange = false;
-        Query.ForEachEntity((ref MovementAction action, Entity entt) => {
-            cmds.RemoveTag<IsActionWaiting>(entt.Id);
-            var grid = Singleton.Entity.GetComponent<Grid>();
-            ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
-            var oldPos = gridPos.Value;
-            var newPos = oldPos + new Vec2I(action.Dx, action.Dy);
-
-            // Check if move is valid
-            if (!grid.IsInside(newPos) || !IsTileFree(grid, newPos, action.Entity)) {
-                // Could play a fail animation here
-                cmds.AddTag<IsActionFinished>(entt.Id);
-                return;
-            }
-
-            // Perform the move
-            grid.MoveCharacterPos(gridPos.Value, newPos);
-            gridPos.Value = newPos;
-            action.Entity.Set(gridPos); // triggers update hooks
-
-            // Calculate vision. Not ideal here but would be much harder to move this into Vision
-            var wasVisible = grid.CheckTile<IsVisible>(oldPos);
-            var isVisible = grid.CheckTile<IsVisible>(newPos);
-            if (wasVisible || isVisible) action.Entity.AddTag<IsVisible>();
-
-            // Add movement animations
-            Vector3 currPos = action.Entity.GetComponent<GridPosition>().Value.ToWorldPos();
-            var actionEntt = action.Entity;
-            Animations.Move(action.Entity, entt, oldPos, currPos,
-                () => {
-					Vec2I vgridPos = actionEntt.GetComponent<GridPosition>().Value;
-					if (!Singleton.Entity.GetComponent<Grid>().CheckTile<IsVisible>(vgridPos))
-                        actionEntt.RemoveTag<IsVisible>(); });
-        });
-    }
-
-    static bool IsTileFree(Grid grid, Vec2I pos, Entity entt) {
-        // TODO refactor grid
-        var destTile = grid.Tile[pos.X, pos.Y];
-        bool isTileFree = destTile.IsNull || (!destTile.Tags.Has<BlocksPathing>());
-        var destChar = grid.Character[pos.X, pos.Y];
-        bool isCharFree = destChar.IsNull || (!destChar.Tags.Has<BlocksPathing>());
-        return isTileFree && (isCharFree || destChar == entt);
-    }
-}
-
-// Not used for now. Current just using 0,0 MovementAction for rest.
-// Might want to use this later if rest has some side effect. Or just add side effect to movement?
-// internal class ProcessRestSystem : QuerySystem<RestAction> {
-//     public ProcessRestSystem() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
-
-//     protected override void OnUpdate() {
-//         Query.ThrowOnStructuralChange = false;
-//         Query.ForEachEntity((ref RestAction action, Entity entt) => {
-//             Console.WriteLine($"Executing action: {action} --- {entt}");
-//             CommandBuffer.RemoveTag<IsActionWaiting>(entt.Id);
-//             CommandBuffer.AddTag<IsActionFinished>(entt.Id);
-//         });
-//     }
-// }

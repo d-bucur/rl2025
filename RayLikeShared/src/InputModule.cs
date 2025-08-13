@@ -70,23 +70,33 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
             else if (IsActionPressed(KeyboardKey.C))
                 keyMovement = (1, 1);
 
+            bool anyInput = false;
             if (keyMovement.HasValue) {
                 HandleMovementInput(entt, cmd, keyMovement.Value);
+                anyInput = true;
             }
             else if (IsActionPressed(KeyboardKey.R)) {
                 // TurnsManagement.QueueAction(cmd, new RestAction(), true);
                 TurnsManagement.QueueAction(cmd, new MovementAction(entt, 0, 0), entt);
                 cmd.RemoveTag<CanAct>(entt.Id);
+                anyInput = true;
             }
             else if (Raylib.IsKeyPressed(KeyboardKey.F)) {
                 TurnsManagement.QueueAction(cmd, new PickupAction { Target = entt, Position = entt.GetComponent<GridPosition>().Value }, entt);
                 cmd.RemoveTag<CanAct>(entt.Id);
+                anyInput = true;
             }
-            else CheckInventoryInput(entt, cmd);
+            else if (CheckInventoryInput(entt, cmd)) {
+                anyInput = true;
+            }
+            if (anyInput) {
+                ref var path = ref entt.GetComponent<PathMovement>();
+                path.Clear();
+            }
         });
     }
 
-    private static void CheckInventoryInput(Entity entt, CommandBuffer cmd) {
+    private static bool CheckInventoryInput(Entity entt, CommandBuffer cmd) {
         for (int i = 0; i < Config.InventoryLimit; i++) {
             if (Raylib.IsKeyPressed(i + KeyboardKey.One)) {
                 var items = entt.GetRelations<InventoryItem>();
@@ -97,20 +107,16 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
                     MessageLog.Print($"Item slot empty");
                 }
                 cmd.RemoveTag<CanAct>(entt.Id);
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     static void HandleMovementInput(Entity entt, CommandBuffer cmd, Vec2I keyMovement) {
         Vec2I prevPos = entt.GetComponent<GridPosition>().Value;
         var newPos = prevPos + keyMovement;
         var grid = Singleton.Entity.GetComponent<Grid>();
-        if (grid.CheckTile<BlocksPathing>(newPos)) {
-            // TODO Should turn into blocking action
-            Animations.Bump(entt, prevPos.ToWorldPos(), prevPos.ToWorldPos() + keyMovement.ToWorldPos() * 0.3f);
-            return;
-        }
         Entity charAtPos = grid.Character[newPos.X, newPos.Y];
         if (charAtPos.IsNull) {
             var action = new MovementAction(entt, keyMovement.X, keyMovement.Y);

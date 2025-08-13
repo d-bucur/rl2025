@@ -101,6 +101,11 @@ struct FireballConsumable : IConsumable {
 			Console.WriteLine($"Damaged {target} for {Damage}");
 		}
 
+		if (hitCount == 0) {
+			MessageLog.Print($"No valid target in range");
+			return false;
+		}
+
 		MessageLog.Print($"Hit {hitCount} targets with fireball");
 		return true;
 	}
@@ -120,71 +125,62 @@ struct FireballConsumable : IConsumable {
 	}
 }
 
-// Use ILinkComponent?? causes fragmentation?
+// TODO Use ILinkComponent to Item?
 struct ConsumeItemAction : IGameAction {
 	required public Entity Target;
 	required public Entity Item;
-	public Vec2I? pos;
 
-	public Entity GetIndexedValue() {
-		return Item;
-	}
+	// Not really the source, could cause problems
+	public Entity GetSource() => Target;
+	public Entity GetIndexedValue() => Item;
 }
 
-struct PickupAction : IComponent {
+struct PickupAction : IGameAction {
 	required public Entity Target;
 	required public Vec2I Position;
+
+	public Entity GetSource() => Target;
 }
 
-// TODO will need to store capacity somewhere
 struct InventoryItem : ILinkRelation {
 	public Entity Item;
-	public Entity GetRelationKey() {
-		return Item;
-	}
+	public Entity GetRelationKey() => Item;
 }
 
 class Items : IModule {
 	public void Init(EntityStore world) {
-		UpdatePhases.ApplyActions.Add(new ProcessPickupActions());
-		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<ConsumeItemAction>(ProcessConsumeItem));
+		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<PickupAction>(ProcessPickupAction));
+		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<ConsumeItemAction>(ProcessConsumeItemAction));
 	}
 
-	bool ProcessConsumeItem(ref ConsumeItemAction action, Entity actionEntt) {
+	ActionProcessor.Result ProcessConsumeItemAction(ref ConsumeItemAction action, Entity actionEntt) {
 		if (action.Item.GetComponent<Item>().Consumable.Consume(action.Target, action.Item)) {
 			action.Item.DeleteEntity();
+			return ActionProcessor.Result.Done;
 		}
-		return true;
+		else return ActionProcessor.Result.Invalid;
 	}
-}
 
-internal class ProcessPickupActions : QuerySystem<PickupAction> {
-	public ProcessPickupActions() => Filter.AllTags(Tags.Get<IsActionExecuting, IsActionWaiting>());
+	private ActionProcessor.Result ProcessPickupAction(ref PickupAction action, Entity actionEntt) {
+		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+		var others = grid.Others[action.Position.X, action.Position.Y];
 
-	protected override void OnUpdate() {
-		var cmds = CommandBuffer;
-		Query.ThrowOnStructuralChange = false;
-		Query.ForEachEntity((ref PickupAction action, Entity entt) => {
-			cmds.RemoveTag<IsActionWaiting>(entt.Id);
-			ref var grid = ref Singleton.Entity.GetComponent<Grid>();
-
-			var others = grid.Others[action.Position.X, action.Position.Y];
-
-			int pickedCount = 0;
-			foreach (var item in new List<Entity>(others?.Value ?? [])) {
-				if (!item.Tags.Has<ItemTag>()) continue;
-				if (action.Target.GetRelations<InventoryItem>().Length >= Config.InventoryLimit) {
-					MessageLog.Print($"Inventory is full");
-					cmds.AddTag<IsActionFinished>(entt.Id);
-					return;
-				}
-				MessageLog.Print($"You picked up {item.Name.value}");
-				PrefabTransformations.PickupItem(item);
-				action.Target.AddRelation(new InventoryItem { Item = item });
-				pickedCount++;
+		int pickedCount = 0;
+		foreach (var item in new List<Entity>(others?.Value ?? [])) {
+			if (!item.Tags.Has<ItemTag>()) continue;
+			if (action.Target.GetRelations<InventoryItem>().Length >= Config.InventoryLimit) {
+				MessageLog.Print($"Inventory is full");
+				return ActionProcessor.Result.Invalid;
 			}
-			if (pickedCount == 0) MessageLog.Print($"You couldn't find anything");
-			cmds.AddTag<IsActionFinished>(entt.Id);
-		});
+			MessageLog.Print($"You picked up {item.Name.value}");
+			PrefabTransformations.PickupItem(item);
+			action.Target.AddRelation(new InventoryItem { Item = item });
+			pickedCount++;
+		}
+		if (pickedCount == 0) {
+			MessageLog.Print($"You couldn't find anything");
+			return ActionProcessor.Result.Invalid;
+		}
+		else return ActionProcessor.Result.Done;
 	}
 }
