@@ -32,7 +32,6 @@ struct Pathfinder : IComponent {
 	}
 
 	internal void Reset() {
-		// Console.WriteLine($"Path reset");
 		visited.Clear();
 		frontier.Clear();
 		frontierItems.Clear();
@@ -156,27 +155,7 @@ struct Pathfinder : IComponent {
 
 class PathfinderModule : IModule {
 	public void Init(EntityStore world) {
-		// UpdatePhases.TurnStart.Add(new ResetPaths());
 		RenderPhases.Render.Add(new DebugPathfinding());
-	}
-}
-
-// TODO only reset when gridposition changes
-internal class ResetPaths : QuerySystem<Pathfinder, GridPosition> {
-	ArchetypeQuery actionQuery;
-
-	protected override void OnAddStore(EntityStore store) {
-		actionQuery = store.Query().AllTags(Tags.Get<IsActionFinished>());
-	}
-
-	protected override void OnUpdate() {
-		// reset paths only if an action was finished
-		if (actionQuery.Count == 0)
-			return;
-		Query.ForEachEntity((ref Pathfinder pathfinder, ref GridPosition pos, Entity entt) => {
-			pathfinder.Goal(pos.Value);
-			Console.WriteLine($"Reset Paths");
-		});
 	}
 }
 

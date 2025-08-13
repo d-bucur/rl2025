@@ -53,29 +53,11 @@ class Combat : IModule {
 	}
 
 	internal static void EnemyDeath(Signal<DeathSignal> signal) {
-		TurnToCorpse(signal.Entity);
+		PrefabTransformations.TurnCharacterToCorpse(signal.Entity);
 	}
 
 	internal static void PlayerDeath(Signal<DeathSignal> signal) {
-		TurnToCorpse(signal.Entity);
-	}
-
-	private static void TurnToCorpse(Entity entity) {
-		Vec2I pos = entity.GetComponent<GridPosition>().Value;
-		Grid grid = Singleton.Entity.GetComponent<Grid>();
-		grid.RemoveCharacter(pos);
-		grid.AddOther(entity, pos);
-
-		entity.Remove<EnemyAI, InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
-		entity.AddTag<Corpse>();
-		ref var name = ref entity.GetComponent<EntityName>();
-		name.value = $"Remains of {name.value}";
-
-		if (entity.HasComponent<Billboard>()) {
-			ref var bill = ref entity.GetComponent<Billboard>();
-			bill.Up = new Vector3(0, 0, -1);
-		}
-		entity.AddComponent(new RotationSingle(Random.Shared.Next(25, 35)));
+		PrefabTransformations.TurnCharacterToCorpse(signal.Entity);
 	}
 }
 

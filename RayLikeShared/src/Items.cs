@@ -20,7 +20,7 @@ struct HealingConsumable : IConsumable {
 		ref var fighter = ref target.GetComponent<Fighter>();
 		int recovered = fighter.Heal(Amount);
 		if (recovered > 0) {
-			MessageLog.Print($"You consume the {itemEntt.Name} and healed for {recovered} HP");
+			MessageLog.Print($"You consume the {itemEntt.Name.value} and healed for {recovered} HP");
 			return true;
 		}
 		else {
@@ -80,13 +80,15 @@ internal class ProcessPickupActions : QuerySystem<PickupAction> {
 
 			var others = grid.Others[action.Position.X, action.Position.Y];
 
-			foreach (var item in new List<Entity>(others.GetValueOrDefault().Value)) {
+			int pickedCount = 0;
+			foreach (var item in new List<Entity>(others?.Value ?? [])) {
 				if (!item.Tags.Has<ItemTag>()) continue;
 				MessageLog.Print($"You picked up {item.Name.value}");
-				// TODO transformations like this should be in the same place as spawning to see components
-				item.Remove<GridPosition, Position, RotationSingle, Scale3>();
+				PrefabTransformations.PickupItem(item);
 				action.Target.AddRelation(new InventoryItem { Item = item });
+				pickedCount++;
 			}
+			if (pickedCount == 0) MessageLog.Print($"You couldn't find anything");
 			cmds.AddTag<IsActionFinished>(entt.Id);
 		});
 	}

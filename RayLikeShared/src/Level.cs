@@ -4,9 +4,7 @@ using Friflo.Engine.ECS;
 namespace RayLikeShared;
 
 class Level : IModule {
-	Random Rand;
 	public void Init(EntityStore world) {
-		Rand = new Random();
 		Grid grid = new(Config.MapSizeX, Config.MapSizeY);
 		Singleton.Entity.AddComponent(grid);
 
@@ -16,18 +14,14 @@ class Level : IModule {
 		var rooms = GenerateDungeon(world);
 		var center = rooms[0].Center();
 
-		SpawnPlayer(world, center);
+		Prefabs.SpawnPlayer(center);
 
 		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
 		camera.Value.Position = new Vector3(center.X, 0, center.Y);
 		camera.Value.Target = new Vector3(center.X, 0, center.Y);
 
-		// Test enemies
-		Console.WriteLine($"Total rooms: {rooms.Count}");
-		foreach (var room in rooms[1..]) {
-			SpawnEnemy(world, room, ref grid);
-		}
-		SpawnItems(ref grid, ref world);
+		SpawnInEmptyTiles(Config.MaxEnemiesPerLevel, Prefabs.SpawnRandomEnemy);
+		SpawnInEmptyTiles(Config.MaxItemsPerLevel, Prefabs.SpawnHealingPotion);
 	}
 
 	static void OnGridPositionAdded(ComponentChanged change) {
@@ -51,138 +45,16 @@ class Level : IModule {
 		}
 	}
 
-	static void SpawnPlayer(EntityStore world, Vec2I pos) {
-		Singleton.Player = world.CreateEntity(
-			new InputReceiver(),
-			new GridPosition(pos.X, pos.Y),
-			new Position(pos.X, 0, pos.Y),
-			new RotationSingle(0f),
-			new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
-			new Billboard(), new TextureWithSource(Assets.heroesTexture) {
-				TileSize = new Vec2I(32, 32),
-				TileIdx = new Vec2I(2, 2)
-			},
-			new ColorComp(),
-			Tags.Get<Player, Character, BlocksPathing>()
-		);
-		// max 10 components per method...
-		Singleton.Player.Add(
-			new EntityName { value = "Hero" },
-			new Energy() { GainPerTick = 5 },
-			new VisionSource() { Range = 6 },
-			new Fighter(40, new Dice(3, 2), 6),
-			new Pathfinder(Singleton.Entity.GetComponent<Grid>()).Goal(pos),
-			new PathMovement(),
-			new Team { Value = 1 }
-		);
-		Singleton.Player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
-	}
-
-	enum MonsterType {
-		Skeleton,
-		Banshee,
-		Ogre,
-		Orc,
-	};
-
-	static void SpawnEnemy(EntityStore world, Room room, ref Grid grid) {
-		var monsterTypes = Enum.GetValues(typeof(MonsterType));
-
-		for (int i = 0; i <= Config.MaxEnemiesPerRoom; i++) {
-			var pos = new Vec2I(Random.Shared.Next(room.StartX + 1, room.EndX), Random.Shared.Next(room.StartY + 1, room.EndY));
-			if (!grid.Character[pos.X, pos.Y].IsNull || grid.CheckTile<BlocksPathing>(pos))
-				continue;
-			var enemyType = (MonsterType)monsterTypes.GetValue(Random.Shared.Next(monsterTypes.Length))!;
-
-			var entt = world.CreateEntity(
-				new GridPosition(pos.X, pos.Y),
-				new Position(pos.X, 0, pos.Y),
-				new RotationSingle(0f),
-				new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
-				new Billboard(),
-				new ColorComp(),
-				new EnemyAI(),
-				new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
-				new PathMovement(),
-				new Team { Value = 2 },
-				Tags.Get<Enemy, Character, BlocksPathing>()
-			);
-			entt.OnTagsChanged += Movement.OnEnemyVisibilityChange;
-			switch (enemyType) {
-				case MonsterType.Skeleton:
-					entt.Add(
-						new EntityName { value = "Skeleton" },
-						new TextureWithSource(Assets.monsterTexture) {
-							TileSize = new Vec2I(32, 32),
-							TileIdx = new Vec2I(0, 4)
-						},
-						new Fighter(6, new Dice(1, 2), 6),
-						new Energy() { GainPerTick = 5 }
-					);
-					break;
-				case MonsterType.Banshee:
-					entt.Add(
-						new EntityName { value = "Banshee" },
-						new TextureWithSource(Assets.monsterTexture) {
-							TileSize = new Vec2I(32, 32),
-							TileIdx = new Vec2I(1, 5)
-						},
-						new Fighter(8, new Dice(0, 1), 9),
-						new Energy() { GainPerTick = 6 }
-					);
-					break;
-				case MonsterType.Orc:
-					entt.Add(
-						new EntityName { value = "Orc" },
-						new TextureWithSource(Assets.monsterTexture) {
-							TileSize = new Vec2I(32, 32),
-							TileIdx = new Vec2I(3, 0)
-						},
-						new Fighter(10, new Dice(2, 2), 7),
-						new Energy() { GainPerTick = 4 }
-					);
-					break;
-				case MonsterType.Ogre:
-					entt.Add(
-						new EntityName { value = "Ogre" },
-						new TextureWithSource(Assets.monsterTexture) {
-							TileSize = new Vec2I(32, 32),
-							TileIdx = new Vec2I(0, 1)
-						},
-						new Fighter(13, new Dice(2, 3), 8),
-						new Energy() { GainPerTick = 3 }
-					);
-					break;
-			}
-			entt.AddSignalHandler<DeathSignal>(Combat.EnemyDeath);
-			Console.WriteLine($"Spawned {enemyType} in {room}");
-		}
-	}
-
-	// TODO make generic and use for enemy spawns
-	void SpawnItems(ref Grid grid, ref EntityStore world) {
-		var walkableTilesQuery = world.Query().AllTags(Tags.Get<Walkable>());
+	static void SpawnInEmptyTiles(int count, Action<Vec2I> SpawnAction) {
+		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+		var walkableTilesQuery = Singleton.World.Query().AllTags(Tags.Get<Walkable>());
 		var walkableTiles = walkableTilesQuery.ToEntityList();
-		for (int i = 0; i < Config.MaxItemsPerLevel; i++) {
+		for (int i = 0; i < count; i++) {
 			var entt = walkableTiles[Random.Shared.Next(walkableTiles.Count)];
 			var pos = entt.GetComponent<GridPosition>().Value;
 			if (grid.Character[pos.X, pos.Y].IsNull
 				&& grid.Others[pos.X, pos.Y] == null) {
-				var health = 10;
-				world.CreateEntity(
-					new EntityName($"Healing potion +{health}HP"),
-					new GridPosition(pos.X, pos.Y),
-					new Position(pos.X, 0, pos.Y),
-					new RotationSingle(0f),
-					new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
-					new Billboard(), new TextureWithSource(Assets.itemsTexture) {
-						TileSize = new Vec2I(32, 32),
-						TileIdx = new Vec2I(1, 19)
-					},
-					new ColorComp(),
-					new Item() { Consumable = new HealingConsumable { Amount = health } },
-					Tags.Get<ItemTag>()
-				);
+				SpawnAction(pos);
 			}
 		}
 	}
@@ -208,11 +80,11 @@ class Level : IModule {
 		// Generate rooms and tunnels and save them to a grid
 		List<Room> rooms = new();
 		for (int i = 0; i < roomCount; i++) {
-			int width = Rand.Next(Config.RoomSizeMin, Config.RoomSizeMax);
-			int height = Rand.Next(Config.RoomSizeMin, Config.RoomSizeMax);
+			int width = Random.Shared.Next(Config.RoomSizeMin, Config.RoomSizeMax);
+			int height = Random.Shared.Next(Config.RoomSizeMin, Config.RoomSizeMax);
 			var room = new Room(
-				Rand.Next(0, Config.MapSizeX - width),
-				Rand.Next(0, Config.MapSizeY - height),
+				Random.Shared.Next(0, Config.MapSizeX - width),
+				Random.Shared.Next(0, Config.MapSizeY - height),
 				width,
 				height
 			);
@@ -235,7 +107,7 @@ class Level : IModule {
 		}
 	}
 
-	void DigRoom(bool[,] map, Room room) {
+	static void DigRoom(bool[,] map, Room room) {
 		for (int i = room.StartX + 1; i < room.EndX - 1; i++) {
 			for (int j = room.StartY + 1; j < room.EndY - 1; j++) {
 				map[i, j] = true;
@@ -243,7 +115,7 @@ class Level : IModule {
 		}
 	}
 
-	void DigTunnel(bool[,] map, Vec2I start, Vec2I end, bool high) {
+	static void DigTunnel(bool[,] map, Vec2I start, Vec2I end, bool high) {
 		var highest = start.Y >= end.Y ? start : end;
 		var lowest = start.Y < end.Y ? start : end;
 		var fixedX = high ? lowest : highest;
@@ -260,7 +132,7 @@ class Level : IModule {
 		// Randomize map for cellular automata
 		for (int i = 0; i < Config.MapSizeX; i++) {
 			for (int j = 0; j < Config.MapSizeY; j++) {
-				if (Rand.NextSingle() > emptyChance)
+				if (Random.Shared.NextSingle() > emptyChance)
 					map[i, j] = true;
 			}
 		}

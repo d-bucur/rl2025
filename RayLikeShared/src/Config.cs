@@ -9,7 +9,7 @@ static class Config {
     internal const int MaxRoomCount = 80;
     internal const int RoomSizeMin = 5;
     internal const int RoomSizeMax = 9;
-    internal const int MaxEnemiesPerRoom = 3;
+    internal const int MaxEnemiesPerLevel = 10;
 	internal const int MaxItemsPerLevel = 3;
 
     internal const int CADeathLimit = 3;
