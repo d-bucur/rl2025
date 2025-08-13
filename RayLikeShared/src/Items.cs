@@ -30,6 +30,29 @@ struct HealingConsumable : IConsumable {
 	}
 }
 
+struct LightningDamageConsumable : IConsumable {
+	required public int Damage;
+	required public int MaximumRange;
+
+	public bool Consume(Entity source, Entity itemEntt) {
+		var query = Singleton.World.Query<GridPosition>().AllTags(Tags.Get<Enemy, IsVisible>());
+		var sourcePos = source.GetComponent<GridPosition>();
+		var closest = (new Entity(), int.MaxValue);
+		query.ForEachEntity((ref GridPosition enemyPos, Entity enemyEntt) => {
+			int dist = Pathfinder.DiagonalDistance(sourcePos.Value, enemyPos.Value);
+			if (dist < closest.Item2) closest = (enemyEntt, dist);
+		});
+		if (closest.Item1.IsNull) {
+			MessageLog.Print($"No enemy in range");
+			return false;
+		}
+		ref var f = ref closest.Item1.GetComponent<Fighter>();
+		Combat.ApplyDamage(closest.Item1, source, Damage);
+		MessageLog.Print($"A lightning bolt strikes {closest.Item1.Name.value} for {Damage} damage!");
+		return true;
+	}
+}
+
 // Use ILinkComponent?? causes fragmentation?
 struct ConsumeItemAction : IGameAction {
 	required public Entity Target;

@@ -14,14 +14,14 @@ class Level : IModule {
 		var rooms = GenerateDungeon(world);
 		var center = rooms[0].Center();
 
-		Prefabs.SpawnPlayer(center);
+		Singleton.Player = Prefabs.SpawnPlayer(center);
 
 		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
 		camera.Value.Position = new Vector3(center.X, 0, center.Y);
 		camera.Value.Target = new Vector3(center.X, 0, center.Y);
 
-		SpawnInEmptyTiles(Config.MaxEnemiesPerLevel, Prefabs.SpawnRandomEnemy);
-		SpawnInEmptyTiles(Config.MaxItemsPerLevel, Prefabs.SpawnHealingPotion);
+		SpawnInEmptyTiles(Config.MaxEnemiesPerLevel, (pos) => Prefabs.SpawnEnemy(pos, Helpers.GetRandomEnum<Prefabs.EnemyType>()));
+		SpawnInEmptyTiles(Config.MaxItemsPerLevel, Prefabs.SpawnRandomConsumable);
 	}
 
 	static void OnGridPositionAdded(ComponentChanged change) {
@@ -45,7 +45,7 @@ class Level : IModule {
 		}
 	}
 
-	static void SpawnInEmptyTiles(int count, Action<Vec2I> SpawnAction) {
+	static void SpawnInEmptyTiles(int count, Func<Vec2I, Entity> SpawnAction) {
 		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
 		var walkableTilesQuery = Singleton.World.Query().AllTags(Tags.Get<Walkable>());
 		var walkableTiles = walkableTilesQuery.ToEntityList();

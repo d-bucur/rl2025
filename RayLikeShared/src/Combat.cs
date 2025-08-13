@@ -59,6 +59,28 @@ class Combat : IModule {
 	internal static void PlayerDeath(Signal<DeathSignal> signal) {
 		PrefabTransformations.TurnCharacterToCorpse(signal.Entity);
 	}
+
+	internal static void ApplyDamage(Entity target, Entity source, int damage) {
+		var desc = $"{source.GetComponent<EntityName>().value} attacks {target.GetComponent<EntityName>().value}";
+		ref var targetFighter = ref target.GetComponent<Fighter>();
+		var isTargetPlayer = target.Tags.Has<Player>();
+		var color = isTargetPlayer ? Color.Red : Color.Orange;
+		if (damage > 0) {
+			targetFighter.ApplyDamage(damage);
+			if (targetFighter.HP <= 0) {
+				MessageLog.Print($"{desc} for {damage} HP and killed it", color);
+				target.EmitSignal(new DeathSignal());
+			}
+			else
+				MessageLog.Print($"{desc} for {damage} HP", color);
+			var actionDir = target.GetComponent<GridPosition>().Value.ToWorldPos()
+				- source.GetComponent<GridPosition>().Value.ToWorldPos();
+			GUI.SpawnDamageFx(damage, target.GetComponent<Position>(),
+				isTargetPlayer ? Color.Red : Color.Orange, actionDir);
+		}
+		else
+			MessageLog.Print($"{desc} but does no damage", color);
+	}
 }
 
 file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
@@ -83,22 +105,7 @@ file class ProcessMeleeSystem : QuerySystem<MeleeAction> {
 			ref var targetFighter = ref action.Target.GetComponent<Fighter>();
 			var damage = sourceFighter.Power
 				- targetFighter.Defense.Roll();
-			var desc = $"{action.Source.GetComponent<EntityName>().value} attacks {action.Target.GetComponent<EntityName>().value}";
-			var isTargetPlayer = action.Target.Tags.Has<Player>();
-			var color = isTargetPlayer ? Color.Red : Color.Orange;
-			if (damage > 0) {
-				targetFighter.ApplyDamage(damage);
-				if (targetFighter.HP <= 0) {
-					MessageLog.Print($"{desc} for {damage} HP and killed it", color);
-					action.Target.EmitSignal(new DeathSignal());
-				}
-				else
-					MessageLog.Print($"{desc} for {damage} HP", color);
-				GUI.SpawnDamageFx(damage, action.Target.GetComponent<Position>(),
-					isTargetPlayer ? Color.Red : Color.Orange, actionDir);
-			}
-			else
-				MessageLog.Print($"{desc} but does no damage", color);
+			Combat.ApplyDamage(action.Target, action.Source, damage);
 		});
 	}
 }

@@ -1,11 +1,13 @@
+using System.Diagnostics;
 using System.Numerics;
 using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
 
 static class Prefabs {
-	internal static void SpawnPlayer(Vec2I pos) {
-		Singleton.Player = Singleton.World.CreateEntity(
+	internal static Entity SpawnPlayer(Vec2I pos) {
+		var startItem = PrefabTransformations.PickupItem(SpawnLightningScroll(pos, 10, 6));
+		var entt = Singleton.World.CreateEntity(
 			new InputReceiver(),
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
@@ -19,7 +21,7 @@ static class Prefabs {
 			Tags.Get<Player, Character, BlocksPathing>()
 		);
 		// max 10 components per method...
-		Singleton.Player.Add(
+		entt.Add(
 			new EntityName { value = "Hero" },
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
@@ -28,20 +30,72 @@ static class Prefabs {
 			new PathMovement(),
 			new Team { Value = 1 }
 		);
-		Singleton.Player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
+		entt.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
+		entt.AddRelation(new InventoryItem { Item = startItem });
+		return entt;
 	}
 
-	enum MonsterType {
+	internal enum EnemyType {
 		Skeleton,
 		Banshee,
 		Ogre,
 		Orc,
 	};
+	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType) {
+		Entity entt = PrepEnemyCommon(pos);
+		switch (enemyType) {
+			case EnemyType.Skeleton:
+				entt.Add(
+					new EntityName { value = "Skeleton" },
+					new TextureWithSource(Assets.monsterTexture) {
+						TileSize = new Vec2I(32, 32),
+						TileIdx = new Vec2I(0, 4)
+					},
+					new Fighter(6, new Dice(1, 2), 6),
+					new Energy() { GainPerTick = 5 }
+				);
+				break;
+			case EnemyType.Banshee:
+				entt.Add(
+					new EntityName { value = "Banshee" },
+					new TextureWithSource(Assets.monsterTexture) {
+						TileSize = new Vec2I(32, 32),
+						TileIdx = new Vec2I(1, 5)
+					},
+					new Fighter(8, new Dice(0, 1), 9),
+					new Energy() { GainPerTick = 6 }
+				);
+				break;
+			case EnemyType.Orc:
+				entt.Add(
+					new EntityName { value = "Orc" },
+					new TextureWithSource(Assets.monsterTexture) {
+						TileSize = new Vec2I(32, 32),
+						TileIdx = new Vec2I(3, 0)
+					},
+					new Fighter(10, new Dice(2, 2), 7),
+					new Energy() { GainPerTick = 4 }
+				);
+				break;
+			case EnemyType.Ogre:
+				entt.Add(
+					new EntityName { value = "Ogre" },
+					new TextureWithSource(Assets.monsterTexture) {
+						TileSize = new Vec2I(32, 32),
+						TileIdx = new Vec2I(0, 1)
+					},
+					new Fighter(15, new Dice(2, 3), 9),
+					new Energy() { GainPerTick = 3 }
+				);
+				break;
+			default:
+				Debug.Fail("Unhandled case");
+				break;
+		}
+		return entt;
+	}
 
-	internal static void SpawnRandomEnemy(Vec2I pos) {
-		var monsterTypes = Enum.GetValues(typeof(MonsterType));
-		var enemyType = (MonsterType)monsterTypes.GetValue(Random.Shared.Next(monsterTypes.Length))!;
-
+	static Entity PrepEnemyCommon(Vec2I pos) {
 		var entt = Singleton.World.CreateEntity(
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
@@ -56,94 +110,81 @@ static class Prefabs {
 			Tags.Get<Enemy, Character, BlocksPathing>()
 		);
 		entt.OnTagsChanged += Movement.OnEnemyVisibilityChange;
-		switch (enemyType) {
-			case MonsterType.Skeleton:
-				entt.Add(
-					new EntityName { value = "Skeleton" },
-					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
-						TileIdx = new Vec2I(0, 4)
-					},
-					new Fighter(6, new Dice(1, 2), 6),
-					new Energy() { GainPerTick = 5 }
-				);
-				break;
-			case MonsterType.Banshee:
-				entt.Add(
-					new EntityName { value = "Banshee" },
-					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
-						TileIdx = new Vec2I(1, 5)
-					},
-					new Fighter(8, new Dice(0, 1), 9),
-					new Energy() { GainPerTick = 6 }
-				);
-				break;
-			case MonsterType.Orc:
-				entt.Add(
-					new EntityName { value = "Orc" },
-					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
-						TileIdx = new Vec2I(3, 0)
-					},
-					new Fighter(10, new Dice(2, 2), 7),
-					new Energy() { GainPerTick = 4 }
-				);
-				break;
-			case MonsterType.Ogre:
-				entt.Add(
-					new EntityName { value = "Ogre" },
-					new TextureWithSource(Assets.monsterTexture) {
-						TileSize = new Vec2I(32, 32),
-						TileIdx = new Vec2I(0, 1)
-					},
-					new Fighter(15, new Dice(2, 3), 9),
-					new Energy() { GainPerTick = 3 }
-				);
-				break;
-		}
 		entt.AddSignalHandler<DeathSignal>(Combat.EnemyDeath);
+		return entt;
 	}
 
-	internal static void SpawnHealingPotion(Vec2I pos) {
-		var health = 10;
-		Singleton.World.CreateEntity(
-			new EntityName($"Healing potion +{health}HP"),
+	internal enum ConsumableTypes {
+		HealingPotion,
+		LightningDamageScroll,
+	};
+	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
+		Helpers.GetRandomEnum<ConsumableTypes>() switch {
+			ConsumableTypes.HealingPotion => SpawnHealingPotion(pos, 10),
+			ConsumableTypes.LightningDamageScroll => SpawnLightningScroll(pos, 10, 6),
+		};
+
+	static Entity PrepConsumableCommon(Vec2I pos) {
+		return Singleton.World.CreateEntity(
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
 			new RotationSingle(0f),
 			new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
+			new ColorComp(),
+			new Item() { Consumable = default }, // add default item to avoid the terrible buffer API
+			Tags.Get<ItemTag>()
+		);
+	}
+
+	static Entity SpawnLightningScroll(Vec2I pos, int damage, int range) {
+		Entity entt = PrepConsumableCommon(pos);
+		entt.Add(
+			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
+				TileSize = new Vec2I(32, 32),
+				TileIdx = new Vec2I(0, 21)
+			},
+			new EntityName($"Lightning scroll"),
+			new Item() { Consumable = new LightningDamageConsumable { Damage = damage, MaximumRange = range } }
+		);
+		return entt;
+	}
+
+	static Entity SpawnHealingPotion(Vec2I pos, int health) {
+		Entity entt = PrepConsumableCommon(pos);
+		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
 				TileSize = new Vec2I(32, 32),
 				TileIdx = new Vec2I(1, 19)
 			},
-			new ColorComp(),
-			new Item() { Consumable = new HealingConsumable { Amount = health } },
-			Tags.Get<ItemTag>()
+			new EntityName($"Healing potion +{health}HP"),
+			new Item() { Consumable = new HealingConsumable { Amount = health } }
 		);
+		return entt;
 	}
 }
 
 static class PrefabTransformations {
-	internal static void PickupItem(Entity item) {
-		item.Remove<GridPosition, Position, RotationSingle, Scale3>();
+	internal static Entity PickupItem(Entity entt) {
+		entt.Remove<GridPosition, Position, RotationSingle, Scale3>();
+		return entt;
 	}
 
-	internal static void TurnCharacterToCorpse(Entity entity) {
-		Vec2I pos = entity.GetComponent<GridPosition>().Value;
+	internal static Entity TurnCharacterToCorpse(Entity entt) {
+		Vec2I pos = entt.GetComponent<GridPosition>().Value;
 		Grid grid = Singleton.Entity.GetComponent<Grid>();
 		grid.RemoveCharacter(pos);
-		grid.AddOther(entity, pos);
+		grid.AddOther(entt, pos);
 
-		entity.Remove<EnemyAI, InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
-		entity.AddTag<Corpse>();
-		ref var name = ref entity.GetComponent<EntityName>();
+		entt.Remove<EnemyAI, InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
+		entt.AddTag<Corpse>();
+		ref var name = ref entt.GetComponent<EntityName>();
 		name.value = $"Remains of {name.value}";
 
-		if (entity.HasComponent<Billboard>()) {
-			ref var bill = ref entity.GetComponent<Billboard>();
+		if (entt.HasComponent<Billboard>()) {
+			ref var bill = ref entt.GetComponent<Billboard>();
 			bill.Up = new Vector3(0, 0, -1);
 		}
-		entity.AddComponent(new RotationSingle(Random.Shared.Next(25, 35)));
+		entt.AddComponent(new RotationSingle(Random.Shared.Next(25, 35)));
+		return entt;
 	}
 }
