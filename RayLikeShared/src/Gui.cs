@@ -63,7 +63,6 @@ static class GUI {
 	internal static void SpawnDamageFx(int damage, Position originPos, Color color, Vector3 dir) {
 		const int Size = 20;
 		var renderTex = Raylib.LoadRenderTexture(Size, Size);
-		// TODO texture render not working in web version. Same with pathfinding debug
 		// Draw text to texture
 		Raylib.BeginTextureMode(renderTex);
 		Raylib.ClearBackground(new Color(0, 0, 0, 0));
@@ -190,7 +189,7 @@ file class RenderMinimap : QuerySystem {
 	}
 }
 
-// TODO Move to input module?
+// A lot of cross cutting concerns here: input, rendering and gui. Should break up
 file class MouseSelect : QuerySystem {
 	List<string> InspectStrings = new();
 

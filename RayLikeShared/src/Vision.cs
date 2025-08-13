@@ -31,7 +31,6 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref GridPosition pos, ref VisionSource vision, Entity entt) => {
-			// TODO enemy visibility doesn't update properly after they move. need to update them without recalculating all vision
 			if (Query.HasEvent(entt.Id)) {
 				RecalculateVision(ref pos, ref vision, entt);
 			}
