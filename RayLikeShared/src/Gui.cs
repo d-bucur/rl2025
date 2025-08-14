@@ -9,13 +9,14 @@ struct MessageLog() : IComponent {
 	internal struct Message {
 		public string Text;
 		public Color Color;
+		public double Time;
 	}
 	public List<Message> Messages = new();
 	public int MaxCount = 200;
-	public int DisplayCount = 3;
+	public int DisplayCount = 4;
 	private bool replaceNext = false;
 
-	public void Add(string message, Color? color = null) {
+	void Add(string message, Color? color = null) {
 		if (replaceNext) {
 			replaceNext = false;
 			return;
@@ -23,6 +24,7 @@ struct MessageLog() : IComponent {
 		Messages.Add(new Message {
 			Text = message,
 			Color = color ?? Color.White,
+			Time = Raylib.GetTime()
 		});
 	}
 
@@ -58,6 +60,7 @@ class GuiModule : IModule {
 
 		RenderPhases.Render.Add(new RenderMinimap());
 		RenderPhases.Render.Add(new RenderInventory());
+		RenderPhases.Render.Add(new RenderTurnOrder());
 		RenderPhases.Render.Add(new RenderHealth());
 		RenderPhases.Render.Add(new RenderGameOver());
 		RenderPhases.Render.Add(new RenderMessageLog());
@@ -135,13 +138,22 @@ file class RenderHealth : QuerySystem<Fighter> {
 }
 
 file class RenderMessageLog : QuerySystem<MessageLog> {
+	private const int MessageDuration = 5;
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref MessageLog log, Entity entt) => {
 			int pos = GUIValues.HealthHeight + GUIValues.Padding + GUIValues.LineHeight;
 			for (int i = Math.Max(0, log.Messages.Count - log.DisplayCount); i < log.Messages.Count; i++) {
 				var message = log.Messages[i];
-				Raylib.DrawText(message.Text, GUIValues.Padding, pos, GUIValues.TextHeight, message.Color);
-				pos += GUIValues.LineHeight;
+				double timeDiff = Raylib.GetTime() - message.Time;
+				// Only draw recent messages
+				if (timeDiff < MessageDuration) {
+					// Fade out effect
+					float ratio = (float)(timeDiff / MessageDuration);
+					float alpha = Ease.QuartOut(1 - ratio);
+					Color color = Raylib.Fade(message.Color, alpha);
+					Raylib.DrawText(message.Text, GUIValues.Padding, pos, GUIValues.TextHeight, color);
+					pos += GUIValues.LineHeight;
+				}
 			}
 		});
 	}
@@ -338,5 +350,38 @@ internal class RenderInventory : QuerySystem {
 				);
 			}
 		}
+	}
+}
+
+// TODO Pretty cool, but ordering is not stable or accurate. Need to debug
+internal class RenderTurnOrder : QuerySystem {
+	protected override void OnUpdate() {
+		var itemSize = 64;
+		// Can cache in turns management
+		var anchor = new Vector2(0, Raylib.GetScreenHeight() - itemSize);
+		var i = 0;
+		foreach (var (entt, energy) in TurnsManagement.SimTurns(6)) {
+			var itemTexture = entt.GetComponent<TextureWithSource>();
+			Vector2 tileStart = anchor + new Vector2(i * itemSize, 0);
+			Rectangle tileRect = new(tileStart, itemSize, itemSize);
+			Raylib.DrawRectangleV(tileStart, new Vector2(itemSize), Raylib.Fade(Color.DarkGray, 0.3f));
+			if (Singleton.Get<MouseTarget>().Value is Vec2I target) {
+				var targetChar = Singleton.Get<Grid>().Character[target.X, target.Y];
+				if (!targetChar.IsNull && targetChar == entt)
+					Raylib.DrawRectangleLinesEx(tileRect, 5, Raylib.Fade(Color.LightGray, 0.3f));
+			}
+			Raylib.DrawTexturePro(
+				itemTexture.Texture,
+				itemTexture.Source,
+				tileRect,
+				Vector2.Zero,
+				0,
+				Color.White
+			);
+			Raylib.DrawText($"{energy}", (int)tileStart.X, (int)tileStart.Y, 20, Color.White);
+
+			i++;
+		}
+		Raylib.DrawText("Turns", (int)anchor.X, (int)anchor.Y - 20, 20, Color.White);
 	}
 }

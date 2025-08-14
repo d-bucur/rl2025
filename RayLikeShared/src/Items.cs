@@ -19,7 +19,8 @@ struct HealingConsumable : IConsumable {
 
 	public bool Consume(Entity target, Entity itemEntt) {
 		ref var fighter = ref target.GetComponent<Fighter>();
-		int recovered = fighter.Heal(Amount);
+		var amount = (fighter.MaxHP - fighter.HP) * 0.75f;
+		int recovered = fighter.Heal((int)amount);
 		if (recovered > 0) {
 			MessageLog.Print($"You consume the {itemEntt.Name.value} and healed for {recovered} HP");
 			return true;
@@ -98,7 +99,6 @@ struct FireballConsumable : IConsumable {
 			if (target.IsNull) continue;
 			hitCount++;
 			Combat.ApplyDamage(target, source, Damage, tilePos - targetPos);
-			Console.WriteLine($"Damaged {target} for {Damage}");
 		}
 
 		if (hitCount == 0) {

@@ -34,7 +34,7 @@ record struct PropertyTween<C, P>(
 	public void Tick(float delta, Entity ent) {
 		if (IsFinished()) return;
 		CurrentTime += delta;
-		float x = CurrentTime / RunTime;
+		float x = CurrentTime / RunTime; // micro-optimization: cache 1/RunTime and use *
 		var t = IsReversed ? EasingFunc(1 - x) : EasingFunc(x);
 		var val = LerpFunc(From, To, t);
 		ref var comp = ref ent.GetComponent<C>();
@@ -155,7 +155,7 @@ record struct Tween(Entity target) : IComponent {
 	#endregion
 }
 
-public class Ease {
+public static class Ease {
 	#region easings
 	// More: https://easings.net/
 	public static float Linear(float x) {
@@ -175,6 +175,17 @@ public class Ease {
 	}
 	public static float SineInOut(float x) {
 		return -(MathF.Cos(MathF.PI * x) - 1) / 2;
+	}
+	// haven't tested these yet
+	public static float SmoothStep(float x) {
+		return x * x * (3.0f - 2.0f * x);
+	}
+	public static float SmoothStep(float x, float a, float b) {
+		x = ClampRange(x, a, b);
+		return x * x * (3.0f - 2.0f * x);
+	}
+	private static float ClampRange(float x, float a, float b) {
+		return Math.Clamp((x - a) / (b - a), 0, 1);
 	}
 	#endregion
 }

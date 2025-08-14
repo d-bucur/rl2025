@@ -45,6 +45,28 @@ class TurnsManagement : IModule {
 		return entt.Tags.Has<IsVisible>()
 			&& Pathfinder.DiagonalDistance(enttPos, playerPos) <= 6;
 	}
+
+	internal static IEnumerable<(Entity, float)> SimTurns(int max = 10) {
+		var query = Singleton.World.Query<Energy>();
+		query.Filter.AllTags(Tags.Get<IsVisible>());
+		var entts = new List<(Energy, Entity)>();
+		query.ForEachEntity((ref Energy energy, Entity entity) => entts.Add((energy, entity)));
+		int totalActed = 0;
+		int pass = 0;
+		for (int i = 0; totalActed < max; i = (i + 1) % entts.Count) {
+			var energy = entts[i].Item1;
+			var entt = entts[i].Item2;
+			energy.Current += energy.GainPerTick;
+			var remaining = energy.Current - energy.AmountToAct;
+			if (remaining >= 0) {
+				energy.Current = remaining;
+				totalActed++;
+				yield return (entt, pass);
+			}
+			entts[i] = (energy, entt);
+			pass++;
+		}
+	}
 }
 
 file class TickEnergySystem : QuerySystem<Energy> {
@@ -63,7 +85,6 @@ file class TickEnergySystem : QuerySystem<Energy> {
 			return;
 
 		// If nobody can act, then progress through the energy components until someone can
-		var buffer = CommandBuffer;
 		while (canActQuery.Count == 0) {
 			Query.ForEachEntity((ref Energy energy, Entity e) => {
 				energy.Current += energy.GainPerTick;
@@ -72,10 +93,10 @@ file class TickEnergySystem : QuerySystem<Energy> {
 				if (remaining >= 0) {
 					// Console.WriteLine($"{e}'s turn to act");
 					energy.Current = remaining;
-					buffer.AddTag<CanAct>(e.Id);
+					CommandBuffer.AddTag<CanAct>(e.Id);
 				}
 			});
-			buffer.Playback();
+			CommandBuffer.Playback();
 		}
 	}
 }

@@ -134,6 +134,8 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
                 return;
             Vec2I next = path.NextPoint();
             Vec2I diff = next - pos.Value;
+            // TODO not handling case where previous point was unreachable; still continues on the path
+            // which tirggers this assert
             Debug.Assert(Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2,
                 $"BUG: Movement is too big: from {pos.Value} to {next}");
 
