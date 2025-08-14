@@ -1,6 +1,5 @@
 ## week 5
 - fx for items, maybe projectiles too?
-- turn order bugged?
 - blood under corpses
 - event handlers for different game states. InputEventHandler component, add and remove as needed.
   

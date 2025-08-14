@@ -8,6 +8,7 @@ struct Energy() : IComponent {
 	internal int Current = 0;
 	internal required int GainPerTick;
 	internal int AmountToAct = 10;
+	internal int TickProcessed = 0;
 }
 // Added once Energy has reached a threshold to act (take a turn)
 struct CanAct : ITag;
@@ -21,8 +22,15 @@ struct IsActionFinished : ITag;
 // Marks that other actions should not be executed until this is finished
 struct IsActionBlocking : ITag;
 
+struct TurnData() : IComponent {
+	internal int CurrentTick = 1;
+}
+
 class TurnsManagement : IModule {
+
 	public void Init(EntityStore world) {
+		Singleton.Entity.AddComponent(new TurnData());
+
 		UpdatePhases.ProgressTurns.Add(new TickEnergySystem());
 		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
 	}
@@ -46,56 +54,77 @@ class TurnsManagement : IModule {
 			&& Pathfinder.DiagonalDistance(enttPos, playerPos) <= 6;
 	}
 
+	private static List<(Energy, Entity)> energyCache = new();
+	// Same as TickEnergySystem. See comments on that
 	internal static IEnumerable<(Entity, float)> SimTurns(int max = 10) {
-		var query = Singleton.World.Query<Energy>();
-		query.Filter.AllTags(Tags.Get<IsVisible>());
-		var entts = new List<(Energy, Entity)>();
-		query.ForEachEntity((ref Energy energy, Entity entity) => entts.Add((energy, entity)));
+		var query = Singleton.World.Query<Energy>().AllTags(Tags.Get<IsVisible>());
+		var turnData = Singleton.Get<TurnData>();
+		energyCache.Clear();
+		query.ForEachEntity((ref Energy energy, Entity entity) => energyCache.Add((energy, entity)));
+		energyCache.Sort((e1, e2) => e1.Item2.Id - e2.Item2.Id);
 		int totalActed = 0;
-		int pass = 0;
-		for (int i = 0; totalActed < max; i = (i + 1) % entts.Count) {
-			var energy = entts[i].Item1;
-			var entt = entts[i].Item2;
-			energy.Current += energy.GainPerTick;
-			var remaining = energy.Current - energy.AmountToAct;
-			if (remaining >= 0) {
-				energy.Current = remaining;
-				totalActed++;
-				yield return (entt, pass);
+		while (totalActed < max) {
+			for (int i = 0; i < energyCache.Count; i++) {
+				var (energy, entt) = energyCache[i];
+				if (energy.TickProcessed >= turnData.CurrentTick) continue;
+				energy.TickProcessed = turnData.CurrentTick;
+				energy.Current += energy.GainPerTick;
+				var remaining = energy.Current - energy.AmountToAct;
+				if (remaining >= 0) {
+					energy.Current = remaining;
+					totalActed++;
+					yield return (entt, turnData.CurrentTick);
+				}
+				energyCache[i] = (energy, entt);
 			}
-			entts[i] = (energy, entt);
-			pass++;
+			turnData.CurrentTick++;
 		}
 	}
 }
 
 file class TickEnergySystem : QuerySystem<Energy> {
 	ArchetypeQuery canActQuery;
-	ArchetypeQuery actionsInPipelineQuery;
+	ArchetypeQuery blockingActionsQuery;
+	List<Entity> entitiesSorted = new();
 
 	protected override void OnAddStore(EntityStore store) {
 		canActQuery = store.Query().AllTags(Tags.Get<CanAct>());
-		// tried to wait on blocking actions only, but then non blocking ones bug out if done fast
-		actionsInPipelineQuery = store.Query().AnyTags(Tags.Get<IsActionBlocking>());
+		blockingActionsQuery = store.Query().AnyTags(Tags.Get<IsActionBlocking>());
 	}
 
 	protected override void OnUpdate() {
-		// Progress only if no actions currently in pipeline
-		if (actionsInPipelineQuery.Count > 0)
+		// Progress only if no blocking actions currently in pipeline
+		if (blockingActionsQuery.Count > 0 || canActQuery.Count > 0)
 			return;
 
+		// This is basically the same as SimTurns(), just working on different data (in place mutation, vs copy)
+		// It's a pain to maintain and keep in sync with each other. 
+		// Would be better to use the same code in both, just doing different things
+		// But hard to do since one is an iterator and works on copies etc.
+		ref var turnData = ref Singleton.Get<TurnData>();
+		// Sort entities by id to guarantee determinism with SimTurns(). Not sure how friflo orders
+		entitiesSorted.Clear();
+		entitiesSorted.AddRange(Query.Entities);
+		entitiesSorted.Sort((e1, e2) => e1.Id - e2.Id);
 		// If nobody can act, then progress through the energy components until someone can
 		while (canActQuery.Count == 0) {
-			Query.ForEachEntity((ref Energy energy, Entity e) => {
+			foreach (var e in entitiesSorted) {
+				ref var energy = ref e.GetComponent<Energy>();
+				// Already processed this tick. Skip
+				if (energy.TickProcessed >= turnData.CurrentTick) continue;
+				energy.TickProcessed = turnData.CurrentTick;
 				energy.Current += energy.GainPerTick;
 				var remaining = energy.Current - energy.AmountToAct;
-				// Console.WriteLine($"Progressing {e} to energy {energy.Current}");
 				if (remaining >= 0) {
-					// Console.WriteLine($"{e}'s turn to act");
 					energy.Current = remaining;
 					CommandBuffer.AddTag<CanAct>(e.Id);
+					// return;
+					// TODO if returning here then turns are deterministic
+					// but movement is slow since entts have to pass through multiple system runs
+					// need a way to progress all enemy systems in the same tick until player's turn to act.
 				}
-			});
+			}
+			turnData.CurrentTick++;
 			CommandBuffer.Playback();
 		}
 	}
