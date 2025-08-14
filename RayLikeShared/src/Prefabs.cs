@@ -49,11 +49,16 @@ static class Prefabs {
 	}
 
 	internal static void SpawnStartingItems(Vec2I pos, Entity entt) {
-		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
 
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos)) });
+		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
+		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
+		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
+		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
+		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
-		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
-		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnHealingPotion(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
 		// SpawnConfusionScroll(pos + (1, 1));
 		// SpawnLightningScroll(pos + (-1, 1), 10, 3);
 		// SpawnFireballScroll(pos + (-1, -1));
@@ -186,7 +191,7 @@ static class Prefabs {
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
 				TileIdx = new Vec2I(1, 19)
 			},
-			new EntityName($"Healing potion +{health}HP"),
+			new EntityName($"Healing potion +3/4HP"),
 			new Item() { Consumable = new HealingConsumable { Amount = health } }
 		);
 		return entt;
@@ -214,6 +219,21 @@ static class Prefabs {
 			new Item() { Consumable = new FireballConsumable { Damage = 5, Range = 3 } }
 		);
 		return entt;
+	}
+
+	internal static Entity SpawnProjectile(Vec2I pos) {
+		return Singleton.World.CreateEntity(
+			new Position(pos.X, 0, pos.Y),
+			new RotationSingle(),
+			new Scale3(1, 1, 1),
+			new ColorComp(),
+			new Billboard(),
+			new TextureWithSource(Assets.itemsTexture) {
+				TileIdx = new Vec2I(1, 21)
+			},
+			new EntityName("Projectile"),
+			Tags.Get<Projectile, IsVisible>()
+		);
 	}
 }
 

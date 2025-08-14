@@ -1,5 +1,4 @@
 using Friflo.Engine.ECS;
-using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
@@ -11,23 +10,22 @@ struct Item : IComponent {
 struct ItemTag : ITag;
 
 internal interface IConsumable {
-	// TODO should add print message to return type?
-	public bool Consume(Entity target, Entity itemEntt);
+	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null);
 }
 struct HealingConsumable : IConsumable {
 	required public int Amount;
 
-	public bool Consume(Entity target, Entity itemEntt) {
+	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null) {
 		ref var fighter = ref target.GetComponent<Fighter>();
 		var amount = (fighter.MaxHP - fighter.HP) * 0.75f;
 		int recovered = fighter.Heal((int)amount);
 		if (recovered > 0) {
 			MessageLog.Print($"You consume the {itemEntt.Name.value} and healed for {recovered} HP");
-			return true;
+			return ActionProcessor.Result.Done;
 		}
 		else {
 			MessageLog.Print($"Your health is already full");
-			return false;
+			return ActionProcessor.Result.Invalid;
 		}
 	}
 }
@@ -36,7 +34,7 @@ struct LightningDamageConsumable : IConsumable {
 	required public int Damage;
 	required public int MaximumRange;
 
-	public bool Consume(Entity source, Entity itemEntt) {
+	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
 		var query = Singleton.World.Query<GridPosition>()
 			.AllTags(Tags.Get<Enemy, IsVisible>())
 			.WithoutAllTags(Tags.Get<Corpse>());
@@ -46,37 +44,53 @@ struct LightningDamageConsumable : IConsumable {
 			int dist = Pathfinder.DiagonalDistance(sourcePos.Value, enemyPos.Value);
 			if (dist < closest.Item2) closest = (enemyEntt, dist);
 		});
-		if (closest.Item1.IsNull) {
+		if (closest.Item1.IsNull || closest.Item2 > MaximumRange) {
 			MessageLog.Print($"No enemy in range");
-			return false;
+			return ActionProcessor.Result.Invalid;
 		}
-		ref var f = ref closest.Item1.GetComponent<Fighter>();
-		Combat.ApplyDamage(closest.Item1, source, Damage);
-		MessageLog.Print($"A lightning bolt strikes {closest.Item1.Name.value} for {Damage} damage!");
-		return true;
+
+		// FX and apply on end callback
+		var damage = Damage; // captured
+		ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
+		Entity projectile = Prefabs.SpawnProjectile(sourcePos.Value);
+		// TODO tweak animation
+		// Save previous speed
+		follow.Target = projectile;
+		var prevSpeed = follow.SpeedTargetFact;
+		// follow.SpeedTargetFact = 0.3f;
+		Animations.ProjectileFX(projectile, sourcePos.Value.ToWorldPos(), closest.Item1, () => {
+			ref var f = ref closest.Item1.GetComponent<Fighter>();
+			Combat.ApplyDamage(closest.Item1, source, damage);
+			MessageLog.Print($"A lightning bolt strikes {closest.Item1.Name.value} for {damage} damage!");
+			ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
+			follow.Target = Singleton.Player;
+			follow.SpeedTargetFact = prevSpeed;
+			actionEntity?.AddTag<IsActionFinished>();
+		});
+		return actionEntity.HasValue ? ActionProcessor.Result.Running : ActionProcessor.Result.Done; ;
 	}
 }
 
 struct ConfusionConsumable : IConsumable {
 	required public int Turns;
 
-	public bool Consume(Entity source, Entity itemEntt) {
+	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
 		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) {
 			MessageLog.Print($"No valid target");
-			return false;
+			return ActionProcessor.Result.Invalid;
 		}
 		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
 		var target = grid.Character[targetPos.X, targetPos.Y];
 		if (target.IsNull) {
 			MessageLog.Print($"No valid target");
-			return false;
+			return ActionProcessor.Result.Invalid;
 		}
 
 		target.Add(new IsConfused { TurnsRemaining = Turns });
 		target.Add(new Team { Value = source.GetComponent<Team>().Value });
 		MessageLog.Print($"{target.Name.value} is confused");
-		return true;
+		return ActionProcessor.Result.Done;
 	}
 }
 
@@ -84,12 +98,12 @@ struct FireballConsumable : IConsumable {
 	required public int Damage;
 	required public int Range;
 
-	public bool Consume(Entity source, Entity itemEntt) {
+	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
 		// TODO check if in line of sight
 		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) {
 			MessageLog.Print($"No valid target");
-			return false;
+			return ActionProcessor.Result.Invalid;
 		}
 		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
 
@@ -103,11 +117,11 @@ struct FireballConsumable : IConsumable {
 
 		if (hitCount == 0) {
 			MessageLog.Print($"No valid target in range");
-			return false;
+			return ActionProcessor.Result.Invalid;
 		}
 
 		MessageLog.Print($"Hit {hitCount} targets with fireball");
-		return true;
+		return ActionProcessor.Result.Done;
 	}
 
 	public IEnumerable<Vec2I> AffectedTiles() {
@@ -154,11 +168,15 @@ class Items : IModule {
 	}
 
 	ActionProcessor.Result ProcessConsumeItemAction(ref ConsumeItemAction action, Entity actionEntt) {
-		if (action.Item.GetComponent<Item>().Consumable.Consume(action.Target, action.Item)) {
-			action.Item.DeleteEntity();
-			return ActionProcessor.Result.Done;
+		ref var item = ref action.Item.GetComponent<Item>();
+		var result = item.Consumable.Consume(action.Target, action.Item, actionEntt);
+		switch (result) {
+			case ActionProcessor.Result.Done:
+			case ActionProcessor.Result.Running:
+				action.Item.DeleteEntity();
+				break;
 		}
-		else return ActionProcessor.Result.Invalid;
+		return result;
 	}
 
 	private ActionProcessor.Result ProcessPickupAction(ref PickupAction action, Entity actionEntt) {

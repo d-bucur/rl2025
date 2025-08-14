@@ -8,8 +8,9 @@ struct Character : ITag; // Entity in tutorial, but name would conflict with ECS
 struct Player : ITag;
 struct Enemy : ITag;
 struct Corpse : ITag;
+struct Projectile : ITag;
 
-struct RotationSingle(float Value) : IComponent {
+struct RotationSingle(float Value = 0f) : IComponent {
 	public float Value = Value;
 }
 

@@ -88,4 +88,32 @@ static class Animations {
 			AutoReverse: true
 		).RegisterEcs();
 	}
+
+	internal static void ProjectileFX(Entity projectile, Vector3 startPos, Entity target, Action? onEnd = null) {
+		var distance = target.GetComponent<Position>().value - startPos;
+		float timePerTile = 0.1f;
+		float duration = distance.Length() * timePerTile;
+		new Tween(projectile).With(
+			(ref Position pos, Vector3 v) => {
+				pos.value = target.GetComponent<Position>().value - v;
+				pos.value.Y = 0;
+			},
+			target.GetComponent<Position>().value - startPos,
+			Vector3.Zero,
+			duration, Ease.Linear,
+			Vector3.Lerp,
+			OnEnd: (ref Position p) => {
+				projectile.DeleteEntity();
+				onEnd?.Invoke();
+			}
+		).RegisterEcs();
+
+		// TODO Rotation not working on right axis
+		// new Tween(projectile).With(
+		// 	(ref RotationSingle rot, float f) => rot.Value = f,
+		// 	0, MathF.PI * 2,
+		// 	duration,
+		// 	Ease.Linear, Tween.LerpFloat
+		// ).RegisterEcs();
+	}
 }
