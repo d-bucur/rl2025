@@ -54,28 +54,28 @@ class TurnsManagement : IModule {
 			&& Pathfinder.DiagonalDistance(enttPos, playerPos) <= 6;
 	}
 
-	private static List<(Energy, Entity)> energyCache = new();
+	static List<(Energy, Entity)> EnergyCache = new();
 	// Same as TickEnergySystem. See comments on that
 	internal static IEnumerable<(Entity, float)> SimTurns(int max = 10) {
 		var query = Singleton.World.Query<Energy>().AllTags(Tags.Get<IsVisible>());
 		var turnData = Singleton.Get<TurnData>();
-		energyCache.Clear();
-		query.ForEachEntity((ref Energy energy, Entity entity) => energyCache.Add((energy, entity)));
-		energyCache.Sort((e1, e2) => e1.Item2.Id - e2.Item2.Id);
+		EnergyCache.Clear();
+		query.ForEachEntity((ref Energy energy, Entity entity) => EnergyCache.Add((energy, entity)));
+		EnergyCache.Sort((e1, e2) => e1.Item2.Id - e2.Item2.Id);
 		int totalActed = 0;
-		while (totalActed < max) {
-			for (int i = 0; i < energyCache.Count; i++) {
-				var (energy, entt) = energyCache[i];
+		while (true) {
+			for (int i = 0; i < EnergyCache.Count; i++) {
+				var (energy, entt) = EnergyCache[i];
 				if (energy.TickProcessed >= turnData.CurrentTick) continue;
 				energy.TickProcessed = turnData.CurrentTick;
 				energy.Current += energy.GainPerTick;
 				var remaining = energy.Current - energy.AmountToAct;
 				if (remaining >= 0) {
 					energy.Current = remaining;
-					totalActed++;
 					yield return (entt, turnData.CurrentTick);
+					if (++totalActed >= max) yield break;
 				}
-				energyCache[i] = (energy, entt);
+				EnergyCache[i] = (energy, entt);
 			}
 			turnData.CurrentTick++;
 		}
@@ -122,6 +122,8 @@ file class TickEnergySystem : QuerySystem<Energy> {
 					// TODO if returning here then turns are deterministic
 					// but movement is slow since entts have to pass through multiple system runs
 					// need a way to progress all enemy systems in the same tick until player's turn to act.
+					// Problem happens when enemies and player are in the same turn
+					// Save into act queue?
 				}
 			}
 			turnData.CurrentTick++;

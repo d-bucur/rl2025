@@ -110,25 +110,20 @@ static class GUI {
 }
 
 file static class GUIValues {
-	public const int HealthHeight = 30;
 	public const int Padding = 10;
 	public const int TextHeight = 20;
 	public const int LineHeight = 25;
 }
 
 file class RenderHealth : QuerySystem<Fighter> {
+	public const int HealthHeight = 30;
 	public RenderHealth() => Filter.AllTags(Tags.Get<Player>());
 
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref Fighter fighter, Entity playerEntt) => {
 			const int width = 300;
-			var rect = new Rectangle(
-				GUIValues.Padding,
-				// Raylib.GetScreenHeight() - height - GUIValues.Padding,
-				GUIValues.Padding,
-				width,
-				GUIValues.HealthHeight
-			);
+			Rectangle r = RenderInventory.GetRect();
+			var rect = new Rectangle(r.X, r.Y - HealthHeight - GUIValues.Padding, r.Width, HealthHeight);
 			Raylib.DrawRectangleRec(rect, Color.Red);
 			rect.Width = (float)fighter.HP / fighter.MaxHP * width;
 			Raylib.DrawRectangleRec(rect, Color.Green);
@@ -141,7 +136,7 @@ file class RenderMessageLog : QuerySystem<MessageLog> {
 	private const int MessageDuration = 5;
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref MessageLog log, Entity entt) => {
-			int pos = GUIValues.HealthHeight + GUIValues.Padding + GUIValues.LineHeight;
+			int pos = GUIValues.Padding;
 			for (int i = Math.Max(0, log.Messages.Count - log.DisplayCount); i < log.Messages.Count; i++) {
 				var message = log.Messages[i];
 				double timeDiff = Raylib.GetTime() - message.Time;
@@ -274,10 +269,16 @@ file class MouseSelect : QuerySystem {
 
 		// Render text of objects at position
 		for (int i = 0; i < InspectStrings.Count; i++) {
+			// align with turn order
+			int posY = Raylib.GetScreenHeight()
+				- RenderTurnOrder.AncorAbove.Y
+				- GUIValues.TextHeight
+				- GUIValues.Padding
+				- i * GUIValues.LineHeight;
 			GUI.RenderText(
 				InspectStrings[i],
-				GUIValues.Padding,
-				Raylib.GetScreenHeight() - GUIValues.TextHeight - GUIValues.Padding - i * GUIValues.LineHeight,
+				RenderTurnOrder.AncorAbove.X + GUIValues.Padding,
+				posY,
 				GUIValues.TextHeight,
 				3
 			);
@@ -324,17 +325,19 @@ file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 	}
 }
 
-internal class RenderInventory : QuerySystem {
+file class RenderInventory : QuerySystem {
+	static int ItemSize = 64;
+	internal static Vec2I AncorAbove = new(0, ItemSize);
+	internal static Rectangle GetRect() => new Rectangle(Raylib.GetScreenWidth() - ItemSize * Config.InventoryLimit, Raylib.GetScreenHeight() - ItemSize, ItemSize * Config.InventoryLimit, ItemSize);
 	protected override void OnUpdate() {
-		int itemSize = 64;
 		var inventory = Singleton.Player.GetRelations<InventoryItem>();
 		var anchor = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight())
-			- new Vector2(Config.InventoryLimit * itemSize, itemSize);
+			- new Vector2(Config.InventoryLimit * ItemSize, ItemSize);
 
 		for (int i = 0; i < Config.InventoryLimit; i++) {
-			var tileStart = new Vector2(anchor.X + i * itemSize, anchor.Y);
-			var tileRect = new Rectangle(tileStart, itemSize, itemSize);
-			Raylib.DrawRectangleV(tileStart, new Vector2(itemSize), Raylib.Fade(Color.DarkGray, 0.3f));
+			var tileStart = new Vector2(anchor.X + i * ItemSize, anchor.Y);
+			var tileRect = new Rectangle(tileStart, ItemSize, ItemSize);
+			Raylib.DrawRectangleV(tileStart, new Vector2(ItemSize), Raylib.Fade(Color.DarkGray, 0.3f));
 			Raylib.DrawRectangleLinesEx(tileRect, 5, Raylib.Fade(Color.LightGray, 0.3f));
 			Raylib.DrawText($"{i + 1}", (int)tileStart.X + 5, (int)tileStart.Y + 5, 20, Color.White);
 
@@ -353,22 +356,24 @@ internal class RenderInventory : QuerySystem {
 	}
 }
 
-// TODO Pretty cool, but ordering is not stable or accurate. Need to debug
-internal class RenderTurnOrder : QuerySystem {
+file class RenderTurnOrder : QuerySystem {
+	static int ItemSize = 64;
+	internal static Vec2I AncorAbove = new(0, ItemSize);
+	const int TileCount = 6;
 	protected override void OnUpdate() {
-		var itemSize = 64;
 		// Can cache in turns management
-		var anchor = new Vector2(0, Raylib.GetScreenHeight() - itemSize);
+		var anchor = new Vector2(0, Raylib.GetScreenHeight() - ItemSize);
 		var i = 0;
-		foreach (var (entt, energy) in TurnsManagement.SimTurns(6)) {
+		// TODO SimTurns is pretty heavy. Should cache result
+		foreach (var (entt, energy) in TurnsManagement.SimTurns(TileCount)) {
 			var itemTexture = entt.GetComponent<TextureWithSource>();
-			Vector2 tileStart = anchor + new Vector2(i * itemSize, 0);
-			Rectangle tileRect = new(tileStart, itemSize, itemSize);
-			Raylib.DrawRectangleV(tileStart, new Vector2(itemSize), Raylib.Fade(Color.DarkGray, 0.3f));
+			Vector2 tileStart = anchor + new Vector2(i * ItemSize, 0);
+			Rectangle tileRect = new(tileStart, ItemSize, ItemSize);
+			Raylib.DrawRectangleV(tileStart, new Vector2(ItemSize), Raylib.Fade(Color.DarkGray, 0.3f));
 			if (Singleton.Get<MouseTarget>().Value is Vec2I target) {
 				var targetChar = Singleton.Get<Grid>().Character[target.X, target.Y];
 				if (!targetChar.IsNull && targetChar == entt)
-					Raylib.DrawRectangleLinesEx(tileRect, 5, Raylib.Fade(Color.LightGray, 0.3f));
+					Raylib.DrawRectangleLinesEx(tileRect, 5, Raylib.Fade(Color.SkyBlue, 0.3f));
 			}
 			Raylib.DrawTexturePro(
 				itemTexture.Texture,
@@ -378,10 +383,16 @@ internal class RenderTurnOrder : QuerySystem {
 				0,
 				Color.White
 			);
+			// Debug turn index
 			Raylib.DrawText($"{energy}", (int)tileStart.X, (int)tileStart.Y, 20, Color.White);
-
 			i++;
 		}
-		Raylib.DrawText("Turns", (int)anchor.X, (int)anchor.Y - 20, 20, Color.White);
+		// Turns text is kind of redundant
+		// Raylib.DrawText("Turns",
+		// 	(int)anchor.X + GUIValues.Padding,
+		// 	(int)anchor.Y - GUIValues.TextHeight - GUIValues.Padding,
+		// 	GUIValues.TextHeight,
+		// 	Color.White
+		// );
 	}
 }
