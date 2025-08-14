@@ -51,23 +51,17 @@ struct LightningDamageConsumable : IConsumable {
 
 		// FX and apply on end callback
 		var damage = Damage; // captured
-		ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
-		Entity projectile = Prefabs.SpawnProjectile(sourcePos.Value);
-		// TODO tweak animation
-		// Save previous speed
-		follow.Target = projectile;
-		var prevSpeed = follow.SpeedTargetFact;
-		// follow.SpeedTargetFact = 0.3f;
-		Animations.ProjectileFX(projectile, sourcePos.Value.ToWorldPos(), closest.Item1, () => {
+		Entity projectile = Prefabs.SpawnProjectile(sourcePos.Value, Prefabs.ConsumableType.LightningDamageScroll);
+
+		Animations.ProjectileFollowFX(projectile, sourcePos.Value.ToWorldPos(), closest.Item1, () => {
 			ref var f = ref closest.Item1.GetComponent<Fighter>();
 			Combat.ApplyDamage(closest.Item1, source, damage);
 			MessageLog.Print($"A lightning bolt strikes {closest.Item1.Name.value} for {damage} damage!");
-			ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
-			follow.Target = Singleton.Player;
-			follow.SpeedTargetFact = prevSpeed;
 			actionEntity?.AddTag<IsActionFinished>();
+			var explosion = Prefabs.SpawnProjectile(closest.Item1.GetComponent<GridPosition>().Value, Prefabs.ConsumableType.LightningDamageScroll);
+			Animations.ExplosionFX(explosion);
 		});
-		return actionEntity.HasValue ? ActionProcessor.Result.Running : ActionProcessor.Result.Done; ;
+		return actionEntity.HasValue ? ActionProcessor.Result.Running : ActionProcessor.Result.Done;
 	}
 }
 
@@ -97,6 +91,8 @@ struct ConfusionConsumable : IConsumable {
 struct FireballConsumable : IConsumable {
 	required public int Damage;
 	required public int Range;
+	static List<Entity> TargetsCache = new();
+	static List<Vec2I> HitTilesCache = new();
 
 	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
 		// TODO check if in line of sight
@@ -108,11 +104,15 @@ struct FireballConsumable : IConsumable {
 		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
 
 		int hitCount = 0;
+		TargetsCache.Clear();
+		HitTilesCache.Clear();
 		foreach (var tilePos in AffectedTiles()) {
+			if (!grid.CheckTile<BlocksFOV>(tilePos))
+				HitTilesCache.Add(tilePos);
 			var target = grid.Character[tilePos.X, tilePos.Y];
 			if (target.IsNull) continue;
 			hitCount++;
-			Combat.ApplyDamage(target, source, Damage, tilePos - targetPos);
+			TargetsCache.Add(target);
 		}
 
 		if (hitCount == 0) {
@@ -120,8 +120,22 @@ struct FireballConsumable : IConsumable {
 			return ActionProcessor.Result.Invalid;
 		}
 
-		MessageLog.Print($"Hit {hitCount} targets with fireball");
-		return ActionProcessor.Result.Done;
+		// FX and apply on end callback
+		var damage = Damage; // captured
+		Vec2I sourcePos = source.GetComponent<GridPosition>().Value;
+		Entity projectile = Prefabs.SpawnProjectile(sourcePos, Prefabs.ConsumableType.FireballScroll);
+		Animations.ProjectilePosFX(projectile, sourcePos.ToWorldPos(), targetPos.ToWorldPos(), () => {
+			MessageLog.Print($"Hit {hitCount} targets with fireball");
+			foreach (var target in TargetsCache) {
+				Combat.ApplyDamage(target, source, damage, Vec2I.Zero);
+			}
+			foreach (var tile in HitTilesCache) {
+				var explosion = Prefabs.SpawnProjectile(tile, Prefabs.ConsumableType.FireballScroll);
+				Animations.ExplosionFX(explosion);
+			}
+			actionEntity?.AddTag<IsActionFinished>();
+		});
+		return actionEntity.HasValue ? ActionProcessor.Result.Running : ActionProcessor.Result.Done;
 	}
 
 	public IEnumerable<Vec2I> AffectedTiles() {
@@ -176,6 +190,7 @@ class Items : IModule {
 				action.Item.DeleteEntity();
 				break;
 		}
+		// TODO Not returning turn on invalid?
 		return result;
 	}
 

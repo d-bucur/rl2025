@@ -14,7 +14,7 @@ static class Prefabs {
 		Dragon,
 	};
 
-	internal enum ConsumableTypes {
+	internal enum ConsumableType {
 		HealingPotion,
 		LightningDamageScroll,
 		ConfusionScroll,
@@ -27,7 +27,7 @@ static class Prefabs {
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
 			new RotationSingle(0f),
-			new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
+			new Scale3(1, 1, 1),
 			new Billboard(), new TextureWithSource(Assets.heroesTexture) {
 				TileIdx = new Vec2I(2, 2)
 			},
@@ -49,16 +49,11 @@ static class Prefabs {
 	}
 
 	internal static void SpawnStartingItems(Vec2I pos, Entity entt) {
-
-		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos)) });
-		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
-		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
-		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
-		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
-		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnHealingPotion(pos)) });
-		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
+		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
 		// SpawnConfusionScroll(pos + (1, 1));
 		// SpawnLightningScroll(pos + (-1, 1), 10, 3);
 		// SpawnFireballScroll(pos + (-1, -1));
@@ -139,7 +134,7 @@ static class Prefabs {
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
 			new RotationSingle(0f),
-			new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
+			new Scale3(1, 1, 1),
 			new Billboard(),
 			new ColorComp(),
 			new EnemyAI(),
@@ -154,11 +149,11 @@ static class Prefabs {
 	}
 
 	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
-		Helpers.GetRandomEnum<ConsumableTypes>() switch {
-			ConsumableTypes.HealingPotion => SpawnHealingPotion(pos),
-			ConsumableTypes.LightningDamageScroll => SpawnLightningScroll(pos),
-			ConsumableTypes.ConfusionScroll => SpawnConfusionScroll(pos),
-			ConsumableTypes.FireballScroll => SpawnFireballScroll(pos),
+		Helpers.GetRandomEnum<ConsumableType>() switch {
+			ConsumableType.HealingPotion => SpawnHealingPotion(pos),
+			ConsumableType.LightningDamageScroll => SpawnLightningScroll(pos),
+			ConsumableType.ConfusionScroll => SpawnConfusionScroll(pos),
+			ConsumableType.FireballScroll => SpawnFireballScroll(pos),
 		};
 
 	static Entity PrepConsumableCommon(Vec2I pos) {
@@ -166,14 +161,14 @@ static class Prefabs {
 			new GridPosition(pos.X, pos.Y),
 			new Position(pos.X, 0, pos.Y),
 			new RotationSingle(0f),
-			new Scale3(Config.GridSize * 0.8f, Config.GridSize * 0.8f, Config.GridSize * 0.8f),
+			new Scale3(1, 1, 1),
 			new ColorComp(),
 			new Item() { Consumable = default }, // add default item to avoid the terrible buffer API
 			Tags.Get<ItemTag>()
 		);
 	}
 
-	static Entity SpawnLightningScroll(Vec2I pos, int damage = 10, int range = 6) {
+	static Entity SpawnLightningScroll(Vec2I pos, int damage = 10, int range = 10) {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
@@ -221,15 +216,18 @@ static class Prefabs {
 		return entt;
 	}
 
-	internal static Entity SpawnProjectile(Vec2I pos) {
+	internal static Entity SpawnProjectile(Vec2I pos, ConsumableType consumable) {
 		return Singleton.World.CreateEntity(
-			new Position(pos.X, 0, pos.Y),
+			new Position(pos.X, 0f, pos.Y),
 			new RotationSingle(),
 			new Scale3(1, 1, 1),
 			new ColorComp(),
-			new Billboard(),
+			new Billboard() { Origin = new(0.5f, 0.5f) },
 			new TextureWithSource(Assets.itemsTexture) {
-				TileIdx = new Vec2I(1, 21)
+				TileIdx = consumable switch {
+					ConsumableType.LightningDamageScroll => new Vec2I(1, 21),
+					ConsumableType.FireballScroll => new Vec2I(2, 21),
+				}
 			},
 			new EntityName("Projectile"),
 			Tags.Get<Projectile, IsVisible>()

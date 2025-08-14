@@ -89,10 +89,49 @@ static class Animations {
 		).RegisterEcs();
 	}
 
-	internal static void ProjectileFX(Entity projectile, Vector3 startPos, Entity target, Action? onEnd = null) {
-		var distance = target.GetComponent<Position>().value - startPos;
-		float timePerTile = 0.1f;
-		float duration = distance.Length() * timePerTile;
+	internal static void ProjectileFollowFX(Entity projectile, Vector3 startPos, Entity target, Action? onEnd = null) {
+		var endCb = ProjectileFXCommon(projectile, onEnd);
+		float duration = 0.1f * (target.GetComponent<Position>().value - startPos).Length();
+		TweenProjectile(projectile, startPos, target, duration, endCb);
+	}
+
+	internal static void ProjectilePosFX(Entity projectile, Vector3 startPos, Vector3 target, Action? onEnd = null) {
+		var endCb = ProjectileFXCommon(projectile, onEnd);
+		float duration = 0.1f * (target - startPos).Length();
+		TweenProjectile(projectile, startPos, target, duration, endCb);
+	}
+
+	static EndCallback<Position> ProjectileFXCommon(Entity projectile, Action? onEnd = null) {
+		// Animate camera
+		ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
+		follow.Target = projectile;
+		var prevSpeed = follow.SpeedTargetFact;
+		// follow.SpeedTargetFact = 0.3f;
+		EndCallback<Position> endCb = (ref Position p) => {
+			projectile.DeleteEntity();
+			onEnd?.Invoke();
+			// restore camera
+			ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
+			follow.Target = Singleton.Player;
+			follow.SpeedTargetFact = prevSpeed;
+		};
+		return endCb;
+	}
+
+	static void TweenProjectile(Entity projectile, Vector3 startPos, Vector3 target, float duration, EndCallback<Position> endCb) {
+		new Tween(projectile).With(
+			(ref Position pos, Vector3 v) => pos.value = v,
+			startPos,
+			target,
+			duration, Ease.Linear,
+			Vector3.Lerp,
+			OnEnd: endCb
+		).RegisterEcs();
+
+		TweenRotation(projectile, duration);
+	}
+
+	static void TweenProjectile(Entity projectile, Vector3 startPos, Entity target, float duration, EndCallback<Position> endCb) {
 		new Tween(projectile).With(
 			(ref Position pos, Vector3 v) => {
 				pos.value = target.GetComponent<Position>().value - v;
@@ -102,18 +141,32 @@ static class Animations {
 			Vector3.Zero,
 			duration, Ease.Linear,
 			Vector3.Lerp,
-			OnEnd: (ref Position p) => {
-				projectile.DeleteEntity();
-				onEnd?.Invoke();
-			}
+			OnEnd: endCb
 		).RegisterEcs();
 
-		// TODO Rotation not working on right axis
-		// new Tween(projectile).With(
-		// 	(ref RotationSingle rot, float f) => rot.Value = f,
-		// 	0, MathF.PI * 2,
-		// 	duration,
-		// 	Ease.Linear, Tween.LerpFloat
-		// ).RegisterEcs();
+		TweenRotation(projectile, duration);
+	}
+
+	private static void TweenRotation(Entity projectile, float duration) {
+		new Tween(projectile).With(
+			(ref RotationSingle rot, float f) => rot.Value = f,
+			0, 360,
+			duration,
+			Ease.Linear, Tween.LerpFloat
+		).RegisterEcs();
+	}
+
+	internal static void ExplosionFX(Entity explosion) {
+		const float halfTime = 0.5f;
+		explosion.AddComponent(new Scale3(0, 0, 0));
+		new Tween(explosion).With(
+			(ref Scale3 scale, Vector3 v) => scale.value = v,
+			Vector3.Zero, Vector3.One,
+			halfTime, Ease.QuartOut, Vector3.Lerp,
+			AutoReverse: true,
+			OnEnd: (ref Scale3 _) => explosion.DeleteEntity()
+		).RegisterEcs();
+
+		TweenRotation(explosion, halfTime * 2);
 	}
 }

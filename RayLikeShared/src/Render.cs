@@ -6,8 +6,9 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 struct Cube() : IComponent { }
-struct Billboard : IComponent {
+struct Billboard() : IComponent {
 	public Vector3? Up;
+	public Vector2 Origin = new(0.5f, 0);
 }
 struct TextureWithSource : IComponent {
 	public TextureWithSource(Texture2D texture, Rectangle? source = null) {
@@ -95,9 +96,9 @@ class Render : IModule {
 					new Vector3(0.0f, 1.0f, 0.0f),
 					35.0f,
 					CameraProjection.Perspective
-					// Alternative:
-					// 10.0f,
-					// CameraProjection.Orthographic
+				// Alternative:
+				// 10.0f,
+				// CameraProjection.Orthographic
 				)
 			});
 	}
@@ -117,7 +118,7 @@ file class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
 	}
 }
 
-file class RenderBillboards : QuerySystem<Position, RotationSingle, Billboard, TextureWithSource, ColorComp> {
+file class RenderBillboards : QuerySystem<Position, RotationSingle, Billboard, TextureWithSource, Scale3> {
 	public RenderBillboards() => Filter.AnyTags(Tags.Get<IsVisible>());
 
 	protected override void OnUpdate() {
@@ -125,14 +126,17 @@ file class RenderBillboards : QuerySystem<Position, RotationSingle, Billboard, T
 		Camera camera = Singleton.Camera.GetComponent<Camera>();
 		Raylib.BeginMode3D(camera.Value);
 
-		Query.ForEachEntity((ref Position pos, ref RotationSingle rot, ref Billboard billboard, ref TextureWithSource tex, ref ColorComp color, Entity e) => {
+		Query.ForEachEntity((ref Position pos, ref RotationSingle rot, ref Billboard billboard, ref TextureWithSource tex, ref Scale3 scale, Entity e) => {
+			Vector2 scale2 = new(scale.value.X, scale.value.Y);
 			Raylib.DrawBillboardPro(
 				camera.Value,
 				tex.Texture,
 				tex.Source,
-				pos.value - new Vector3(0.5f, 0, 0f),
+				pos.value - new Vector3(billboard.Origin.X, 0f, billboard.Origin.Y),
 				billboard.Up ?? camera.GetUpVec(),
-				Vector2.One, new Vector2(0.5f, 0f), rot.Value, color.Value
+				scale2,
+				billboard.Origin * scale2,
+				rot.Value, Color.White
 			);
 		});
 

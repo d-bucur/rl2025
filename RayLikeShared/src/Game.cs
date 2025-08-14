@@ -103,6 +103,7 @@ public class Game {
 		aot.RegisterComponent<Item>();
 		aot.RegisterComponent<MouseTarget>();
 		aot.RegisterComponent<IsConfused>();
+		aot.RegisterComponent<TurnData>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();
@@ -116,6 +117,7 @@ public class Game {
 		aot.RegisterTag<IsExplored>();
 		aot.RegisterTag<ItemTag>();
 		aot.RegisterTag<Walkable>();
+		aot.RegisterTag<Projectile>();
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<MeleeAction>();
