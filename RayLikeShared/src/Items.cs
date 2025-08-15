@@ -33,14 +33,15 @@ struct HealingConsumable : IConsumable {
 struct LightningDamageConsumable : IConsumable {
 	required public int Damage;
 	required public int MaximumRange;
+	static ArchetypeQuery<GridPosition>? cachedQuery;
 
 	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
-		var query = Singleton.World.Query<GridPosition>()
+		cachedQuery ??= Singleton.World.Query<GridPosition>()
 			.AllTags(Tags.Get<Enemy, IsVisible>())
 			.WithoutAllTags(Tags.Get<Corpse>());
 		var sourcePos = source.GetComponent<GridPosition>();
 		var closest = (new Entity(), int.MaxValue);
-		query.ForEachEntity((ref GridPosition enemyPos, Entity enemyEntt) => {
+		cachedQuery.ForEachEntity((ref GridPosition enemyPos, Entity enemyEntt) => {
 			int dist = Pathfinder.DiagonalDistance(sourcePos.Value, enemyPos.Value);
 			if (dist < closest.Item2) closest = (enemyEntt, dist);
 		});
@@ -71,13 +72,13 @@ struct ConfusionConsumable : IConsumable {
 	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
 		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) {
-			MessageLog.Print($"No valid target");
+			MessageLog.Print($"Not a valid target");
 			return ActionProcessor.Result.Invalid;
 		}
 		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
 		var target = grid.Character[targetPos.X, targetPos.Y];
-		if (target.IsNull) {
-			MessageLog.Print($"No valid target");
+		if (target.IsNull || target == Singleton.Player) {
+			MessageLog.Print($"Not a valid target");
 			return ActionProcessor.Result.Invalid;
 		}
 
@@ -205,10 +206,13 @@ class Items : IModule {
 				MessageLog.Print($"Inventory is full");
 				return ActionProcessor.Result.Invalid;
 			}
-			MessageLog.Print($"You picked up {item.Name.value}");
-			PrefabTransformations.PickupItem(item);
-			action.Target.AddRelation(new InventoryItem { Item = item });
 			pickedCount++;
+			var target = action.Target;
+			MessageLog.Print($"You picked up {item.Name.value}");
+			target.AddRelation(new InventoryItem { Item = item });
+			Animations.PickupItem(action.Target, item, () => {
+				PrefabTransformations.PickupItem(item);
+			});
 		}
 		if (pickedCount == 0) {
 			MessageLog.Print($"You couldn't find anything");

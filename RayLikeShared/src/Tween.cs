@@ -37,6 +37,11 @@ record struct PropertyTween<C, P>(
 		float x = CurrentTime / RunTime; // micro-optimization: cache 1/RunTime and use *
 		var t = IsReversed ? EasingFunc(1 - x) : EasingFunc(x);
 		var val = LerpFunc(From, To, t);
+		if (!ent.HasComponent<C>()) {
+			// Generally shouldn't happen but better be defensive about it
+			CurrentRepetitions = Repetitions;
+			return;
+		}
 		ref var comp = ref ent.GetComponent<C>();
 		Setter(ref comp, val);
 		if (CurrentTime > RunTime) {
@@ -65,6 +70,7 @@ record struct PropertyTween<C, P>(
 
 	public void Finish(Entity ent) {
 		// Make sure final value is set
+		if (!ent.HasComponent<C>()) return;
 		Setter(ref ent.GetComponent<C>(), IsReversed ? From : To);
 		OnEnd?.Invoke(ref ent.GetComponent<C>());
 	}

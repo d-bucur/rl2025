@@ -104,16 +104,20 @@ static class Animations {
 	static EndCallback<Position> ProjectileFXCommon(Entity projectile, Action? onEnd = null) {
 		// Animate camera
 		ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
-		follow.Target = projectile;
+		if (Singleton.Get<Settings>().CameraShake) {
+			follow.Target = projectile;
+		}
 		var prevSpeed = follow.SpeedTargetFact;
 		// follow.SpeedTargetFact = 0.3f;
 		EndCallback<Position> endCb = (ref Position p) => {
 			projectile.DeleteEntity();
 			onEnd?.Invoke();
 			// restore camera
-			ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
-			follow.Target = Singleton.Player;
-			follow.SpeedTargetFact = prevSpeed;
+			if (Singleton.Get<Settings>().CameraShake) {
+				ref var follow = ref Singleton.Camera.GetComponent<CameraFollowTarget>();
+				follow.Target = Singleton.Player;
+				follow.SpeedTargetFact = prevSpeed;
+			}
 		};
 		return endCb;
 	}
@@ -168,5 +172,30 @@ static class Animations {
 		).RegisterEcs();
 
 		TweenRotation(explosion, halfTime * 2);
+	}
+
+	internal static void PickupItem(Entity target, Entity item, Action onEnd) {
+		float halfTime = 0.2f;
+		Vector3 startPos = item.GetComponent<Position>().value;
+		new Tween(item).With(
+			(ref Position pos, float v) => pos.value.Y = v,
+			0,
+			1,
+			halfTime, Ease.QuartOut,
+			Tween.LerpFloat,
+			AutoReverse: true
+		).RegisterEcs();
+		new Tween(item).With(
+			(ref Position pos, Vector3 v) => {
+				Vector3 r = target.GetComponent<Position>().value - v;
+				pos.value.X = r.X;
+				pos.value.Z = r.Z;
+			},
+			target.GetComponent<Position>().value - startPos,
+			Vector3.Zero,
+			halfTime * 2, Ease.Linear,
+			Vector3.Lerp,
+			OnEnd: (ref Position _) => onEnd()
+		).RegisterEcs();
 	}
 }

@@ -2,10 +2,10 @@
 - fx for items, maybe projectiles too?
 - blood under corpses
 - event handlers for different game states. InputEventHandler component, add and remove as needed.
+- turn prediction bugged when player and enemy act in the same tick
   
 ## extra
 - aggro nearby enemies when one is alerted
-- handle confusion applied to hero
 - billboard don't work on android chrome. They work on android firefox...
 
 ## idea bin

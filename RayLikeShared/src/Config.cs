@@ -34,4 +34,5 @@ struct Settings() : IComponent {
     internal bool ExplorationHack = false;
     internal bool DebugPathfinding = false;
     internal bool IsOverhead = false;
+    internal bool CameraShake = true;
 }
