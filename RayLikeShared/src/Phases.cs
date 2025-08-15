@@ -2,7 +2,7 @@ using Friflo.Engine.ECS.Systems;
 
 namespace RayLikeShared;
 
-class UpdatePhases {
+static class UpdatePhases {
 	static internal SystemGroup ProgressTurns = new("ProgressTurnsPhase");
 	static internal SystemGroup TurnStart = new("TurnStartPhase");
 	static internal SystemGroup Input = new("InputPhase");
@@ -20,7 +20,12 @@ class UpdatePhases {
 	];
 }
 
-class RenderPhases {
+static class RenderPhases {
 	static internal SystemGroup PreRender = new("PreRenderPhase");
 	static internal SystemGroup Render = new("RenderPhase");
+
+	static internal List<SystemGroup> All = [
+		PreRender,
+		Render,
+	];
 }

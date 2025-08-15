@@ -5,12 +5,14 @@ using Raylib_cs;
 namespace RayLikeShared;
 
 public class Game {
-	EntityStore World;
+	internal static Game Instance;
+	EntityStore? World;
 	SystemRoot UpdateRootSystems;
 	SystemRoot RenderRootSystems;
 	List<IModule> Modules;
 
 	public Game() {
+		Instance = this;
 		Raylib.SetTargetFPS(60);
 		if (!OperatingSystem.IsBrowser()) {
 			Console.WriteLine($"Setting ResizableWindow");
@@ -19,18 +21,36 @@ public class Game {
 		Raylib.SetWindowMinSize(Config.WinSizeX, Config.WinSizeY);
 		Raylib.InitWindow(Config.WinSizeX, Config.WinSizeY, "RaygueLike Challenge");
 		RegisterComponentsForNativeAot();
+		ResetWorld();
+	}
 
+	public void ResetWorld() {
+		var oldWorld = World;
 		World = new EntityStore();
 		World.EventRecorder.Enabled = true;
 		Singleton.Init(World);
 
-		UpdateRootSystems = new SystemRoot(World);
-		UpdatePhases.All.ForEach(p => UpdateRootSystems.Add(p));
+		// TODO resetting world goes into speed mode for some reason!
+		// Better to recreate level instead of clearing the world
+		UpdateRootSystems ??= new SystemRoot();
+		if (oldWorld == null) {
+			UpdateRootSystems.AddStore(World);
+			UpdatePhases.All.ForEach(p => UpdateRootSystems.Add(p));
+		}
+		else {
+			UpdateRootSystems.RemoveStore(oldWorld);
+			UpdateRootSystems.AddStore(World);
+		}
 
-		RenderRootSystems = new SystemRoot(World) {
-			RenderPhases.PreRender,
-			RenderPhases.Render,
-		};
+		RenderRootSystems ??= new SystemRoot();
+		if (oldWorld == null) {
+			RenderRootSystems.AddStore(World);
+			RenderPhases.All.ForEach(p => RenderRootSystems.Add(p));
+		}
+		else {
+			RenderRootSystems.RemoveStore(oldWorld);
+			RenderRootSystems.AddStore(World);
+		}
 
 		Modules = [
 			new Assets(),

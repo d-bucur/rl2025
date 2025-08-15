@@ -93,6 +93,10 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
                 ref var path = ref entt.GetComponent<PathMovement>();
                 path.Clear();
             }
+
+            if (Raylib.IsKeyReleased(KeyboardKey.Backspace)) {
+                Game.Instance.ResetWorld();
+            }
         });
     }
 
