@@ -92,7 +92,7 @@ class Combat : IModule {
 				MessageLog.Print($"{desc} for {damage} HP", color);
 			Vec2I fxdir = direction ?? target.GetComponent<GridPosition>().Value
 				- source.GetComponent<GridPosition>().Value;
-			GUI.SpawnDamageFx(damage, target.GetComponent<Position>(),
+			GUI.SpawnDamageFx(damage, target.GetComponent<Position>().value,
 				isTargetPlayer ? Color.Red : Color.Orange, fxdir.ToWorldPos()); // TODO clamp vector
 		}
 		else

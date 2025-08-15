@@ -1,3 +1,4 @@
+using System.Numerics;
 using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
@@ -21,6 +22,7 @@ struct HealingConsumable : IConsumable {
 		int recovered = fighter.Heal((int)amount);
 		if (recovered > 0) {
 			MessageLog.Print($"You consume the {itemEntt.Name.value} and healed for {recovered} HP");
+			GUI.SpawnDamageFx(Amount, target.GetComponent<Position>().value, Raylib_cs.Color.Green, Vector3.Zero);
 			return ActionProcessor.Result.Done;
 		}
 		else {

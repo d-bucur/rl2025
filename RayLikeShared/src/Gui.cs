@@ -85,8 +85,10 @@ static class GUI {
 		);
 	}
 
-	internal static void SpawnDamageFx(int damage, Position originPos, Color color, Vector3 dir) {
+	// Should move this somewhere else
+	internal static void SpawnDamageFx(int damage, Vector3 originPos, Color color, Vector3 dir) {
 		const int Size = 20;
+		// TODO use texture pool
 		var renderTex = Raylib.LoadRenderTexture(Size, Size);
 		// Draw text to texture
 		Raylib.BeginTextureMode(renderTex);
@@ -94,7 +96,7 @@ static class GUI {
 		RenderText($"{damage}", 0, 0, Size, 1, color);
 		Raylib.EndTextureMode();
 
-		Vector3 fxPos = originPos.value + new Vector3(0, 1f, 0);
+		Vector3 fxPos = originPos + new Vector3(0, 1f, 0);
 		Position startPos = new(fxPos.X, fxPos.Y, fxPos.Z);
 		Scale3 startScale = new(0, 0, 0);
 		var fxEntt = Singleton.World.CreateEntity(
