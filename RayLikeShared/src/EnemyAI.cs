@@ -7,6 +7,7 @@ struct EnemyAI : IComponent {
 	// add ai logic here
 }
 
+// TODO Use statuses instead
 struct IsConfused : IComponent {
 	required internal int TurnsRemaining;
 	internal const float HurtSelfChance = 0.25f;

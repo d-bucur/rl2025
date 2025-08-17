@@ -121,6 +121,7 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
         Vec2I prevPos = entt.GetComponent<GridPosition>().Value;
         var newPos = prevPos + keyMovement;
         var grid = Singleton.Entity.GetComponent<Grid>();
+        if (!grid.IsInside(newPos)) return;
         Entity charAtPos = grid.Character[newPos.X, newPos.Y];
         if (charAtPos.IsNull) {
             var action = new MovementAction(entt, keyMovement.X, keyMovement.Y);

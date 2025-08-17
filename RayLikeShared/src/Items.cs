@@ -3,7 +3,7 @@ using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
 
-// TODO could maybe use relationships between Item and HealingConsumable
+// TODO could maybe use relationships between Item and HealingConsumable. See how ActiveStatusEffect works
 struct Item : IComponent {
 	required public IConsumable Consumable;
 }
@@ -43,7 +43,7 @@ struct RageConsumable : IConsumable {
 		var newGain = GainCalc(energy);
 		energy.GainPerTick = newGain;
 		// TODO OldGain will be wrong if stacked effects
-		target.AddComponent(new StatusEffect {
+		target.AddRelation(new StatusEffect {
 			Value = new RageEffect() { Duration = Duration, OldGain = oldGain }
 		});
 		MessageLog.Print($"You feel enraged! You will act much faster");
@@ -219,7 +219,6 @@ class Items : IModule {
 				action.Item.DeleteEntity();
 				break;
 		}
-		// TODO Not returning turn on invalid?
 		return result;
 	}
 

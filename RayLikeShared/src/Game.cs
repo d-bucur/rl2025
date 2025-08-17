@@ -153,6 +153,8 @@ public class Game {
 		aot.RegisterTag<IsActionBlocking>();
 
 		aot.RegisterLinkRelation<InventoryItem>();
+		
+		aot.RegisterRelation<StatusEffect, IStatusEffect>();
 
 		var schema = aot.CreateSchema();
 	}

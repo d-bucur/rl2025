@@ -1,6 +1,7 @@
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
-using RayLikeShared;
+
+namespace RayLikeShared;
 
 class StatusModule : IModule {
 	public void Init(EntityStore world) {
@@ -15,13 +16,13 @@ interface IStatusEffect {
 	bool EndCondition(Entity e);
 }
 
-// TODO maybe use a non fragmenting relationship instead
-// Trying something different from interfaces. 
-internal struct StatusEffect() : IComponent {
+// Single value per IStatusEffect, non fragmenting
+struct StatusEffect : IRelation<IStatusEffect> {
 	public required IStatusEffect Value;
+	public IStatusEffect GetRelationKey() => Value;
 }
 
-struct RageEffect : IStatusEffect {
+struct RageEffect : IStatusEffect, IComponent {
 	public required int OldGain;
 	public required int Duration;
 	public int Elapsed;
@@ -41,16 +42,23 @@ struct RageEffect : IStatusEffect {
 	}
 }
 
-internal class ApplyStatusEffects : QuerySystem<StatusEffect> {
+class ApplyStatusEffects : QuerySystem {
 	public ApplyStatusEffects() => Filter.AllTags(Tags.Get<CanAct, TurnStarted>());
+	List<IStatusEffect> removeBuffer = [];
 	protected override void OnUpdate() {
-		Query.ForEachEntity((ref StatusEffect effect, Entity e) => {
-			effect.Value.Tick(e);
-			CommandBuffer.RemoveTag<TurnStarted>(e.Id);
-			if (effect.Value.EndCondition(e)) {
-				effect.Value.OnEnd(e);
-				CommandBuffer.RemoveComponent<StatusEffect>(e.Id);
+		foreach (Entity entt in Query.Entities) {
+			foreach (var effect in entt.GetRelations<StatusEffect>()) {
+				effect.Value.Tick(entt);
+				CommandBuffer.RemoveTag<TurnStarted>(entt.Id);
+				if (effect.Value.EndCondition(entt)) {
+					effect.Value.OnEnd(entt);
+					removeBuffer.Add(effect.Value);
+				}
 			}
-		});
+			foreach (var effect in removeBuffer) {
+				entt.RemoveRelation<StatusEffect, IStatusEffect>(effect);
+			}
+			removeBuffer.Clear();
+		}
 	}
 }
