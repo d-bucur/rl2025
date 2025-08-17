@@ -19,6 +19,7 @@ static class Prefabs {
 		LightningDamageScroll,
 		ConfusionScroll,
 		FireballScroll,
+		RagePotion,
 	};
 
 	internal static Entity SpawnPlayer(Vec2I pos) {
@@ -53,10 +54,12 @@ static class Prefabs {
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnHealingPotion(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRagePotion(pos)) });
 		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
-		// SpawnConfusionScroll(pos + (1, 1));
-		// SpawnLightningScroll(pos + (-1, 1), 10, 3);
-		// SpawnFireballScroll(pos + (-1, -1));
+		SpawnConfusionScroll(pos + (1, 1));
+		SpawnLightningScroll(pos + (-1, 1));
+		SpawnFireballScroll(pos + (-1, -1));
+		SpawnHealingPotion(pos + (1, -1));
 	}
 
 	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType) {
@@ -154,6 +157,7 @@ static class Prefabs {
 			ConsumableType.LightningDamageScroll => SpawnLightningScroll(pos),
 			ConsumableType.ConfusionScroll => SpawnConfusionScroll(pos),
 			ConsumableType.FireballScroll => SpawnFireballScroll(pos),
+			ConsumableType.RagePotion => SpawnRagePotion(pos),
 		};
 
 	static Entity PrepConsumableCommon(Vec2I pos) {
@@ -192,6 +196,19 @@ static class Prefabs {
 		return entt;
 	}
 
+	static int DefaultRageGain(Energy e) => e.GainPerTick * 3;
+	static Entity SpawnRagePotion(Vec2I pos, Func<Energy, int>? gainSetter = null) {
+		Entity entt = PrepConsumableCommon(pos);
+		entt.Add(
+			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
+				TileIdx = new Vec2I(4, 20)
+			},
+			new EntityName($"Rage"),
+			new Item() { Consumable = new RageConsumable { GainCalc = gainSetter ?? DefaultRageGain, Duration = 6 } }
+		);
+		return entt;
+	}
+
 	private static Entity SpawnConfusionScroll(Vec2I pos) {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
@@ -216,9 +233,9 @@ static class Prefabs {
 		return entt;
 	}
 
-	internal static Entity SpawnProjectile(Vec2I pos, ConsumableType consumable) {
+	internal static Entity SpawnProjectile(Vec2I pos, ConsumableType consumable, Vector3 offset = default) {
 		return Singleton.World.CreateEntity(
-			new Position(pos.X, 0f, pos.Y),
+			new Position(pos.X + offset.X, offset.Y, pos.Y + offset.Z),
 			new RotationSingle(),
 			new Scale3(1, 1, 1),
 			new ColorComp(),
@@ -227,6 +244,7 @@ static class Prefabs {
 				TileIdx = consumable switch {
 					ConsumableType.LightningDamageScroll => new Vec2I(1, 21),
 					ConsumableType.FireballScroll => new Vec2I(2, 21),
+					ConsumableType.RagePotion => new Vec2I(4, 20),
 				}
 			},
 			new EntityName("Projectile"),

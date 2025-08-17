@@ -3,6 +3,7 @@ using Friflo.Engine.ECS.Systems;
 namespace RayLikeShared;
 
 static class UpdatePhases {
+	static internal SystemGroup StatusEffects = new("StatusEffects");
 	static internal SystemGroup ProgressTurns = new("ProgressTurnsPhase");
 	static internal SystemGroup TurnStart = new("TurnStartPhase");
 	static internal SystemGroup Input = new("InputPhase");
@@ -11,6 +12,7 @@ static class UpdatePhases {
 	static internal SystemGroup Animations = new("AnimationsPhase");
 
 	static internal List<SystemGroup> All = [
+		StatusEffects,
 		ProgressTurns,
 		TurnStart,
 		Input,

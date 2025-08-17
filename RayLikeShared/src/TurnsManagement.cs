@@ -22,6 +22,9 @@ struct IsActionFinished : ITag;
 // Marks that other actions should not be executed until this is finished
 struct IsActionBlocking : ITag;
 
+// Workaround to not use an event/signal for this
+struct TurnStarted : ITag;
+
 struct TurnData() : IComponent {
 	internal int CurrentTick = 1;
 }
@@ -118,6 +121,7 @@ file class TickEnergySystem : QuerySystem<Energy> {
 				if (remaining >= 0) {
 					energy.Current = remaining;
 					CommandBuffer.AddTag<CanAct>(e.Id);
+					CommandBuffer.AddTag<TurnStarted>(e.Id);
 					// return;
 					// TODO if returning here then turns are deterministic
 					// but movement is slow since entts have to pass through multiple system runs

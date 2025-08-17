@@ -33,3 +33,4 @@
 ## discarded?
 - show vision colors in minimap?
 - log history
+- behavior trees for ai

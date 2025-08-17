@@ -13,6 +13,7 @@ struct ItemTag : ITag;
 internal interface IConsumable {
 	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null);
 }
+
 struct HealingConsumable : IConsumable {
 	required public int Amount;
 
@@ -29,6 +30,31 @@ struct HealingConsumable : IConsumable {
 			MessageLog.Print($"Your health is already full");
 			return ActionProcessor.Result.Invalid;
 		}
+	}
+}
+
+struct RageConsumable : IConsumable {
+	required public Func<Energy, int> GainCalc;
+	public int Duration;
+
+	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null) {
+		ref var energy = ref target.GetComponent<Energy>();
+		var oldGain = energy.GainPerTick;
+		var newGain = GainCalc(energy);
+		energy.GainPerTick = newGain;
+		// TODO OldGain will be wrong if stacked effects
+		target.AddComponent(new StatusEffect {
+			Value = new RageEffect() { Duration = Duration, OldGain = oldGain }
+		});
+		MessageLog.Print($"You feel enraged! You will act much faster");
+
+		var fx = Prefabs.SpawnProjectile(
+			target.GetComponent<GridPosition>().Value,
+			Prefabs.ConsumableType.RagePotion,
+			new Vector3(0, 1, 0)
+		);
+		Animations.ExplosionFX(fx);
+		return ActionProcessor.Result.Done;
 	}
 }
 

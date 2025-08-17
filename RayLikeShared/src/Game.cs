@@ -66,6 +66,7 @@ public class Game {
 			new Vision(),
 			new Combat(),
 			new Items(),
+			new StatusModule(),
 		];
 		Modules.ForEach(m => m.Init(World));
 	}
@@ -138,6 +139,7 @@ public class Game {
 		aot.RegisterTag<ItemTag>();
 		aot.RegisterTag<Walkable>();
 		aot.RegisterTag<Projectile>();
+		aot.RegisterTag<TurnStarted>();
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<MeleeAction>();
