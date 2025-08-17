@@ -111,8 +111,8 @@ file class TickEnergySystem : QuerySystem<Energy> {
 		entitiesSorted.Sort((e1, e2) => e1.Id - e2.Id);
 		// If nobody can act, then progress through the energy components until someone can
 		while (canActQuery.Count == 0) {
-			foreach (var e in entitiesSorted) {
-				ref var energy = ref e.GetComponent<Energy>();
+			foreach (var entt in entitiesSorted) {
+				ref var energy = ref entt.GetComponent<Energy>();
 				// Already processed this tick. Skip
 				if (energy.TickProcessed >= turnData.CurrentTick) continue;
 				energy.TickProcessed = turnData.CurrentTick;
@@ -120,14 +120,10 @@ file class TickEnergySystem : QuerySystem<Energy> {
 				var remaining = energy.Current - energy.AmountToAct;
 				if (remaining >= 0) {
 					energy.Current = remaining;
-					CommandBuffer.AddTag<CanAct>(e.Id);
-					CommandBuffer.AddTag<TurnStarted>(e.Id);
-					// return;
-					// TODO if returning here then turns are deterministic
-					// but movement is slow since entts have to pass through multiple system runs
-					// need a way to progress all enemy systems in the same tick until player's turn to act.
-					// Problem happens when enemies and player are in the same turn
-					// Save into act queue?
+					CommandBuffer.AddTag<CanAct>(entt.Id);
+					CommandBuffer.AddTag<TurnStarted>(entt.Id);
+					// Hack to make order for player more deterministic
+					if (entt.Tags.Has<Player>()) return;
 				}
 			}
 			turnData.CurrentTick++;
