@@ -154,7 +154,7 @@ public class Game {
 
 		aot.RegisterLinkRelation<InventoryItem>();
 		
-		aot.RegisterRelation<StatusEffect, IStatusEffect>();
+		aot.RegisterRelation<StatusEffect, Type>();
 
 		var schema = aot.CreateSchema();
 	}

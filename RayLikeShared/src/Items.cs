@@ -110,7 +110,7 @@ struct ConfusionConsumable : IConsumable {
 			return ActionProcessor.Result.Invalid;
 		}
 
-		target.Add(new IsConfused { TurnsRemaining = Turns });
+		target.AddRelation(new StatusEffect { Value = new IsConfused { TurnsRemaining = Turns } });
 		target.Add(new Team { Value = source.GetComponent<Team>().Value });
 		MessageLog.Print($"{target.Name.value} is confused");
 		return ActionProcessor.Result.Done;

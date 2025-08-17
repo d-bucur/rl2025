@@ -17,9 +17,10 @@ interface IStatusEffect {
 }
 
 // Single value per IStatusEffect, non fragmenting
-struct StatusEffect : IRelation<IStatusEffect> {
+struct StatusEffect() : IRelation<Type> {
 	public required IStatusEffect Value;
-	public IStatusEffect GetRelationKey() => Value;
+	// register aot creates a default. This prevents it from breaking.
+	public Type GetRelationKey() => Value != null ? Value.GetType() : typeof(StatusEffect);
 }
 
 struct RageEffect : IStatusEffect, IComponent {
@@ -42,6 +43,24 @@ struct RageEffect : IStatusEffect, IComponent {
 	}
 }
 
+struct IsConfused : IStatusEffect, IComponent {
+	required internal int TurnsRemaining;
+	internal const float HurtSelfChance = 0.25f;
+
+	public void Tick(Entity e) {
+		TurnsRemaining--;
+		Console.WriteLine($"Ticking IsConfused");
+	}
+
+	public void OnEnd(Entity e) {
+		ref var t = ref e.GetComponent<Team>();
+		t.Value = 2;
+		MessageLog.Print($"{e.Name.value} is no longer confused");
+	}
+
+	public bool EndCondition(Entity e) => TurnsRemaining <= 0;
+}
+
 class ApplyStatusEffects : QuerySystem {
 	public ApplyStatusEffects() => Filter.AllTags(Tags.Get<CanAct, TurnStarted>());
 	List<IStatusEffect> removeBuffer = [];
@@ -56,7 +75,7 @@ class ApplyStatusEffects : QuerySystem {
 				}
 			}
 			foreach (var effect in removeBuffer) {
-				entt.RemoveRelation<StatusEffect, IStatusEffect>(effect);
+				entt.RemoveRelation<StatusEffect, Type>(effect.GetType());
 			}
 			removeBuffer.Clear();
 		}

@@ -12,8 +12,8 @@ static class UpdatePhases {
 	static internal SystemGroup Animations = new("AnimationsPhase");
 
 	static internal List<SystemGroup> All = [
-		StatusEffects,
 		ProgressTurns,
+		StatusEffects,
 		TurnStart,
 		Input,
 		ApplyActions,

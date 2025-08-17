@@ -7,12 +7,6 @@ struct EnemyAI : IComponent {
 	// add ai logic here
 }
 
-// TODO Use statuses instead
-struct IsConfused : IComponent {
-	required internal int TurnsRemaining;
-	internal const float HurtSelfChance = 0.25f;
-}
-
 class EnemyAIModule : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.Input.Add(new EnemyMovementSystem());
@@ -28,7 +22,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, ref Pathfinder pathfinder, Entity enemyEntt) => {
 			ref var usedPathfinder = ref pathfinder;
 			// TODO refactor: always select closest enemy (different team and set it as destination) for player as well
-			bool isConfused = enemyEntt.HasComponent<IsConfused>();
+			bool isConfused = enemyEntt.TryGetRelation<StatusEffect, Type>(typeof(IsConfused), out var statusEffect);
 			if (isConfused) {
 				// Chance to hurt itself
 				if (Random.Shared.NextSingle() < IsConfused.HurtSelfChance) {
@@ -43,15 +37,6 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 						path.Destination = closest.GetComponent<GridPosition>().Value;
 						usedPathfinder.Goal(path.Destination.Value);
 					}
-				}
-				// TODO should be separate from ai so it can be applied to player as well
-				ref var confused = ref enemyEntt.GetComponent<IsConfused>();
-				// Tick down confusion
-				confused.TurnsRemaining -= 1;
-				if (confused.TurnsRemaining <= 0) {
-					cmds.RemoveComponent<IsConfused>(enemyEntt.Id);
-					cmds.AddComponent(enemyEntt.Id, new Team { Value = 2 });
-					MessageLog.Print($"{enemyEntt.Name.value} is no longer confused");
 				}
 			}
 			// If in range of player visibility then set that as a target
