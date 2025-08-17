@@ -41,7 +41,7 @@ static class Prefabs {
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
 			new Fighter(40, new Dice(3, 2), 6),
-			new Pathfinder(Singleton.Entity.GetComponent<Grid>()).Goal(pos),
+			new Pathfinder(Singleton.Get<Grid>()).Goal(pos),
 			new PathMovement(),
 			new Team { Value = 1 }
 		);
@@ -141,7 +141,7 @@ static class Prefabs {
 			new Billboard(),
 			new ColorComp(),
 			new EnemyAI(),
-			new Pathfinder(Singleton.Entity.GetComponent<Grid>()),
+			new Pathfinder(Singleton.Get<Grid>()),
 			new PathMovement(),
 			new Team { Value = 2 },
 			Tags.Get<Enemy, Character, BlocksPathing>()
@@ -261,7 +261,7 @@ static class PrefabTransformations {
 
 	internal static Entity TurnCharacterToCorpse(Entity entt) {
 		Vec2I pos = entt.GetComponent<GridPosition>().Value;
-		Grid grid = Singleton.Entity.GetComponent<Grid>();
+		Grid grid = Singleton.Get<Grid>();
 		grid.RemoveCharacter(pos);
 		grid.AddOther(entt, pos);
 

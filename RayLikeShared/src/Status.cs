@@ -29,17 +29,12 @@ struct RageEffect : IStatusEffect, IComponent {
 	public int Elapsed;
 
 	public bool EndCondition(Entity e) => Elapsed >= Duration;
-
-	public void Tick(Entity e) {
-		Elapsed++;
-		Console.WriteLine($"Ticking rage effect {Elapsed}");
-	}
+	public void Tick(Entity e) => Elapsed++;
 
 	public void OnEnd(Entity e) {
 		ref var energy = ref e.GetComponent<Energy>();
 		energy.GainPerTick = OldGain;
 		MessageLog.Print($"The rage effect has worn off");
-		Console.WriteLine($"Reverting gain to {OldGain}");
 	}
 }
 
@@ -47,18 +42,14 @@ struct IsConfused : IStatusEffect, IComponent {
 	required internal int TurnsRemaining;
 	internal const float HurtSelfChance = 0.25f;
 
-	public void Tick(Entity e) {
-		TurnsRemaining--;
-		Console.WriteLine($"Ticking IsConfused");
-	}
+	public void Tick(Entity e) => TurnsRemaining--;
+	public bool EndCondition(Entity e) => TurnsRemaining <= 0;
 
 	public void OnEnd(Entity e) {
 		ref var t = ref e.GetComponent<Team>();
 		t.Value = 2;
 		MessageLog.Print($"{e.Name.value} is no longer confused");
 	}
-
-	public bool EndCondition(Entity e) => TurnsRemaining <= 0;
 }
 
 class ApplyStatusEffects : QuerySystem {

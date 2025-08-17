@@ -98,12 +98,12 @@ struct ConfusionConsumable : IConsumable {
 	required public int Turns;
 
 	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
-		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
+		var mouseVal = Singleton.Get<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) {
 			MessageLog.Print($"Not a valid target");
 			return ActionProcessor.Result.Invalid;
 		}
-		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+		ref var grid = ref Singleton.Get<Grid>();
 		var target = grid.Character[targetPos.X, targetPos.Y];
 		if (target.IsNull || target == Singleton.Player) {
 			MessageLog.Print($"Not a valid target");
@@ -125,12 +125,12 @@ struct FireballConsumable : IConsumable {
 
 	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
 		// TODO check if in line of sight
-		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
+		var mouseVal = Singleton.Get<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) {
 			MessageLog.Print($"No valid target");
 			return ActionProcessor.Result.Invalid;
 		}
-		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+		ref var grid = ref Singleton.Get<Grid>();
 
 		int hitCount = 0;
 		TargetsCache.Clear();
@@ -168,8 +168,8 @@ struct FireballConsumable : IConsumable {
 	}
 
 	public IEnumerable<Vec2I> AffectedTiles() {
-		var grid = Singleton.Entity.GetComponent<Grid>();
-		var mouseVal = Singleton.Entity.GetComponent<MouseTarget>().Value;
+		var grid = Singleton.Get<Grid>();
+		var mouseVal = Singleton.Get<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) yield break;
 
 		for (int x = -Range + 1; x < Range; x++) {
@@ -223,7 +223,7 @@ class Items : IModule {
 	}
 
 	private ActionProcessor.Result ProcessPickupAction(ref PickupAction action, Entity actionEntt) {
-		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+		ref var grid = ref Singleton.Get<Grid>();
 		var others = grid.Others[action.Position.X, action.Position.Y];
 
 		int pickedCount = 0;

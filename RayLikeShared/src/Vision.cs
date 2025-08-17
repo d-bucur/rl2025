@@ -42,7 +42,7 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 		// Set all previous visible tiles to explored
 		var cmds = CommandBuffer;
 		VisibleObjectsQuery.ForEachEntity((ref GridPosition pos, Entity entt) => {
-			if (!Singleton.Entity.GetComponent<Settings>().VisibilityHack)
+			if (!Singleton.Get<Settings>().VisibilityHack)
 				cmds.RemoveTag<IsVisible>(entt.Id);
 		});
 
@@ -55,7 +55,7 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 		// New FOV algo - inspired by FOV pass in 
 		// https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter23_Crowd_Pathfinding_and_Steering_Using_Flow_Field_Tiles.pdf
 		// breadth first search, mark FOV corners, draw lines from corners and block further search for tiles on the line
-		var grid = Singleton.Entity.GetComponent<Grid>();
+		var grid = Singleton.Get<Grid>();
 		Queue<(Vec2I, Vec2I)> toVisit = new();
 		toVisit.Enqueue((source.Value, new Vec2I(0, 0)));
 		HashSet<Vec2I> visited = [source.Value];
@@ -161,7 +161,7 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 
 	// Old, simple visibility algorithm marking all tiles in a square radius around the source
 	// void SimpleVisionWalk(GridPosition source, VisionSource vision) {
-	// 	var grid = Singleton.Entity.GetComponent<Grid>();
+	// 	var grid = Singleton.Get<Grid>();
 	// 	for (int i = -vision.Range; i < vision.Range + 1; i++) {
 	// 		for (int j = -vision.Range; j < vision.Range + 1; j++) {
 	// 			var pos = source.Value + new Vec2I(i, j);
@@ -171,7 +171,7 @@ class RecalculateVisionSystem : QuerySystem<GridPosition, VisionSource> {
 	// }
 
 	internal static void MarkAllTiles<T>() where T : struct, ITag {
-		var grid = Singleton.Entity.GetComponent<Grid>();
+		var grid = Singleton.Get<Grid>();
 		var cmds = Singleton.World.GetCommandBuffer();
 		for (int i = 0; i < grid.Tile.GetLength(0); i++) {
 			for (int j = 0; j < grid.Tile.GetLength(1); j++) {

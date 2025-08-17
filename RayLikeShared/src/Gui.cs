@@ -29,22 +29,22 @@ struct MessageLog() : IComponent {
 	}
 
 	internal static void Print(string message, Color? color = null) {
-		Singleton.Entity.GetComponent<MessageLog>().Add(message, color);
+		Singleton.Get<MessageLog>().Add(message, color);
 	}
 
 	internal static void ReplaceLast(string message, Color? color = null) {
 		RemoveLast();
-		Singleton.Entity.GetComponent<MessageLog>().Add(message, color);
+		Singleton.Get<MessageLog>().Add(message, color);
 	}
 
 	internal static void ReplaceNext(string message, Color? color = null) {
-		ref var messages = ref Singleton.Entity.GetComponent<MessageLog>();
+		ref var messages = ref Singleton.Get<MessageLog>();
 		messages.Add(message, color);
 		messages.replaceNext = true;
 	}
 
 	internal static void RemoveLast() {
-		ref List<Message> messages = ref Singleton.Entity.GetComponent<MessageLog>().Messages;
+		ref List<Message> messages = ref Singleton.Get<MessageLog>().Messages;
 		if (messages.Count > 0) messages.RemoveAt(messages.Count - 1);
 	}
 }
@@ -183,11 +183,11 @@ file class RenderMinimap : QuerySystem {
 	}
 
 	protected override unsafe void OnUpdate() {
-		if (!Singleton.Entity.GetComponent<Settings>().MinimapEnabled)
+		if (!Singleton.Get<Settings>().MinimapEnabled)
 			return;
-		explorationHack = Singleton.Entity.GetComponent<Settings>().ExplorationHack;
+		explorationHack = Singleton.Get<Settings>().ExplorationHack;
 
-		var grid = Singleton.Entity.GetComponent<Grid>();
+		var grid = Singleton.Get<Grid>();
 		for (int x = 0; x < grid.Tile.GetLength(0); x++) {
 			for (int y = 0; y < grid.Tile.GetLength(1); y++) {
 				Raylib.ImageDrawPixel(ref MinimapImage, x, y, GetColor(grid, x, y));
@@ -225,10 +225,10 @@ file class MouseSelect : QuerySystem {
 	List<string> InspectStrings = new();
 
 	protected override void OnUpdate() {
-		var mouseTarget = Singleton.Entity.GetComponent<MouseTarget>();
+		var mouseTarget = Singleton.Get<MouseTarget>();
 		if (!mouseTarget.Value.HasValue) return;
 		var mousePosI = mouseTarget.Value.Value;
-		ref Grid grid = ref Singleton.Entity.GetComponent<Grid>();
+		ref Grid grid = ref Singleton.Get<Grid>();
 
 		var isTileVisible = grid.CheckTile<IsVisible>(mousePosI);
 		var charAtPos = grid.Character[mousePosI.X, mousePosI.Y];
@@ -302,7 +302,7 @@ file class MouseSelect : QuerySystem {
 		if (Raylib.IsMouseButtonReleased(MouseButton.Left)) {
 			// move player to target destination
 			ref var movement = ref Singleton.Player.GetComponent<PathMovement>();
-			if (!Singleton.Entity.GetComponent<Grid>().CheckTile<BlocksPathing>(posI)) movement.NewDestination(posI, path);
+			if (!Singleton.Get<Grid>().CheckTile<BlocksPathing>(posI)) movement.NewDestination(posI, path);
 		}
 	}
 }

@@ -40,7 +40,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 				}
 			}
 			// If in range of player visibility then set that as a target
-			bool shouldChasePlayer = Singleton.Entity.GetComponent<Grid>().CheckTile<IsVisible>(enemyPos.Value);
+			bool shouldChasePlayer = Singleton.Get<Grid>().CheckTile<IsVisible>(enemyPos.Value);
 			if (shouldChasePlayer && !isConfused) {
 				path.Destination = Singleton.Player.GetComponent<GridPosition>().Value;
 				usedPathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
@@ -71,7 +71,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 				if (Random.Shared.NextSingle() < 0.75) {
 					var pos = enemyPos.Value;
 					var moves = Grid.NeighborsCardinal.Concat(Grid.NeighborsDiagonal)
-						.Where(p => !Singleton.Entity.GetComponent<Grid>().BlocksPathing(pos + p))
+						.Where(p => !Singleton.Get<Grid>().BlocksPathing(pos + p))
 						.ToList();
 
 					if (moves.Count > 0) {

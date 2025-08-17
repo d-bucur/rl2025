@@ -170,7 +170,7 @@ internal class DebugPathfinding : QuerySystem<Pathfinder> {
 	}
 
 	protected override void OnUpdate() {
-		if (!Singleton.Entity.GetComponent<Settings>().DebugPathfinding)
+		if (!Singleton.Get<Settings>().DebugPathfinding)
 			return;
 
 		camera = Singleton.Camera.GetComponent<Camera>();

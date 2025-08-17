@@ -24,7 +24,7 @@ class InputModule : IModule {
 
 file class UpdateMousePosition : QuerySystem {
     protected override void OnUpdate() {
-        ref var mouseTarget = ref Singleton.Entity.GetComponent<MouseTarget>();
+        ref var mouseTarget = ref Singleton.Get<MouseTarget>();
         mouseTarget.Value = null;
         Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
         var ray = Raylib.GetScreenToWorldRay(Raylib.GetMousePosition(), camera);
@@ -37,7 +37,7 @@ file class UpdateMousePosition : QuerySystem {
         float t = -ray.Position.Y / ray.Direction.Y;
         Vector3 intersection = ray.Position + t * ray.Direction + MouseTarget.tileOffset;
         Vec2I mousePosI = Vec2I.FromWorldPos(intersection);
-        ref Grid grid = ref Singleton.Entity.GetComponent<Grid>();
+        ref Grid grid = ref Singleton.Get<Grid>();
 
         if (!grid.IsInside(mousePosI))
             return;
@@ -120,7 +120,7 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
     static void HandleMovementInput(Entity entt, CommandBuffer cmd, Vec2I keyMovement) {
         Vec2I prevPos = entt.GetComponent<GridPosition>().Value;
         var newPos = prevPos + keyMovement;
-        var grid = Singleton.Entity.GetComponent<Grid>();
+        var grid = Singleton.Get<Grid>();
         if (!grid.IsInside(newPos)) return;
         Entity charAtPos = grid.Character[newPos.X, newPos.Y];
         if (charAtPos.IsNull) {
@@ -141,7 +141,7 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
 
 file class GameInputSystem : QuerySystem {
     protected override void OnUpdate() {
-        ref Settings settings = ref Singleton.Entity.GetComponent<Settings>();
+        ref Settings settings = ref Singleton.Get<Settings>();
         // Minimap
         if (Raylib.IsKeyPressed(KeyboardKey.M))
             settings.MinimapEnabled = !settings.MinimapEnabled;
@@ -185,7 +185,7 @@ file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
                 (follow.SpeedTargetFact, prevCameraTargetFollow) = (prevCameraTargetFollow, follow.SpeedTargetFact);
                 // (cam.Value.Projection, prevProjection) = (prevProjection, cam.Value.Projection);
                 // (cam.Value.FovY, prevFov) = (prevFov, cam.Value.FovY);
-                ref var settings = ref Singleton.Entity.GetComponent<Settings>();
+                ref var settings = ref Singleton.Get<Settings>();
                 settings.IsOverhead = !settings.IsOverhead;
             }
 

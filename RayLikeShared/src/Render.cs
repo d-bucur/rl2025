@@ -158,7 +158,7 @@ file class RenderMeshes : QuerySystem<Position, Scale3, Mesh, ColorComp> {
 			var normalColor = e.Tags.Has<IsVisible>()
 				? Raylib.ColorTint(color.Value, Color.White)
 				: Raylib.ColorBrightness(color.Value, Palette.NotVisibleFade);
-			var colorFinal = Singleton.Entity.GetComponent<Settings>().DebugColorsEnabled
+			var colorFinal = Singleton.Get<Settings>().DebugColorsEnabled
 				? (color.DebugColor ?? normalColor)
 				: normalColor;
 			Raylib.DrawModelEx(mesh.Model, posWithOffset, Vector3.UnitY, 0, scale.value, colorFinal);
@@ -192,7 +192,7 @@ file class FadeScenery : QuerySystem<GridPosition> {
 			color.Value.A = 255;
 		});
 
-		var grid = Singleton.Entity.GetComponent<Grid>();
+		var grid = Singleton.Get<Grid>();
 		Query.ForEachEntity((ref GridPosition pos, Entity entt) => {
 			foreach (var delta in PositionsBelow) {
 				var posBelow = pos.Value + delta;

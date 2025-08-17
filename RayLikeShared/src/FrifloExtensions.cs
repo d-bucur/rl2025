@@ -40,7 +40,6 @@ static class Singleton {
 		World = world;
 	}
 
-	// TODO replace all Singleton.Entity.GetComponent with Singleton.Get
 	internal static ref T Get<T>() where T : struct, IComponent {
 		return ref Entity.GetComponent<T>();
 	}

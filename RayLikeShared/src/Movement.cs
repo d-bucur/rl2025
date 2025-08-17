@@ -71,7 +71,7 @@ class Movement : IModule {
 
     private ActionProcessor.Result ProcessMovementAction(ref MovementAction action, Entity actionEntt) {
         var source = action.Entity;
-        var grid = Singleton.Entity.GetComponent<Grid>();
+        var grid = Singleton.Get<Grid>();
         ref var gridPos = ref action.Entity.GetComponent<GridPosition>();
         var oldPos = gridPos.Value;
         Vec2I dir = new(action.Dx, action.Dy);
@@ -109,7 +109,7 @@ class Movement : IModule {
         Animations.Move(action.Entity, actionEntt, oldPos, currPos,
             () => {
                 Vec2I gridPos = source.GetComponent<GridPosition>().Value;
-                if (!Singleton.Entity.GetComponent<Grid>().CheckTile<IsVisible>(gridPos))
+                if (!Singleton.Get<Grid>().CheckTile<IsVisible>(gridPos))
                     source.RemoveTag<IsVisible>();
             });
         return ActionProcessor.Result.Running;
@@ -134,12 +134,11 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
                 return;
             Vec2I next = path.NextPoint();
             Vec2I diff = next - pos.Value;
-            // TODO not handling case where previous point was unreachable; still continues on the path
-            // which tirggers this assert
+            // TODO not handling case where previous point was unreachable; still continues on the path which triggers this assert
             Debug.Assert(Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2,
                 $"BUG: Movement is too big: from {pos.Value} to {next}");
 
-            var grid = Singleton.Entity.GetComponent<Grid>();
+            var grid = Singleton.Get<Grid>();
             Entity destEntt = grid.Character[next.X, next.Y];
 
             if (!destEntt.IsNull && team.Value != destEntt.GetComponent<Team>().Value) {

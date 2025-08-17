@@ -30,7 +30,7 @@ class Level : IModule {
 
 	static void OnGridPositionAdded(ComponentChanged change) {
 		if (change.Type != typeof(GridPosition) || change.Action != ComponentChangedAction.Add) return;
-		var grid = Singleton.Entity.GetComponent<Grid>();
+		var grid = Singleton.Get<Grid>();
 		var pos = change.Component<GridPosition>().Value;
 		if (change.Entity.Tags.Has<Character>())
 			grid.Character[pos.X, pos.Y] = change.Entity;
@@ -42,7 +42,7 @@ class Level : IModule {
 
 	private void OnGridPositionRemoved(ComponentChanged change) {
 		if (change.Type != typeof(GridPosition) || change.Action != ComponentChangedAction.Remove) return;
-		var grid = Singleton.Entity.GetComponent<Grid>();
+		var grid = Singleton.Get<Grid>();
 		var pos = change.OldComponent<GridPosition>().Value;
 		if (change.Entity.HasComponent<Item>()) {
 			grid.Others[pos.X, pos.Y].GetValueOrDefault().Value.Remove(change.Entity);
@@ -51,7 +51,7 @@ class Level : IModule {
 
 	static void SpawnInEmptyTiles(int count, Func<Vec2I, Entity> SpawnAction, int minDistance = 7) {
 		var playerPos = Singleton.Player.GetComponent<GridPosition>().Value;
-		ref var grid = ref Singleton.Entity.GetComponent<Grid>();
+		ref var grid = ref Singleton.Get<Grid>();
 		var walkableTilesQuery = Singleton.World.Query().AllTags(Tags.Get<Walkable>());
 		var walkableTiles = walkableTilesQuery.ToEntityList();
 		for (int i = 0; i < count; i++) {
