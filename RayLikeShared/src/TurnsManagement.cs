@@ -140,6 +140,7 @@ file class TickEnergySystem : QuerySystem<Energy> {
 /// Does maintenance of currently executing actions
 /// </summary>
 file class ProcessActionsSystem : QuerySystem {
+	public ProcessActionsSystem() => Filter.AllTags(Tags.Get<Player>());
 	ArchetypeQuery finishedQuery;
 	ArchetypeQuery waitingQuery;
 	ArchetypeQuery blockingQuery;

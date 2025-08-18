@@ -69,6 +69,9 @@ public class Game {
 			new StatusModule(),
 		];
 		Modules.ForEach(m => m.Init(World));
+
+		// UpdateRootSystems.SetMonitorPerf(true);
+		// RenderRootSystems.SetMonitorPerf(true);
 	}
 
 	public void Update() {
@@ -84,6 +87,8 @@ public class Game {
 		Raylib.EndDrawing();
 
 		World.EventRecorder.ClearEvents();
+		// Console.WriteLine(UpdateRootSystems.GetPerfLog());
+		// Console.WriteLine(RenderRootSystems.GetPerfLog());
 	}
 
 	public static UpdateTick GetUpdateTick() {

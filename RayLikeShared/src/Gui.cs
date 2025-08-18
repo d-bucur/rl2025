@@ -173,6 +173,7 @@ file class RenderGameOver : QuerySystem<EntityName> {
 
 // Optimization: could only redraw on change
 file class RenderMinimap : QuerySystem {
+	public RenderMinimap() => Filter.AllTags(Tags.Get<Player>());
 	Image MinimapImage;
 	Texture2D MinimapTexture;
 	private static bool explorationHack;
@@ -222,6 +223,7 @@ file class RenderMinimap : QuerySystem {
 
 // A lot of cross cutting concerns here: input, rendering and gui. Should break up
 file class MouseSelect : QuerySystem {
+	public MouseSelect() => Filter.AllTags(Tags.Get<Player>());
 	List<string> InspectStrings = new();
 
 	protected override void OnUpdate() {
@@ -320,6 +322,7 @@ file class MouseSelect : QuerySystem {
 }
 
 file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
+	public RenderDamageFx() => Filter.AllTags(Tags.Get<Player>());
 	protected override void OnUpdate() {
 		Camera camera = Singleton.Camera.GetComponent<Camera>();
 		Raylib.BeginShaderMode(Assets.billboardShader);
@@ -342,6 +345,8 @@ file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 file class RenderInventory : QuerySystem {
 	static int ItemSize = 64;
 	internal static Vec2I AncorAbove = new(0, ItemSize);
+	public RenderInventory() => Filter.AllTags(Tags.Get<Player>());
+
 	internal static Rectangle GetRect() => new Rectangle(Raylib.GetScreenWidth() - ItemSize * Config.InventoryLimit, Raylib.GetScreenHeight() - ItemSize, ItemSize * Config.InventoryLimit, ItemSize);
 	protected override void OnUpdate() {
 		var inventory = Singleton.Player.GetRelations<InventoryItem>();
@@ -374,6 +379,8 @@ file class RenderTurnOrder : QuerySystem {
 	static int ItemSize = 64;
 	internal static Vec2I AncorAbove = new(0, ItemSize);
 	const int TileCount = 6;
+
+	public RenderTurnOrder() => Filter.AllTags(Tags.Get<Player>());
 	protected override void OnUpdate() {
 		// Can cache in turns management
 		var anchor = new Vector2(0, Raylib.GetScreenHeight() - ItemSize);

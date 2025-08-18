@@ -23,6 +23,7 @@ class InputModule : IModule {
 }
 
 file class UpdateMousePosition : QuerySystem {
+    public UpdateMousePosition() => Filter.AllTags(Tags.Get<Player>());
     protected override void OnUpdate() {
         ref var mouseTarget = ref Singleton.Get<MouseTarget>();
         mouseTarget.Value = null;
@@ -140,6 +141,8 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
 }
 
 file class GameInputSystem : QuerySystem {
+    // not sure how to execute a system only once, so adding a player tag to the filter
+    public GameInputSystem() => Filter.AllTags(Tags.Get<Player>());
     protected override void OnUpdate() {
         ref Settings settings = ref Singleton.Get<Settings>();
         // Minimap
