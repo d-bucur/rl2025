@@ -69,12 +69,14 @@ class TurnsManagement : IModule {
 		while (true) {
 			for (int i = 0; i < EnergyCache.Count; i++) {
 				var (energy, entt) = EnergyCache[i];
-				if (energy.TickProcessed >= turnData.CurrentTick) continue;
-				energy.TickProcessed = turnData.CurrentTick;
-				energy.Current += energy.GainPerTick;
-				var remaining = energy.Current - energy.AmountToAct;
-				if (remaining >= 0) {
-					energy.Current = remaining;
+				if (energy.TickProcessed >= turnData.CurrentTick
+					&& energy.Current < energy.AmountToAct) continue;
+				if (energy.TickProcessed < turnData.CurrentTick) {
+					energy.Current += energy.GainPerTick;
+					energy.TickProcessed = turnData.CurrentTick;
+				}
+				while (energy.Current >= energy.AmountToAct) {
+					energy.Current -= energy.AmountToAct;
 					yield return (entt, turnData.CurrentTick);
 					if (++totalActed >= max) yield break;
 				}
@@ -114,12 +116,14 @@ file class TickEnergySystem : QuerySystem<Energy> {
 			foreach (var entt in entitiesSorted) {
 				ref var energy = ref entt.GetComponent<Energy>();
 				// Already processed this tick. Skip
-				if (energy.TickProcessed >= turnData.CurrentTick) continue;
-				energy.TickProcessed = turnData.CurrentTick;
-				energy.Current += energy.GainPerTick;
-				var remaining = energy.Current - energy.AmountToAct;
-				if (remaining >= 0) {
-					energy.Current = remaining;
+				if (energy.TickProcessed >= turnData.CurrentTick
+					&& energy.Current < energy.AmountToAct) continue;
+				if (energy.TickProcessed < turnData.CurrentTick) {
+					energy.Current += energy.GainPerTick;
+					energy.TickProcessed = turnData.CurrentTick;
+				}
+				if (energy.Current >= energy.AmountToAct) {
+					energy.Current -= energy.AmountToAct;
 					CommandBuffer.AddTag<CanAct>(entt.Id);
 					CommandBuffer.AddTag<TurnStarted>(entt.Id);
 					// Hack to make order for player more deterministic

@@ -43,9 +43,9 @@ struct RageConsumable : IConsumable {
 		var oldGain = energy.GainPerTick;
 		var newGain = GainCalc(energy);
 		energy.GainPerTick = newGain;
-		// TODO OldGain will be wrong if stacked effects
 		target.AddRelation(new StatusEffect {
-			Value = new RageEffect() { Duration = Duration, OldGain = oldGain }
+			// hardcoded value might cause problems
+			Value = new RageEffect() { Duration = Duration, OldGain = 5 }
 		});
 		MessageLog.Print($"You feel enraged! You will act much faster");
 

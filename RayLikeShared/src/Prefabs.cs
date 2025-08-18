@@ -56,10 +56,10 @@ static class Prefabs {
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnHealingPotion(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRagePotion(pos)) });
 		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
-		SpawnConfusionScroll(pos + (1, 1));
-		SpawnLightningScroll(pos + (-1, 1));
-		SpawnFireballScroll(pos + (-1, -1));
-		SpawnHealingPotion(pos + (1, -1));
+		// SpawnConfusionScroll(pos + (1, 1));
+		// SpawnLightningScroll(pos + (-1, 1));
+		// SpawnFireballScroll(pos + (-1, -1));
+		// SpawnHealingPotion(pos + (1, -1));
 	}
 
 	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType) {
@@ -196,7 +196,7 @@ static class Prefabs {
 		return entt;
 	}
 
-	static int DefaultRageGain(Energy e) => e.GainPerTick * 3;
+	static int DefaultRageGain(Energy e) => 15;
 	static Entity SpawnRagePotion(Vec2I pos, Func<Energy, int>? gainSetter = null) {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
