@@ -12,6 +12,7 @@ struct ItemTag : ITag;
 
 internal interface IConsumable {
 	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null);
+	public IEnumerable<Vec2I> AffectedTiles(Vec2I source) => [Vec2I.Zero];
 }
 
 struct HealingConsumable : IConsumable {
@@ -64,16 +65,9 @@ struct LightningDamageConsumable : IConsumable {
 	static ArchetypeQuery<GridPosition>? cachedQuery;
 
 	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
-		cachedQuery ??= Singleton.World.Query<GridPosition>()
-			.AllTags(Tags.Get<Enemy, IsVisible>())
-			.WithoutAllTags(Tags.Get<Corpse>());
 		var sourcePos = source.GetComponent<GridPosition>();
-		var closest = (new Entity(), int.MaxValue);
-		cachedQuery.ForEachEntity((ref GridPosition enemyPos, Entity enemyEntt) => {
-			int dist = Pathfinder.DiagonalDistance(sourcePos.Value, enemyPos.Value);
-			if (dist < closest.Item2) closest = (enemyEntt, dist);
-		});
-		if (closest.Item1.IsNull || closest.Item2 > MaximumRange) {
+		var closest = GetClosest(sourcePos.Value);
+		if (closest.IsNull) {
 			MessageLog.Print($"No enemy in range");
 			return ActionProcessor.Result.Invalid;
 		}
@@ -82,16 +76,37 @@ struct LightningDamageConsumable : IConsumable {
 		var damage = Damage; // captured
 		Entity projectile = Prefabs.SpawnProjectile(sourcePos.Value, Prefabs.ConsumableType.LightningDamageScroll);
 
-		Animations.ProjectileFollowFX(projectile, sourcePos.Value.ToWorldPos(), closest.Item1, () => {
-			ref var f = ref closest.Item1.GetComponent<Fighter>();
-			Combat.ApplyDamage(closest.Item1, source, damage);
-			MessageLog.Print($"A lightning bolt strikes {closest.Item1.Name.value} for {damage} damage!");
+		Animations.ProjectileFollowFX(projectile, sourcePos.Value.ToWorldPos(), closest, () => {
+			ref var f = ref closest.GetComponent<Fighter>();
+			Combat.ApplyDamage(closest, source, damage);
+			MessageLog.Print($"A lightning bolt strikes {closest.Name.value} for {damage} damage!");
 			actionEntity?.AddTag<IsActionFinished>();
-			var explosion = Prefabs.SpawnProjectile(closest.Item1.GetComponent<GridPosition>().Value, Prefabs.ConsumableType.LightningDamageScroll);
+			var explosion = Prefabs.SpawnProjectile(closest.GetComponent<GridPosition>().Value, Prefabs.ConsumableType.LightningDamageScroll);
 			Animations.ExplosionFX(explosion);
 		});
 		return actionEntity.HasValue ? ActionProcessor.Result.Running : ActionProcessor.Result.Done;
 	}
+
+	Entity GetClosest(Vec2I pos) {
+		cachedQuery ??= Singleton.World.Query<GridPosition>()
+			.AllTags(Tags.Get<Enemy, IsVisible>())
+			.WithoutAllTags(Tags.Get<Corpse>());
+		var closest = (new Entity(), int.MaxValue);
+		cachedQuery.ForEachEntity((ref GridPosition enemyPos, Entity enemyEntt) => {
+			int dist = Pathfinder.DiagonalDistance(pos, enemyPos.Value);
+			if (dist < closest.Item2) closest = (enemyEntt, dist);
+		});
+
+		return closest.Item2 <= MaximumRange ? closest.Item1 : default;
+	}
+
+	public IEnumerable<Vec2I> AffectedTiles(Vec2I source) {
+		Entity entity = GetClosest(source);
+		if (entity.IsNull)
+			return [];
+		return [entity.GetComponent<GridPosition>().Value];
+	}
+
 }
 
 struct ConfusionConsumable : IConsumable {
@@ -135,7 +150,7 @@ struct FireballConsumable : IConsumable {
 		int hitCount = 0;
 		TargetsCache.Clear();
 		HitTilesCache.Clear();
-		foreach (var tilePos in AffectedTiles()) {
+		foreach (var tilePos in AffectedTiles(targetPos)) {
 			if (!grid.CheckTile<BlocksFOV>(tilePos))
 				HitTilesCache.Add(tilePos);
 			var target = grid.Character[tilePos.X, tilePos.Y];
@@ -167,7 +182,7 @@ struct FireballConsumable : IConsumable {
 		return actionEntity.HasValue ? ActionProcessor.Result.Running : ActionProcessor.Result.Done;
 	}
 
-	public IEnumerable<Vec2I> AffectedTiles() {
+	public IEnumerable<Vec2I> AffectedTiles(Vec2I _) {
 		var grid = Singleton.Get<Grid>();
 		var mouseVal = Singleton.Get<MouseTarget>().Value;
 		if (mouseVal is not Vec2I targetPos) yield break;

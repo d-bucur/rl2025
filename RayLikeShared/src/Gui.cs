@@ -243,15 +243,11 @@ file class MouseSelect : QuerySystem {
 				mousePosI.ToWorldPos() - MouseTarget.tileOffset,
 				new Vector3(1.1f, 1f, 1.1f),
 				Raylib.Fade(color, 0.3f));
-			// TODO handle targeting better	
-			// var test = new FireballConsumable { Damage = 5, Range = 3 };
-			// foreach (var pos in test.AffectedTiles()) {
-			// 	Raylib.DrawCubeWiresV(
-			// 		pos.ToWorldPos() - MouseTarget.tileOffset,
-			// 		new Vector3(1f, 1f, 1f),
-			// 		Raylib.Fade(Color.Orange, 0.3f));
-			// }
-			PathTo(mousePosI, color);
+
+			// Draw target tiles
+			DrawTargetTiles();
+
+			DrawPathTo(mousePosI, color);
 			Raylib.EndMode3D();
 		}
 
@@ -287,7 +283,23 @@ file class MouseSelect : QuerySystem {
 		}
 	}
 
-	private void PathTo(Vec2I posI, Color color) {
+	private static void DrawTargetTiles() {
+		for (int i = 0; i < Config.InventoryLimit; i++) {
+			if (!Raylib.IsKeyDown(i + KeyboardKey.One)) continue;
+
+			var items = Singleton.Player.GetRelations<InventoryItem>();
+			if (items.Length <= i) continue;
+			Vec2I playerPos = Singleton.Player.GetComponent<GridPosition>().Value;
+			foreach (var pos in items[i].Item.GetComponent<Item>().Consumable.AffectedTiles(playerPos)) {
+				Raylib.DrawCubeWiresV(
+					pos.ToWorldPos() - MouseTarget.tileOffset,
+					new Vector3(1f, 1f, 1f),
+					Raylib.Fade(Color.Orange, 0.3f));
+			}
+		}
+	}
+
+	private void DrawPathTo(Vec2I posI, Color color) {
 		ref var pathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
 		if (Raylib.IsMouseButtonPressed(MouseButton.Right))
 			pathfinder.Reset();
@@ -386,7 +398,7 @@ file class RenderTurnOrder : QuerySystem {
 				Color.White
 			);
 			// Debug turn index
-			Raylib.DrawText($"{energy}", (int)tileStart.X, (int)tileStart.Y, 20, Color.White);
+			// Raylib.DrawText($"{energy}", (int)tileStart.X, (int)tileStart.Y, 20, Color.White);
 			i++;
 		}
 		// Turns text is kind of redundant

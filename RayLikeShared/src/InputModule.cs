@@ -102,7 +102,7 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
 
     private static bool CheckInventoryInput(Entity entt, CommandBuffer cmd) {
         for (int i = 0; i < Config.InventoryLimit; i++) {
-            if (Raylib.IsKeyPressed(i + KeyboardKey.One)) {
+            if (Raylib.IsKeyReleased(i + KeyboardKey.One)) {
                 var items = entt.GetRelations<InventoryItem>();
                 if (items.Length > i) {
                     TurnsManagement.QueueAction(cmd, new ConsumeItemAction { Target = entt, Item = items[i].Item }, entt);
