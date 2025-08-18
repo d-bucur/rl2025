@@ -4,7 +4,7 @@ using Friflo.Engine.ECS.Systems;
 namespace RayLikeShared;
 
 struct EnemyAI : IComponent {
-	// add ai logic here
+	public bool isOnPlayerSide; // hack to make it work with current AI
 }
 
 class EnemyAIModule : IModule {
@@ -17,11 +17,10 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 	public EnemyMovementSystem() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {
-		// Should add a proper state machine
+		// TODO Super spaghetti. Should add proper state machine/behavior tree
 		var cmds = CommandBuffer;
 		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, ref Pathfinder pathfinder, Entity enemyEntt) => {
 			ref var usedPathfinder = ref pathfinder;
-			// TODO refactor: always select closest enemy (different team and set it as destination) for player as well
 			bool isConfused = enemyEntt.TryGetRelation<StatusEffect, Type>(typeof(IsConfused), out var statusEffect);
 			if (isConfused) {
 				// Chance to hurt itself
@@ -31,20 +30,24 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 					cmds.RemoveTag<CanAct>(enemyEntt.Id);
 					return;
 				}
-				else {
+			}
+			else {
+				if (ai.isOnPlayerSide) {
 					var closest = GetClosestEnemy(enemyEntt, enemyPos.Value);
 					if (!closest.IsNull) {
 						path.Destination = closest.GetComponent<GridPosition>().Value;
 						usedPathfinder.Goal(path.Destination.Value);
 					}
 				}
-			}
-			// If in range of player visibility then set that as a target
-			bool shouldChasePlayer = Singleton.Get<Grid>().CheckTile<IsVisible>(enemyPos.Value);
-			if (shouldChasePlayer && !isConfused) {
-				path.Destination = Singleton.Player.GetComponent<GridPosition>().Value;
-				usedPathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
-				usedPathfinder.Goal(path.Destination.Value);
+				else {
+					// If in range of player visibility then set that as a target
+					bool shouldChasePlayer = Singleton.Get<Grid>().CheckTile<IsVisible>(enemyPos.Value);
+					if (shouldChasePlayer && !isConfused) {
+						path.Destination = Singleton.Player.GetComponent<GridPosition>().Value;
+						usedPathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
+						usedPathfinder.Goal(path.Destination.Value);
+					}
+				}
 			}
 
 			// Move to destination
@@ -86,7 +89,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 	}
 
 	private Entity GetClosestEnemy(Entity sourceEntt, Vec2I sourcePos) {
-		var query = Singleton.World.Query<GridPosition, Team>();
+		var query = Singleton.World.Query<GridPosition, Team>().WithoutAllTags(Tags.Get<Corpse>());
 		var closest = (new Entity(), int.MaxValue);
 		var sourceTeam = sourceEntt.GetComponent<Team>().Value;
 		query.ForEachEntity((ref GridPosition targetPos, ref Team targetTeam, Entity targetEntt) => {

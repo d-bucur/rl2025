@@ -20,6 +20,7 @@ static class Prefabs {
 		ConfusionScroll,
 		FireballScroll,
 		RagePotion,
+		NecromancyScroll,
 	};
 
 	internal static Entity SpawnPlayer(Vec2I pos) {
@@ -55,11 +56,13 @@ static class Prefabs {
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnHealingPotion(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRagePotion(pos)) });
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnNecromancyScroll(pos)) });
 		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
 		// SpawnConfusionScroll(pos + (1, 1));
 		// SpawnLightningScroll(pos + (-1, 1));
 		// SpawnFireballScroll(pos + (-1, -1));
 		// SpawnHealingPotion(pos + (1, -1));
+		// SpawnNecromancyScroll(pos + (1, -1));
 	}
 
 	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType) {
@@ -158,6 +161,7 @@ static class Prefabs {
 			ConsumableType.ConfusionScroll => SpawnConfusionScroll(pos),
 			ConsumableType.FireballScroll => SpawnFireballScroll(pos),
 			ConsumableType.RagePotion => SpawnRagePotion(pos),
+			ConsumableType.NecromancyScroll => SpawnNecromancyScroll(pos),
 		};
 
 	static Entity PrepConsumableCommon(Vec2I pos) {
@@ -233,6 +237,18 @@ static class Prefabs {
 		return entt;
 	}
 
+	private static Entity SpawnNecromancyScroll(Vec2I pos) {
+		Entity entt = PrepConsumableCommon(pos);
+		entt.Add(
+			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
+				TileIdx = new Vec2I(3, 21)
+			},
+			new EntityName($"Necromancy scroll"),
+			new Item() { Consumable = new NecromancyConsumable { } }
+		);
+		return entt;
+	}
+
 	internal static Entity SpawnProjectile(Vec2I pos, ConsumableType consumable, Vector3 offset = default) {
 		return Singleton.World.CreateEntity(
 			new Position(pos.X + offset.X, offset.Y, pos.Y + offset.Z),
@@ -278,5 +294,25 @@ static class PrefabTransformations {
 		}
 		entt.AddComponent(new RotationSingle(Random.Shared.Next(25, 35)));
 		return entt;
+	}
+
+	// Only works for enemies
+	internal static void ResurrectCorpse(Entity entt, Vec2I mouseTarget) {
+		entt.RemoveTag<Corpse>();
+		entt.RemoveComponent<GridPosition>(); // not ideal, but this retriggers add to the grid
+		entt.Add(
+			new GridPosition() { Value = mouseTarget },
+			new EnemyAI() { isOnPlayerSide = true },
+			new Billboard(),
+			new RotationSingle(),
+			new Energy() { GainPerTick = 4 },
+			new Team() { Value = 1 },
+			Tags.Get<BlocksPathing, Character>()
+		);
+		ref var f = ref entt.GetComponent<Fighter>();
+		f.HP = f.MaxHP;
+
+		ref var name = ref entt.GetComponent<EntityName>();
+		name.value = $"Reanimated {name.value.Replace("Remains of", "")}";
 	}
 }

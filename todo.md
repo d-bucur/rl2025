@@ -1,10 +1,11 @@
 ## week 5
 - fx for items, maybe projectiles too?
-- blood under corpses
 - event handlers for different game states. InputEventHandler component, add and remove as needed.
+- enemies should attack closest enemy (including minions)
 
 ## extra
-- aggro nearby enemies when one is alerted
+- blood under corpses
+- aggro nearby enemies when one is alerted (maybe generic sound system?)
 - billboard don't work on android chrome. They work on android firefox...
 - object pool and use for textures
 
@@ -21,7 +22,6 @@
 - add keyboard targeting
 
 ## item ideas
-- resurrect enemy as minion
 - full map exploration
 - chain lighting
 - air scroll: push enemies and damage everything they hit

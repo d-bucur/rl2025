@@ -18,6 +18,13 @@
 - https://www.redblobgames.com/pathfinding/a-star/introduction.html
 - https://theory.stanford.edu/~amitp/GameProgramming/
 
+## AI
+- https://github.com/ashblue/fluid-behavior-tree
+- https://bitbra.in/beehave/#/
+- https://github.com/limbonaut/limboai
+- https://www.behaviortree.dev/docs/nodes-library/DecoratorNode
+- https://www.roguebasin.com/index.php/Articles#AI
+
 ## Others
 - https://www.roguebasin.com/index.php?title=Articles
 
