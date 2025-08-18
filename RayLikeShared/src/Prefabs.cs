@@ -242,9 +242,11 @@ static class Prefabs {
 			new Billboard() { Origin = new(0.5f, 0.5f) },
 			new TextureWithSource(Assets.itemsTexture) {
 				TileIdx = consumable switch {
+					// TODO use vec map for this
 					ConsumableType.LightningDamageScroll => new Vec2I(1, 21),
 					ConsumableType.FireballScroll => new Vec2I(2, 21),
 					ConsumableType.RagePotion => new Vec2I(4, 20),
+					ConsumableType.ConfusionScroll => new Vec2I(0, 21),
 				}
 			},
 			new EntityName("Projectile"),

@@ -21,7 +21,6 @@
 - add keyboard targeting
 
 ## item ideas
-- self buff: double energy gain, lose some HP
 - resurrect enemy as minion
 - full map exploration
 - chain lighting

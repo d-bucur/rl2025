@@ -49,12 +49,11 @@ struct RageConsumable : IConsumable {
 		});
 		MessageLog.Print($"You feel enraged! You will act much faster");
 
-		var fx = Prefabs.SpawnProjectile(
+		Animations.ExplosionFX(Prefabs.SpawnProjectile(
 			target.GetComponent<GridPosition>().Value,
 			Prefabs.ConsumableType.RagePotion,
 			new Vector3(0, 1, 0)
-		);
-		Animations.ExplosionFX(fx);
+		));
 		return ActionProcessor.Result.Done;
 	}
 }
@@ -128,6 +127,12 @@ struct ConfusionConsumable : IConsumable {
 		target.AddRelation(new StatusEffect { Value = new IsConfused { TurnsRemaining = Turns } });
 		target.Add(new Team { Value = source.GetComponent<Team>().Value });
 		MessageLog.Print($"{target.Name.value} is confused");
+
+		Animations.ExplosionFX(Prefabs.SpawnProjectile(
+			target.GetComponent<GridPosition>().Value,
+			Prefabs.ConsumableType.ConfusionScroll,
+			new Vector3(0, 1, 0)
+		));
 		return ActionProcessor.Result.Done;
 	}
 }

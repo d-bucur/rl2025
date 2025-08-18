@@ -322,7 +322,6 @@ file class MouseSelect : QuerySystem {
 }
 
 file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
-	public RenderDamageFx() => Filter.AllTags(Tags.Get<Player>());
 	protected override void OnUpdate() {
 		Camera camera = Singleton.Camera.GetComponent<Camera>();
 		Raylib.BeginShaderMode(Assets.billboardShader);
