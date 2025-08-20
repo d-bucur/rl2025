@@ -19,39 +19,20 @@ class EnemyAIModule : IModule {
 	}
 
 	internal static void AddEnemyAI(Entity entt) {
-		/* High level description:
-		.select()
-			.sequence()
-				.condition(IsConfused)
-				.not().sequence()
-					.condition(RandomChance) //combine below
-					.action(HurtSelf)
-				.action(RandomMovement)
-			.force(fail).select()
-				.sequence()
-					.condition(IsOnPlayerSide)
-					.condition(IsEnemyInSight)
-					.action(SetDestination(enemy))
-				.sequence()
-					.condition(IsPlayerVisible) // IsVisible(enemy)
-					.action(SetDestination(player))
-			.sequence()
-				.condition(HasDestination) // combine condition with action below?
-				.action(MoveTowards(destination))
-			.action(RandomMovement)
-		*/
 		BT.BehaviorTree tree = new() {
 			Root =
 			new Select("Root", [
-				new Sequence("Confused behavior", [
+				new Sequence("ConfusedBranchr", [
 					new Condition(IsConfusedCond).Named("IsConfused"),
-					new Invert(new Sequence("Self hurt", [
-						RandomChance(IsConfused.HurtSelfChance).Named("HurtChance"),
-						new BT.Action(HurtSelf).Named("HurtSelf"),
-					])),
-					new BT.Action(RandomMovement).Named("RandomMovement"),
+					new Select("ConfusionChoice", [
+						new Sequence("Self hurt", [
+							RandomChance(IsConfused.HurtSelfChance).Named("HurtChance"),
+							new BT.Action(HurtSelf).Named("HurtSelf"),
+						]),
+						new BT.Action(RandomMovement).Named("RandomMovement"),
+					]),
 				]),
-				new Force(BTStatus.Failure, new Select("GetDestination", [
+				new Force(BTStatus.Failure, new Select("GetDestination", false, [
 					new Sequence("Friendlies", [
 						new Condition(IsOnPlayerSide).Named("IsOnPlayerTeam"),
 						new BT.Action(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
@@ -70,7 +51,7 @@ class EnemyAIModule : IModule {
 }
 
 file class EnemyAIBehavior : QuerySystem<EnemyAI, GridPosition> {
-	public EnemyAIBehavior() => Filter.AllTags(Tags.Get<CanAct>());
+	public EnemyAIBehavior() => Filter.AllTags(Tags.Get<CanAct>()).WithoutAllTags(Tags.Get<Corpse>());
 
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref EnemyAI ai, ref GridPosition pos, Entity enemyEntt) => {
@@ -80,18 +61,18 @@ file class EnemyAIBehavior : QuerySystem<EnemyAI, GridPosition> {
 				cmds = CommandBuffer,
 			};
 			var status = ai.BTree.Tick(ref ctx);
-			Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
+			// Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
 			ai.LastExecution = ctx.ExecutionLog;
 			if (status != BTStatus.Running) CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
 		});
 	}
 }
 
+// TODO Remove after testing new AI
 file class EnemyMovementSystemOld : QuerySystem<GridPosition, EnemyAI, PathMovement, Pathfinder> {
 	public EnemyMovementSystemOld() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {
-		// TODO Super spaghetti. Should add proper state machine/behavior tree
 		var cmds = CommandBuffer;
 		Query.ForEachEntity((ref GridPosition enemyPos, ref EnemyAI ai, ref PathMovement path, ref Pathfinder pathfinder, Entity enemyEntt) => {
 			ref var usedPathfinder = ref pathfinder;
@@ -256,7 +237,6 @@ static class BTExtension {
 				return BTStatus.Failure;
 			}
 			path.NewDestination(path.Destination.Value, newPath);
-			// TODO should not remove ToAct here. Another system needs to pick it up
 			return BTStatus.Running;
 		};
 	}

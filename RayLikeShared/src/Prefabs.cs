@@ -263,6 +263,7 @@ static class Prefabs {
 					ConsumableType.FireballScroll => new Vec2I(2, 21),
 					ConsumableType.RagePotion => new Vec2I(4, 20),
 					ConsumableType.ConfusionScroll => new Vec2I(0, 21),
+					_ => throw new("No valid texture"),
 				}
 			},
 			new EntityName("Projectile"),
@@ -283,7 +284,7 @@ static class PrefabTransformations {
 		grid.RemoveCharacter(pos);
 		grid.AddOther(entt, pos);
 
-		entt.Remove<EnemyAI, InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
+		entt.Remove<InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
 		entt.AddTag<Corpse>();
 		ref var name = ref entt.GetComponent<EntityName>();
 		name.value = $"Remains of {name.value}";
@@ -302,7 +303,6 @@ static class PrefabTransformations {
 		entt.RemoveComponent<GridPosition>(); // not ideal, but this retriggers add to the grid
 		entt.Add(
 			new GridPosition() { Value = mouseTarget },
-			new EnemyAI() { isOnPlayerSide = true },
 			new Billboard(),
 			new RotationSingle(),
 			new Energy() { GainPerTick = 4 },

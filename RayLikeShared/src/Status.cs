@@ -40,14 +40,13 @@ struct RageEffect : IStatusEffect, IComponent {
 
 struct IsConfused : IStatusEffect, IComponent {
 	required internal int TurnsRemaining;
-	internal const float HurtSelfChance = 0.25f;
+	internal const float HurtSelfChance = 0.3f;
 
 	public void Tick(Entity e) => TurnsRemaining--;
 	public bool EndCondition(Entity e) => TurnsRemaining <= 0;
 
 	public void OnEnd(Entity e) {
 		ref var t = ref e.GetComponent<Team>();
-		t.Value = 2;
 		MessageLog.Print($"{e.Name.value} is no longer confused");
 	}
 }

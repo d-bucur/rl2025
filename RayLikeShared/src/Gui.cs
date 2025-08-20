@@ -359,7 +359,6 @@ file class RenderInventory : QuerySystem {
 			var tileRect = new Rectangle(tileStart, ItemSize, ItemSize);
 			Raylib.DrawRectangleV(tileStart, new Vector2(ItemSize), Raylib.Fade(Color.DarkGray, 0.3f));
 			Raylib.DrawRectangleLinesEx(tileRect, 5, Raylib.Fade(Color.LightGray, 0.3f));
-			Raylib.DrawText($"{i + 1}", (int)tileStart.X + 5, (int)tileStart.Y + 5, 20, Color.White);
 
 			if (i < inventory.Length) {
 				TextureWithSource itemTexture = inventory[i].Item.GetComponent<TextureWithSource>();
@@ -372,6 +371,7 @@ file class RenderInventory : QuerySystem {
 					Color.White
 				);
 			}
+			Raylib.DrawText($"{i + 1}", (int)tileStart.X + 5, (int)tileStart.Y + 5, 20, Color.White);
 		}
 	}
 }
@@ -426,8 +426,12 @@ file class DebugBehaviorTree : QuerySystem<EnemyAI> {
 
 		Entity? targeted = Singleton.Get<MouseTarget>().Entity;
 		if (targeted.HasValue && targeted.Value.HasComponent<EnemyAI>()) Displayed = targeted;
-		var entt = Displayed ?? Query.Entities.First();
+		var entt = Displayed ?? Query.Entities.First(); // TODO can crash when no enemies
 
+		if (!entt.HasComponent<EnemyAI>()) {
+			Displayed = null;
+			return;
+		}
 		ref var ai = ref entt.GetComponent<EnemyAI>();
 		int nesting = 0;
 		Dictionary<(string, Type), int> open = new();

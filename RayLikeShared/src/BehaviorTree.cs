@@ -105,13 +105,16 @@ public class Sequence(Behavior[] Children) : Behavior {
 	}
 }
 
-public class Select(Behavior[] Children) : Behavior {
+public class Select(Behavior[] Children, bool Reactive = true) : Behavior {
 	private int Counter;
 	public override BTStatus Tick(ref Context ctx) {
 		while (Counter < Children.Length) {
 			var status = Children[Counter].Execute(ref ctx);
 			Counter++;
-			if (status == BTStatus.Running) return BTStatus.Running;
+			if (status == BTStatus.Running) {
+				if (Reactive) Counter = 0;
+				return BTStatus.Running;
+			}
 			if (status == BTStatus.Success) {
 				Counter = 0;
 				return BTStatus.Success;
@@ -121,6 +124,9 @@ public class Select(Behavior[] Children) : Behavior {
 		return BTStatus.Failure;
 	}
 	public Select(string name, Behavior[] Children) : this(Children) {
+		Name = name;
+	}
+	public Select(string name, bool reactive, Behavior[] Children) : this(Children, reactive) {
 		Name = name;
 	}
 }
