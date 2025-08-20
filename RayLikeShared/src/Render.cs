@@ -95,7 +95,7 @@ class Render : IModule {
 					new Vector3(2, 0f, 2f),
 					new Vector3(2.5f, 0.0f, 2.5f),
 					new Vector3(0.0f, 1.0f, 0.0f),
-					35.0f,
+					30.0f,
 					CameraProjection.Perspective
 				// Alternative:
 				// 10.0f,

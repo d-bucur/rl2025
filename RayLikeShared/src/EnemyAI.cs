@@ -33,13 +33,14 @@ class EnemyAIModule : IModule {
 					]),
 				]),
 				new Force(BTStatus.Failure, new Select("GetDestination", false, [
+					// can probably unite these 2 branches
 					new Sequence("Friendlies", [
 						new Condition(IsOnPlayerSide).Named("IsOnPlayerTeam"),
 						new BT.Action(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
 					]),
 					new Sequence("Enemies", [
 						new Condition(IsInPlayerView).Named("IsInPlayerView"),
-						new BT.Action(SetDestination(Singleton.Player)).Named("SetDestination(Player)"),
+						new BT.Action(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
 					]),
 				])).Named("Fail"),
 				new BT.Action(MoveToDestination()).Named("MoveToDestination"),

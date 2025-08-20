@@ -41,7 +41,7 @@ class Main : IModule {
 				Target = Singleton.Player,
 				Distance = 10f,
 				Height = 10f,
-				Offset = new Vector3(0f, 10f, 10f),
+				Offset = new Vector3(0f, 12f, 10f),
 			});
 		UpdatePhases.Animations.Add(LambdaSystems.New((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
 			var targetPos = follow.Target.GetComponent<Position>();
