@@ -132,6 +132,7 @@ static class Prefabs {
 				Debug.Fail("Unhandled case");
 				break;
 		}
+		EnemyAIModule.AddEnemyAI(entt);
 		return entt;
 	}
 
@@ -143,7 +144,6 @@ static class Prefabs {
 			new Scale3(1, 1, 1),
 			new Billboard(),
 			new ColorComp(),
-			new EnemyAI(),
 			new Pathfinder(Singleton.Get<Grid>()),
 			new PathMovement(),
 			new Team { Value = 2 },

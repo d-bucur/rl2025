@@ -1,15 +1,72 @@
+using BehaviorTree;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using BT = BehaviorTree;
+using static RayLikeShared.Nodes;
 
 namespace RayLikeShared;
 
-struct EnemyAI : IComponent {
+struct EnemyAI() : IComponent {
 	public bool isOnPlayerSide; // hack to make it work with current AI
+	public BT.BehaviorTree BTree;
+	public Dictionary<string, object> Board;
 }
 
 class EnemyAIModule : IModule {
 	public void Init(EntityStore world) {
-		UpdatePhases.Input.Add(new EnemyMovementSystem());
+		// UpdatePhases.Input.Add(new EnemyMovementSystem());
+		UpdatePhases.Input.Add(new EnemyAIBehavior());
+	}
+
+	internal static void AddEnemyAI(Entity entt) {
+		/* High level description:
+		.select()
+			.sequence()
+				.condition(IsConfused)
+				.select()
+					.condition(RandomChance) //combine below
+					.action(HurtSelf)
+				.action(RandomMovement)
+			.select()
+				.sequence()
+					.condition(IsOnPlayerSide)
+					.condition(IsEnemyInSight)
+					.action(SetDestination(enemy))
+				.sequence()
+					.condition(IsPlayerVisible) // IsVisible(enemy)
+					.action(SetDestination(player))
+			.sequence()
+				.condition(HasDestination) // combine condition with action below?
+				.action(MoveTowards(destination))
+			.action(RandomMovement)
+		*/
+		// TODO Remove board and just pass entity into Tick()? or capture it directly here
+		Dictionary<string, object> board = new();
+		board["entt"] = entt;
+		BT.BehaviorTree tree = new() {
+			Root =
+			new Select([
+				new Sequence([
+					new Condition(() => board.Get<Entity>("entt").TryGetRelation<StatusEffect, Type>(typeof(IsConfused), out var statusEffect)),
+					new Select([
+						RandomChance(IsConfused.HurtSelfChance),
+						PrintAction($"{entt.Name.value} hurting self")
+					])
+				]),
+			]),
+		};
+		entt.Add(new EnemyAI { Board = board, BTree = tree });
+	}
+}
+
+file class EnemyAIBehavior : QuerySystem<EnemyAI> {
+	public EnemyAIBehavior() => Filter.AllTags(Tags.Get<CanAct>());
+
+	protected override void OnUpdate() {
+		Query.ForEachEntity((ref EnemyAI ai, Entity enemyEntt) => {
+			ai.BTree.Tick();
+			CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
+		});
 	}
 }
 
@@ -98,5 +155,14 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 			if (dist < closest.Item2) closest = (targetEntt, dist);
 		});
 		return closest.Item1;
+	}
+}
+
+static class Nodes {
+	public static BT.Action PrintAction(string text) {
+		return new BT.Action(() => Console.WriteLine(text));
+	}
+	public static Condition RandomChance(float p) {
+		return new Condition(() => Random.Shared.NextSingle() < p);
 	}
 }

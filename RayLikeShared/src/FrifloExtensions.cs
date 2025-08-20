@@ -1,5 +1,6 @@
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
+using System.Runtime.InteropServices;
 
 namespace RayLikeShared;
 
@@ -42,5 +43,12 @@ static class Singleton {
 
 	internal static ref T Get<T>() where T : struct, IComponent {
 		return ref Entity.GetComponent<T>();
+	}
+}
+
+public static class DictionaryExtensions {
+	public static T Get<T>(this Dictionary<string, object> instance, string name) {
+		// ref var v = ref CollectionsMarshal.GetValueRefOrNullRef(instance, name);
+		return (T)instance[name];
 	}
 }
