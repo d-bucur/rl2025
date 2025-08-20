@@ -255,7 +255,7 @@ static class Prefabs {
 			new RotationSingle(),
 			new Scale3(1, 1, 1),
 			new ColorComp(),
-			new Billboard() { Origin = new(0.5f, 0.5f) },
+			new Billboard() { Origin = new(0.5f, 0.5f), Offset = new(0, 0, 0.1f) }, // this should render the sprite on top, but it doesn't...
 			new TextureWithSource(Assets.itemsTexture) {
 				TileIdx = consumable switch {
 					// TODO use vec map for this

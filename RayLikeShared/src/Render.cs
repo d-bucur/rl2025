@@ -9,6 +9,7 @@ struct Cube() : IComponent { }
 struct Billboard() : IComponent {
 	public Vector3? Up;
 	public Vector2 Origin = new(0.5f, 0);
+	public Vector3 Offset = Vector3.Zero;
 }
 struct TextureWithSource : IComponent {
 	public TextureWithSource(Texture2D texture, Rectangle? source = null) {
@@ -132,7 +133,7 @@ file class RenderBillboards : QuerySystem<Position, RotationSingle, Billboard, T
 				camera.Value,
 				tex.Texture,
 				tex.Source,
-				pos.value - new Vector3(billboard.Origin.X, 0f, billboard.Origin.Y),
+				pos.value - new Vector3(billboard.Origin.X, 0f, billboard.Origin.Y) + billboard.Offset,
 				billboard.Up ?? camera.GetUpVec(),
 				scale2,
 				billboard.Origin * scale2,

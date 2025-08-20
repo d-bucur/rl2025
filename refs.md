@@ -19,11 +19,15 @@
 - https://theory.stanford.edu/~amitp/GameProgramming/
 
 ## AI
+- https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter06_The_Behavior_Tree_Starter_Kit.pdf
 - https://github.com/ashblue/fluid-behavior-tree
 - https://bitbra.in/beehave/#/
 - https://github.com/limbonaut/limboai
 - https://www.behaviortree.dev/docs/nodes-library/DecoratorNode
+- https://www.gameaipro.com/
 - https://www.roguebasin.com/index.php/Articles#AI
+- action scoring
+- dijkstra maps
 
 ## Others
 - https://www.roguebasin.com/index.php?title=Articles
