@@ -2,14 +2,13 @@ using BehaviorTree;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using BT = BehaviorTree;
-using static RayLikeShared.Nodes;
+using static RayLikeShared.BTExtension;
 
 namespace RayLikeShared;
 
 struct EnemyAI() : IComponent {
-	public bool isOnPlayerSide; // hack to make it work with current AI
 	public BT.BehaviorTree BTree;
-	public Dictionary<string, object> Board;
+	public bool isOnPlayerSide; // hack to make it work with current AI
 }
 
 class EnemyAIModule : IModule {
@@ -23,11 +22,11 @@ class EnemyAIModule : IModule {
 		.select()
 			.sequence()
 				.condition(IsConfused)
-				.select()
+				.not().sequence()
 					.condition(RandomChance) //combine below
 					.action(HurtSelf)
 				.action(RandomMovement)
-			.select()
+			.force(fail).select()
 				.sequence()
 					.condition(IsOnPlayerSide)
 					.condition(IsEnemyInSight)
@@ -40,38 +39,59 @@ class EnemyAIModule : IModule {
 				.action(MoveTowards(destination))
 			.action(RandomMovement)
 		*/
-		// TODO Remove board and just pass entity into Tick()? or capture it directly here
-		Dictionary<string, object> board = new();
-		board["entt"] = entt;
 		BT.BehaviorTree tree = new() {
 			Root =
-			new Select([
-				new Sequence([
-					new Condition(() => board.Get<Entity>("entt").TryGetRelation<StatusEffect, Type>(typeof(IsConfused), out var statusEffect)),
-					new Select([
+			new Select("Root", [
+				new Sequence("Confused behavior", [
+					new Condition(IsConfusedCond),
+					new Invert(new Sequence("Self hurt", [
 						RandomChance(IsConfused.HurtSelfChance),
-						PrintAction($"{entt.Name.value} hurting self")
-					])
+						new BT.Action(HurtSelf),
+						// PrintAction($"{entt.Name.value} hurting self")
+					])),
+					new BT.Action(RandomMovement),
+					// PrintAction($"{entt.Name.value} random movement")
 				]),
+				new Force(BTStatus.Failure, new Select([
+					new Sequence("Friendlies", [
+						new Condition(IsOnPlayerSide),
+						new BT.Action(MoveToClosestEnemy),
+						PrintAction($"{entt.Name.value} friendly moving to enemy")
+					]),
+					new Sequence("Enemies", [
+						new Condition(IsInPlayerView),
+						new BT.Action(SetDestination(Singleton.Player)),
+						PrintAction($"{entt.Name.value} hostile moving to player")
+					]),
+				])),
+				new BT.Action(MoveToDestination()),
+				new BT.Action(RandomMovement),
+				PrintAction($"{entt.Name.value} fallback random movement")
 			]),
 		};
-		entt.Add(new EnemyAI { Board = board, BTree = tree });
+		entt.Add(new EnemyAI { BTree = tree });
 	}
 }
 
-file class EnemyAIBehavior : QuerySystem<EnemyAI> {
+file class EnemyAIBehavior : QuerySystem<EnemyAI, GridPosition> {
 	public EnemyAIBehavior() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {
-		Query.ForEachEntity((ref EnemyAI ai, Entity enemyEntt) => {
-			ai.BTree.Tick();
-			CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
+		Query.ForEachEntity((ref EnemyAI ai, ref GridPosition pos, Entity enemyEntt) => {
+			var ctx = new Context {
+				Entt = enemyEntt,
+				Pos = pos.Value,
+				cmds = CommandBuffer,
+			};
+			var status = ai.BTree.Tick(ref ctx);
+			Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
+			if (status != BTStatus.Running) CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
 		});
 	}
 }
 
-file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement, Pathfinder> {
-	public EnemyMovementSystem() => Filter.AllTags(Tags.Get<CanAct>());
+file class EnemyMovementSystemOld : QuerySystem<GridPosition, EnemyAI, PathMovement, Pathfinder> {
+	public EnemyMovementSystemOld() => Filter.AllTags(Tags.Get<CanAct>());
 
 	protected override void OnUpdate() {
 		// TODO Super spaghetti. Should add proper state machine/behavior tree
@@ -145,7 +165,7 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 		});
 	}
 
-	private Entity GetClosestEnemy(Entity sourceEntt, Vec2I sourcePos) {
+	internal static Entity GetClosestEnemy(Entity sourceEntt, Vec2I sourcePos) {
 		var query = Singleton.World.Query<GridPosition, Team>().WithoutAllTags(Tags.Get<Corpse>());
 		var closest = (new Entity(), int.MaxValue);
 		var sourceTeam = sourceEntt.GetComponent<Team>().Value;
@@ -158,11 +178,90 @@ file class EnemyMovementSystem : QuerySystem<GridPosition, EnemyAI, PathMovement
 	}
 }
 
-static class Nodes {
-	public static BT.Action PrintAction(string text) {
-		return new BT.Action(() => Console.WriteLine(text));
+static class BTExtension {
+	public static BT.Action PrintAction(string text) =>
+		new((ref Context c) => {
+			Console.WriteLine(text);
+			return BTStatus.Success;
+		});
+
+	public static Condition RandomChance(float p) =>
+		new((ref Context c) => Random.Shared.NextSingle() < p);
+
+	public static bool IsOnPlayerSide(ref Context c) =>
+		Singleton.Player.GetComponent<Team>().Value == c.Entt.GetComponent<Team>().Value;
+
+	public static BTStatus MoveToClosestEnemy(ref Context ctx) {
+		var closest = EnemyMovementSystemOld.GetClosestEnemy(ctx.Entt, ctx.Pos);
+		if (!closest.IsNull) {
+			ref var path = ref ctx.Entt.GetComponent<PathMovement>();
+			path.Destination = closest.GetComponent<GridPosition>().Value;
+			return BTStatus.Success;
+		}
+		return BTStatus.Failure;
 	}
-	public static Condition RandomChance(float p) {
-		return new Condition(() => Random.Shared.NextSingle() < p);
+
+	public static BTStatus HurtSelf(ref Context ctx) {
+		TurnsManagement.QueueAction(ctx.cmds, new MeleeAction(ctx.Entt, ctx.Entt, 0, 1), ctx.Entt);
+		MessageLog.Print($"{ctx.Entt.Name.value} hurt itself in its confusion!", Raylib_cs.Color.Orange);
+		return BTStatus.Success;
+	}
+
+	public static bool IsInPlayerView(ref Context c) =>
+		c.Entt.Tags.Has<IsVisible>();
+
+	public static bool IsConfusedCond(ref Context c) =>
+		c.Entt.TryGetRelation<StatusEffect, Type>(typeof(IsConfused), out var statusEffect);
+
+	public static BTStatus RandomMovement(ref Context ctx) {
+		var pos = ctx.Pos;
+		var moves = Grid.NeighborsCardinal.Concat(Grid.NeighborsDiagonal)
+			.Where(p => !Singleton.Get<Grid>().BlocksPathing(pos + p))
+			.ToList();
+
+		if (moves.Count > 0) {
+			var randomMove = moves[Random.Shared.Next(moves.Count)];
+			TurnsManagement.QueueAction(ctx.cmds,
+				new MovementAction(ctx.Entt, randomMove.X, randomMove.Y), ctx.Entt);
+		}
+		return BTStatus.Success;
+	}
+
+	// public static bool HasDestination(ref Context c) =>
+	// 	c.Entt.GetComponent<PathMovement>().Destination.HasValue;
+	public static ActionFunc SetDestination(Entity target) {
+		return (ref Context ctx) => {
+			ref var path = ref ctx.Entt.GetComponent<PathMovement>();
+			path.Destination = target.GetComponent<GridPosition>().Value;
+			return BTStatus.Success;
+		};
+	}
+
+	public static ActionFunc MoveToDestination() {
+		return (ref Context ctx) => {
+			var path = ctx.Entt.GetComponent<PathMovement>();
+			if (!path.Destination.HasValue) return BTStatus.Failure;
+
+			// TODO enemies do not reuse hero pathfinder
+			ref var pathfinder = ref ctx.Entt.GetComponent<Pathfinder>();
+			// If destination is set follow path towards it
+
+			var newPath = pathfinder
+				.Goal(path.Destination.Value)
+				.PathFrom(ctx.Pos)
+				.Skip(1).ToList();
+			if (newPath.Count == 0) {
+				// TODO still a bug sometimes
+				var debugPath = pathfinder
+					.Goal(path.Destination.Value)
+					.PathFrom(ctx.Pos)
+					.ToList();
+				Console.WriteLine($"Usually a bug: Couldn't find path from {ctx.Pos} to {path.Destination.Value}. Path: {debugPath}");
+				ctx.cmds.RemoveTag<CanAct>(ctx.Entt.Id);
+			}
+			path.NewDestination(path.Destination.Value, newPath);
+			// TODO should not remove ToAct here. Another system needs to pick it up
+			return BTStatus.Running;
+		};
 	}
 }

@@ -20,6 +20,7 @@
 - biomes with different tiles
 - arena allocator with frame lifetime
 - add keyboard targeting
+- somewhat modular files like BehaviorTree and Tween should be moved to an Engine folder
 
 ## item ideas
 - full map exploration

@@ -112,7 +112,7 @@ struct GridPosition : IComponent {
 	}
 }
 
-struct Vec2I {
+public struct Vec2I {
 	public int X;
 	public int Y;
 

@@ -11,3 +11,7 @@
 
 # Stop this madness
 csharp_new_line_before_open_brace = none
+
+# Makes switch expressions less useless https://github.com/dotnet/roslyn/issues/47066
+dotnet_diagnostic.CS8509.severity=error # missing switch case for named enum value
+dotnet_diagnostic.CS8524.severity=none # missing switch case for unnamed enum value
