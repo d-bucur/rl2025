@@ -8,6 +8,7 @@ namespace RayLikeShared;
 struct InputReceiver : IComponent;
 struct MouseTarget : IComponent {
     internal Vec2I? Value;
+    internal Entity? Entity;
     internal static readonly Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
 }
 
@@ -27,6 +28,7 @@ file class UpdateMousePosition : QuerySystem {
     protected override void OnUpdate() {
         ref var mouseTarget = ref Singleton.Get<MouseTarget>();
         mouseTarget.Value = null;
+        mouseTarget.Entity = null;
         Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
         var ray = Raylib.GetScreenToWorldRay(Raylib.GetMousePosition(), camera);
 
@@ -39,10 +41,11 @@ file class UpdateMousePosition : QuerySystem {
         Vector3 intersection = ray.Position + t * ray.Direction + MouseTarget.tileOffset;
         Vec2I mousePosI = Vec2I.FromWorldPos(intersection);
         ref Grid grid = ref Singleton.Get<Grid>();
-
         if (!grid.IsInside(mousePosI))
             return;
         mouseTarget.Value = mousePosI;
+		Entity charAt = grid.Character[mousePosI.X, mousePosI.Y];
+		mouseTarget.Entity = charAt.IsNull ? null : charAt;
     }
 }
 
@@ -154,6 +157,9 @@ file class GameInputSystem : QuerySystem {
         // Debug pathfinding
         if (Raylib.IsKeyPressed(KeyboardKey.P) && IsDevKeyModifier())
             settings.DebugPathfinding = !settings.DebugPathfinding;
+        // Debug AI trees
+        if (Raylib.IsKeyPressed(KeyboardKey.I) && IsDevKeyModifier())
+            settings.DebugAI = !settings.DebugAI;
         // Visibiltiy hack
         if (Raylib.IsKeyPressed(KeyboardKey.J) && IsDevKeyModifier()) {
             settings.VisibilityHack = !settings.VisibilityHack;

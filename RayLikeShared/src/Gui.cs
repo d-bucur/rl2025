@@ -1,4 +1,5 @@
 using System.Numerics;
+using BehaviorTree;
 using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using Raylib_cs;
@@ -66,6 +67,7 @@ class GuiModule : IModule {
 		RenderPhases.Render.Add(new RenderMessageLog());
 		RenderPhases.Render.Add(new MouseSelect()); // should be in input phase
 		RenderPhases.Render.Add(new RenderDamageFx());
+		RenderPhases.Render.Add(new DebugBehaviorTree());
 	}
 }
 
@@ -414,5 +416,46 @@ file class RenderTurnOrder : QuerySystem {
 		// 	GUIValues.TextHeight,
 		// 	Color.White
 		// );
+	}
+}
+
+file class DebugBehaviorTree : QuerySystem<EnemyAI> {
+	Entity? Displayed;
+	protected override void OnUpdate() {
+		if (!Singleton.Get<Settings>().DebugAI) return;
+
+		Entity? targeted = Singleton.Get<MouseTarget>().Entity;
+		if (targeted.HasValue && targeted.Value.HasComponent<EnemyAI>()) Displayed = targeted;
+		var entt = Displayed ?? Query.Entities.First();
+
+		ref var ai = ref entt.GetComponent<EnemyAI>();
+		int nesting = 0;
+		Dictionary<(string, Type), int> open = new();
+		int y = 0;
+		for (int i = 0; i < ai.LastExecution.Count; i++) {
+			var newLog = ai.LastExecution[i];
+			var (name, log, status, type) = newLog;
+			if (log == ExecutionLogEnum.End) nesting--;
+			if (log == ExecutionLogEnum.Begin) {
+				open[(name, type)] = y++;
+			}
+			else {
+				var usedY = open[(name, type)];
+				string text = $"{type.Name} {name}";
+				Raylib.DrawText(
+					text,
+					10 + nesting * 20,
+					100 + usedY * 20,
+					20,
+					status switch {
+						BTStatus.Success => Color.Green,
+						BTStatus.Running => Color.Yellow,
+						BTStatus.Failure => Color.Red,
+						null => Color.White,
+					}
+				);
+			}
+			if (log == ExecutionLogEnum.Begin) nesting++;
+		}
 	}
 }

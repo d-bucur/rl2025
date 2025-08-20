@@ -33,6 +33,7 @@ struct Settings() : IComponent {
     internal bool VisibilityHack = false;
     internal bool ExplorationHack = false;
     internal bool DebugPathfinding = false;
+    internal bool DebugAI = false;
     internal bool IsOverhead = false;
     internal bool CameraShake = false;
 }

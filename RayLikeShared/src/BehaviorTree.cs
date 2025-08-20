@@ -1,3 +1,4 @@
+global using BTLog = System.Collections.Generic.List<(string, BehaviorTree.ExecutionLogEnum, BehaviorTree.BTStatus?, System.Type)>;
 using Friflo.Engine.ECS;
 using RayLikeShared;
 
@@ -9,9 +10,21 @@ public enum BTStatus {
 	Running,
 }
 
+public enum ExecutionLogEnum {
+	Begin,
+	End,
+}
+
 public abstract class Behavior {
 	public string Name = "";
 	public abstract BTStatus Tick(ref Context ctx);
+	public BTStatus Execute(ref Context ctx) {
+		// Could disable collection of data with directive
+		ctx.ExecutionLog.Add((Name, ExecutionLogEnum.Begin, null, GetType()));
+		var status = Tick(ref ctx);
+		ctx.ExecutionLog.Add((Name, ExecutionLogEnum.End, status, GetType()));
+		return status;
+	}
 	public Behavior Named(string name) {
 		Name = name;
 		return this;
@@ -20,16 +33,19 @@ public abstract class Behavior {
 	// public void OnEnd() { }
 }
 
-public partial struct Context {
-	// TODO add as tick parameters, define specifics for game in other file
+// Can be defined outside of this file to keep coupling to game minimal
+public partial struct Context() {
 	public required Entity Entt;
 	public required CommandBuffer cmds;
 	public required Vec2I Pos;
+	public BTLog ExecutionLog = new(10);
 }
 
 public class BehaviorTree {
 	public Behavior Root;
-	public BTStatus Tick(ref Context ctx) => Root.Tick(ref ctx);
+	public BTStatus Tick(ref Context ctx) {
+		return Root.Execute(ref ctx);
+	}
 }
 
 public delegate bool ConditionFunc(ref Context ctx);
@@ -45,15 +61,15 @@ public class Condition(ConditionFunc F) : Behavior {
 public class Action(ActionFunc F) : Behavior {
 	public override BTStatus Tick(ref Context ctx) {
 		return F.Invoke(ref ctx);
-		// return BTStatus.Success;
 	}
 }
 
 public class Repeat(int Limit, Behavior Child) : Behavior {
 	private int Counter;
 	public override BTStatus Tick(ref Context ctx) {
+		// TODO no need for loop?
 		while (true) {
-			var status = Child.Tick(ref ctx);
+			var status = Child.Execute(ref ctx);
 			Counter++;
 			if (status == BTStatus.Running) return BTStatus.Running;
 			if (status == BTStatus.Failure) {
@@ -68,11 +84,12 @@ public class Repeat(int Limit, Behavior Child) : Behavior {
 	}
 }
 
+// TODO add interrupts behavior
 public class Sequence(Behavior[] Children) : Behavior {
 	private int Counter;
 	public override BTStatus Tick(ref Context ctx) {
 		while (Counter < Children.Length) {
-			var status = Children[Counter].Tick(ref ctx);
+			var status = Children[Counter].Execute(ref ctx);
 			Counter++;
 			if (status == BTStatus.Running) return BTStatus.Running;
 			if (status == BTStatus.Failure) {
@@ -92,7 +109,7 @@ public class Select(Behavior[] Children) : Behavior {
 	private int Counter;
 	public override BTStatus Tick(ref Context ctx) {
 		while (Counter < Children.Length) {
-			var status = Children[Counter].Tick(ref ctx);
+			var status = Children[Counter].Execute(ref ctx);
 			Counter++;
 			if (status == BTStatus.Running) return BTStatus.Running;
 			if (status == BTStatus.Success) {
@@ -110,7 +127,7 @@ public class Select(Behavior[] Children) : Behavior {
 
 public class Invert(Behavior Child) : Behavior {
 	public override BTStatus Tick(ref Context ctx) {
-		return Child.Tick(ref ctx) switch {
+		return Child.Execute(ref ctx) switch {
 			BTStatus.Success => BTStatus.Failure,
 			BTStatus.Failure => BTStatus.Success,
 			BTStatus.Running => BTStatus.Running,
@@ -120,7 +137,7 @@ public class Invert(Behavior Child) : Behavior {
 
 public class Force(BTStatus Status, Behavior Child) : Behavior {
 	public override BTStatus Tick(ref Context ctx) {
-		Child.Tick(ref ctx);
+		Child.Execute(ref ctx);
 		return Status;
 	}
 }

@@ -9,6 +9,7 @@ namespace RayLikeShared;
 struct EnemyAI() : IComponent {
 	public BT.BehaviorTree BTree;
 	public bool isOnPlayerSide; // hack to make it work with current AI
+	public BTLog LastExecution = new();
 }
 
 class EnemyAIModule : IModule {
@@ -43,30 +44,25 @@ class EnemyAIModule : IModule {
 			Root =
 			new Select("Root", [
 				new Sequence("Confused behavior", [
-					new Condition(IsConfusedCond),
+					new Condition(IsConfusedCond).Named("IsConfused"),
 					new Invert(new Sequence("Self hurt", [
-						RandomChance(IsConfused.HurtSelfChance),
-						new BT.Action(HurtSelf),
-						// PrintAction($"{entt.Name.value} hurting self")
+						RandomChance(IsConfused.HurtSelfChance).Named("HurtChance"),
+						new BT.Action(HurtSelf).Named("HurtSelf"),
 					])),
-					new BT.Action(RandomMovement),
-					// PrintAction($"{entt.Name.value} random movement")
+					new BT.Action(RandomMovement).Named("RandomMovement"),
 				]),
-				new Force(BTStatus.Failure, new Select([
+				new Force(BTStatus.Failure, new Select("GetDestination", [
 					new Sequence("Friendlies", [
-						new Condition(IsOnPlayerSide),
-						new BT.Action(MoveToClosestEnemy),
-						PrintAction($"{entt.Name.value} friendly moving to enemy")
+						new Condition(IsOnPlayerSide).Named("IsOnPlayerTeam"),
+						new BT.Action(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
 					]),
 					new Sequence("Enemies", [
-						new Condition(IsInPlayerView),
-						new BT.Action(SetDestination(Singleton.Player)),
-						PrintAction($"{entt.Name.value} hostile moving to player")
+						new Condition(IsInPlayerView).Named("IsInPlayerView"),
+						new BT.Action(SetDestination(Singleton.Player)).Named("SetDestination(Player)"),
 					]),
-				])),
-				new BT.Action(MoveToDestination()),
-				new BT.Action(RandomMovement),
-				PrintAction($"{entt.Name.value} fallback random movement")
+				])).Named("Fail"),
+				new BT.Action(MoveToDestination()).Named("MoveToDestination"),
+				new BT.Action(RandomMovement).Named("RandomMovement"),
 			]),
 		};
 		entt.Add(new EnemyAI { BTree = tree });
@@ -85,6 +81,7 @@ file class EnemyAIBehavior : QuerySystem<EnemyAI, GridPosition> {
 			};
 			var status = ai.BTree.Tick(ref ctx);
 			Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
+			ai.LastExecution = ctx.ExecutionLog;
 			if (status != BTStatus.Running) CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
 		});
 	}
@@ -183,23 +180,13 @@ static class BTExtension {
 		new((ref Context c) => {
 			Console.WriteLine(text);
 			return BTStatus.Success;
-		});
+		}) { Name = text };
 
 	public static Condition RandomChance(float p) =>
 		new((ref Context c) => Random.Shared.NextSingle() < p);
 
 	public static bool IsOnPlayerSide(ref Context c) =>
 		Singleton.Player.GetComponent<Team>().Value == c.Entt.GetComponent<Team>().Value;
-
-	public static BTStatus MoveToClosestEnemy(ref Context ctx) {
-		var closest = EnemyMovementSystemOld.GetClosestEnemy(ctx.Entt, ctx.Pos);
-		if (!closest.IsNull) {
-			ref var path = ref ctx.Entt.GetComponent<PathMovement>();
-			path.Destination = closest.GetComponent<GridPosition>().Value;
-			return BTStatus.Success;
-		}
-		return BTStatus.Failure;
-	}
 
 	public static BTStatus HurtSelf(ref Context ctx) {
 		TurnsManagement.QueueAction(ctx.cmds, new MeleeAction(ctx.Entt, ctx.Entt, 0, 1), ctx.Entt);
@@ -237,15 +224,24 @@ static class BTExtension {
 		};
 	}
 
+	public static BTStatus MoveToClosestEnemy(ref Context ctx) {
+		var closest = EnemyMovementSystemOld.GetClosestEnemy(ctx.Entt, ctx.Pos);
+		if (!closest.IsNull) {
+			ref var path = ref ctx.Entt.GetComponent<PathMovement>();
+			path.Destination = closest.GetComponent<GridPosition>().Value;
+			return BTStatus.Success;
+		}
+		return BTStatus.Failure;
+	}
+
 	public static ActionFunc MoveToDestination() {
 		return (ref Context ctx) => {
-			var path = ctx.Entt.GetComponent<PathMovement>();
+			ref var path = ref ctx.Entt.GetComponent<PathMovement>();
 			if (!path.Destination.HasValue) return BTStatus.Failure;
 
-			// TODO enemies do not reuse hero pathfinder
+			// TODO minor enemies do not reuse hero pathfinder
 			ref var pathfinder = ref ctx.Entt.GetComponent<Pathfinder>();
 			// If destination is set follow path towards it
-
 			var newPath = pathfinder
 				.Goal(path.Destination.Value)
 				.PathFrom(ctx.Pos)
@@ -257,7 +253,7 @@ static class BTExtension {
 					.PathFrom(ctx.Pos)
 					.ToList();
 				Console.WriteLine($"Usually a bug: Couldn't find path from {ctx.Pos} to {path.Destination.Value}. Path: {debugPath}");
-				ctx.cmds.RemoveTag<CanAct>(ctx.Entt.Id);
+				return BTStatus.Failure;
 			}
 			path.NewDestination(path.Destination.Value, newPath);
 			// TODO should not remove ToAct here. Another system needs to pick it up
