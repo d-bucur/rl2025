@@ -57,8 +57,7 @@ public class Condition(ConditionFunc F) : Behavior {
 	}
 }
 
-// TODO Rename to Do to avoid conflict with system.Action
-public class Action(ActionFunc F) : Behavior {
+public class Do(ActionFunc F) : Behavior {
 	public override BTStatus Tick(ref Context ctx) {
 		return F.Invoke(ref ctx);
 	}
@@ -67,7 +66,6 @@ public class Action(ActionFunc F) : Behavior {
 public class Repeat(int Limit, Behavior Child) : Behavior {
 	private int Counter;
 	public override BTStatus Tick(ref Context ctx) {
-		// TODO no need for loop?
 		while (true) {
 			var status = Child.Execute(ref ctx);
 			Counter++;
@@ -84,17 +82,37 @@ public class Repeat(int Limit, Behavior Child) : Behavior {
 	}
 }
 
-// TODO add interrupts behavior
-public class Sequence(Behavior[] Children) : Behavior {
+// https://www.behaviortree.dev/docs/nodes-library/SequenceNode
+public class Sequence(Behavior[] Children, Sequence.Type type = default) : Behavior {
+	public enum Type {
+		Default,
+		Reactive,
+		Memory,
+	}
 	private int Counter;
 	public override BTStatus Tick(ref Context ctx) {
 		while (Counter < Children.Length) {
 			var status = Children[Counter].Execute(ref ctx);
 			Counter++;
-			if (status == BTStatus.Running) return BTStatus.Running;
+			if (status == BTStatus.Running) {
+				switch (type) {
+					case Type.Default:
+					case Type.Memory:
+						return BTStatus.Running;
+					case Type.Reactive:
+						Counter = 0;
+						return BTStatus.Failure;
+				}
+			}
 			if (status == BTStatus.Failure) {
-				Counter = 0;
-				return BTStatus.Failure;
+				switch (type) {
+					case Type.Default:
+					case Type.Reactive:
+						Counter = 0;
+						return BTStatus.Failure;
+					case Type.Memory:
+						return BTStatus.Failure;
+				}
 			}
 		}
 		Counter = 0;
@@ -105,6 +123,7 @@ public class Sequence(Behavior[] Children) : Behavior {
 	}
 }
 
+// https://www.behaviortree.dev/docs/nodes-library/FallbackNode
 public class Select(Behavior[] Children, bool Reactive = true) : Behavior {
 	private int Counter;
 	public override BTStatus Tick(ref Context ctx) {

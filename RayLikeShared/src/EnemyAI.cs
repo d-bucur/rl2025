@@ -27,24 +27,24 @@ class EnemyAIModule : IModule {
 					new Select("ConfusionChoice", [
 						new Sequence("Self hurt", [
 							RandomChance(IsConfused.HurtSelfChance).Named("HurtChance"),
-							new BT.Action(HurtSelf).Named("HurtSelf"),
+							new Do(HurtSelf).Named("HurtSelf"),
 						]),
-						new BT.Action(RandomMovement).Named("RandomMovement"),
+						new Do(RandomMovement).Named("RandomMovement"),
 					]),
 				]),
 				new Force(BTStatus.Failure, new Select("GetDestination", false, [
 					// can probably unite these 2 branches
 					new Sequence("Friendlies", [
 						new Condition(IsOnPlayerSide).Named("IsOnPlayerTeam"),
-						new BT.Action(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
+						new Do(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
 					]),
 					new Sequence("Enemies", [
 						new Condition(IsInPlayerView).Named("IsInPlayerView"),
-						new BT.Action(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
+						new Do(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
 					]),
 				])).Named("Fail"),
-				new BT.Action(MoveToDestination()).Named("MoveToDestination"),
-				new BT.Action(RandomMovement).Named("RandomMovement"),
+				new Do(MoveToDestination()).Named("MoveToDestination"),
+				new Do(RandomMovement).Named("RandomMovement"),
 			]),
 		};
 		entt.Add(new EnemyAI { BTree = tree });
@@ -158,7 +158,7 @@ file class EnemyMovementSystemOld : QuerySystem<GridPosition, EnemyAI, PathMovem
 }
 
 static class BTExtension {
-	public static BT.Action PrintAction(string text) =>
+	public static Do PrintAction(string text) =>
 		new((ref Context c) => {
 			Console.WriteLine(text);
 			return BTStatus.Success;

@@ -1,9 +1,9 @@
 ## week 5
 - fx for items, maybe projectiles too?
 - event handlers for different game states. InputEventHandler component, add and remove as needed.
-- enemies should attack closest enemy (including minions)
 
 ## extra
+- dragon fire
 - blood under corpses
 - aggro nearby enemies when one is alerted (maybe generic sound system?)
 - billboard don't work on android chrome. They work on android firefox...
@@ -32,4 +32,3 @@
 ## discarded?
 - show vision colors in minimap?
 - log history
-- behavior trees for ai
