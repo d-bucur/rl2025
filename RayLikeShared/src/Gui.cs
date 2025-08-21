@@ -380,17 +380,24 @@ file class RenderTurnOrder : QuerySystem {
 	static int ItemSize = 64;
 	internal static Vec2I AncorAbove = new(0, ItemSize);
 	const int TileCount = 6;
+	int LastTickForOrder = -1;
+	List<(Entity, float)> turnOrder = new(6);
 
 	public RenderTurnOrder() => Filter.AllTags(Tags.Get<Player>());
 	protected override void OnUpdate() {
-		// Can cache in turns management
-		var anchor = new Vector2(0, Raylib.GetScreenHeight() - ItemSize);
-		var i = 0;
-		// TODO high SimTurns is pretty heavy. Should cache result
-		var turnOrder = TurnsManagement.SimTurns(TileCount).ToList();
+		// Cache turns order result for current turn
+		var currentTick = Singleton.Get<TurnData>().CurrentTick;
+		if (LastTickForOrder < currentTick) {
+			LastTickForOrder = currentTick;
+			turnOrder.Clear();
+			turnOrder = [.. TurnsManagement.SimTurns(TileCount)];
+			// Console.WriteLine($"Calculating order for tick {currentTick}");
+		}
 		// If only player is visible don't render
 		if (turnOrder.All(p => p.Item1 == Singleton.Player)) return;
 
+		var anchor = new Vector2(0, Raylib.GetScreenHeight() - ItemSize);
+		var i = 0;
 		foreach (var (entt, energy) in turnOrder) {
 			var itemTexture = entt.GetComponent<TextureWithSource>();
 			Vector2 tileStart = anchor + new Vector2(i * ItemSize, 0);
