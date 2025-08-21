@@ -65,7 +65,7 @@ file class EnemyAIBehavior : QuerySystem<EnemyAI, GridPosition> {
 				cmds = CommandBuffer,
 			};
 			var status = ai.BTree.Tick(ref ctx);
-			Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
+			// Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
 			ai.LastExecution = ctx.ExecutionLog;
 			CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
 		});

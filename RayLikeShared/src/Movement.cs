@@ -17,19 +17,22 @@ struct PathMovement() : IComponent {
     internal Vec2I? Destination;
     internal List<Vec2I> Path = new();
     internal int PathIndex;
+    internal bool clearedForMovement = false;
 
     internal bool ShouldMove() {
-        return Destination.HasValue;
+        return Destination.HasValue && clearedForMovement;
     }
 
     internal void NewDestination(Vec2I posI, List<Vec2I> path) {
         Destination = posI;
         Path = path;
         PathIndex = 0;
+        clearedForMovement = true;
     }
 
     // Progress to next point in the path
     internal Vec2I NextPoint() {
+        clearedForMovement = false;
         if (Destination.HasValue && PathIndex >= Path.Count) {
             Vec2I d = Destination.Value;
             Clear();
@@ -45,12 +48,13 @@ struct PathMovement() : IComponent {
     // Use to go back when forward action has failed for some reason
     internal void PrevPoint() {
         // Doesn't work if action was cleared before
-        PathIndex--;
+        PathIndex = Math.Max(PathIndex - 1, 0);
     }
 
     internal void Clear() {
         Destination = null;
         PathIndex = 0;
+        clearedForMovement = false;
     }
 }
 
@@ -134,9 +138,15 @@ file class ProcessPathMovement : QuerySystem<PathMovement, GridPosition, Team> {
                 return;
             Vec2I next = path.NextPoint();
             Vec2I diff = next - pos.Value;
-            // TODO not handling case where previous point was unreachable; still continues on the path which triggers this assert
-            Debug.Assert(Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2,
-                $"BUG: Movement is too big: from {pos.Value} to {next}");
+			// TODO not handling case where previous point was unreachable; still continues on the path which triggers this assert
+			bool isMoveValid = Math.Abs(diff.X) + Math.Abs(diff.Y) <= 2;
+            if (!isMoveValid) {
+                // Debug.Assert(isMoveValid, $"BUG: Movement is too big: from {pos.Value} to {next}");
+                path.Clear();
+                Console.WriteLine($"BUG: Movement is too big: from {pos.Value} to {next}");
+                CommandBuffer.RemoveTag<CanAct>(entt.Id);
+                return;
+            }
 
             var grid = Singleton.Get<Grid>();
             Entity destEntt = grid.Character[next.X, next.Y];

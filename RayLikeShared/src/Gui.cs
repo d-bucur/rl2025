@@ -386,8 +386,12 @@ file class RenderTurnOrder : QuerySystem {
 		// Can cache in turns management
 		var anchor = new Vector2(0, Raylib.GetScreenHeight() - ItemSize);
 		var i = 0;
-		// TODO SimTurns is pretty heavy. Should cache result
-		foreach (var (entt, energy) in TurnsManagement.SimTurns(TileCount)) {
+		// TODO high SimTurns is pretty heavy. Should cache result
+		var turnOrder = TurnsManagement.SimTurns(TileCount).ToList();
+		// If only player is visible don't render
+		if (turnOrder.All(p => p.Item1 == Singleton.Player)) return;
+
+		foreach (var (entt, energy) in turnOrder) {
 			var itemTexture = entt.GetComponent<TextureWithSource>();
 			Vector2 tileStart = anchor + new Vector2(i * ItemSize, 0);
 			Rectangle tileRect = new(tileStart, ItemSize, ItemSize);
@@ -437,11 +441,10 @@ file class DebugBehaviorTree : QuerySystem<EnemyAI> {
 		Dictionary<(string, Type), int> open = new();
 		int y = 0;
 		for (int i = 0; i < ai.LastExecution.Count; i++) {
-			var newLog = ai.LastExecution[i];
-			var (name, log, status, type) = newLog;
+			var (name, log, status, type) = ai.LastExecution[i];
 			if (log == ExecutionLogEnum.End) nesting--;
 			if (log == ExecutionLogEnum.Begin) {
-				open[(name, type)] = y++;
+				open[(name, type)] = y++; // could collide. better to use object address for hashing
 			}
 			else {
 				var usedY = open[(name, type)];

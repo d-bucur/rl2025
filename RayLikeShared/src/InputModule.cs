@@ -44,8 +44,8 @@ file class UpdateMousePosition : QuerySystem {
         if (!grid.IsInside(mousePosI))
             return;
         mouseTarget.Value = mousePosI;
-		Entity charAt = grid.Character[mousePosI.X, mousePosI.Y];
-		mouseTarget.Entity = charAt.IsNull ? null : charAt;
+        Entity charAt = grid.Character[mousePosI.X, mousePosI.Y];
+        mouseTarget.Entity = charAt.IsNull ? null : charAt;
     }
 }
 
@@ -93,10 +93,9 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
             else if (CheckInventoryInput(entt, cmd)) {
                 anyInput = true;
             }
-            if (anyInput) {
-                ref var path = ref entt.GetComponent<PathMovement>();
-                path.Clear();
-            }
+            ref var path = ref entt.GetComponent<PathMovement>();
+            path.clearedForMovement = true;
+            if (anyInput) path.Clear();
 
             if (Raylib.IsKeyReleased(KeyboardKey.Backspace)) {
                 Game.Instance.ResetWorld();

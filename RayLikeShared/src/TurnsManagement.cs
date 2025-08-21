@@ -65,8 +65,10 @@ class TurnsManagement : IModule {
 		EnergyCache.Clear();
 		query.ForEachEntity((ref Energy energy, Entity entity) => EnergyCache.Add((energy, entity)));
 		EnergyCache.Sort((e1, e2) => e1.Item2.Id - e2.Item2.Id);
+		if (EnergyCache.Count == 0) yield break;
 		int totalActed = 0;
-		while (true) {
+		// TODO hacky solution. not handling overflow properly
+		while (turnData.CurrentTick < int.MaxValue) {
 			for (int i = 0; i < EnergyCache.Count; i++) {
 				var (energy, entt) = EnergyCache[i];
 				if (energy.TickProcessed >= turnData.CurrentTick
