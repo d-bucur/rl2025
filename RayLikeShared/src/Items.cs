@@ -11,14 +11,14 @@ struct Item : IComponent {
 struct ItemTag : ITag;
 
 internal interface IConsumable {
-	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null);
+	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null);
 	public IEnumerable<Vec2I> AffectedTiles(Vec2I source) => [Vec2I.Zero];
 }
 
 struct HealingConsumable : IConsumable {
 	required public int Amount;
 
-	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null) {
+	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null) {
 		ref var fighter = ref target.GetComponent<Fighter>();
 		var amount = (fighter.MaxHP - fighter.HP) * 0.75f;
 		int recovered = fighter.Heal((int)amount);
@@ -38,7 +38,7 @@ struct RageConsumable : IConsumable {
 	required public Func<Energy, int> GainCalc;
 	public int Duration;
 
-	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null) {
+	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null) {
 		ref var energy = ref target.GetComponent<Energy>();
 		var oldGain = energy.GainPerTick;
 		var newGain = GainCalc(energy);
@@ -63,7 +63,7 @@ struct LightningDamageConsumable : IConsumable {
 	required public int MaximumRange;
 	static ArchetypeQuery<GridPosition>? cachedQuery;
 
-	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
+	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null) {
 		var sourcePos = source.GetComponent<GridPosition>();
 		var closest = GetClosest(sourcePos.Value);
 		if (closest.IsNull) {
@@ -111,13 +111,19 @@ struct LightningDamageConsumable : IConsumable {
 struct ConfusionConsumable : IConsumable {
 	required public int Turns;
 
-	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
-		var mouseVal = Singleton.Get<MouseTarget>().Value;
-		if (mouseVal is not Vec2I targetPos) {
-			MessageLog.Print($"Not a valid target");
-			return ActionProcessor.Result.Invalid;
+	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null, Vec2I? inputPos = null) {
+		// TODO refactor part with FireballConsumable
+		if (inputPos == null) {
+			var mouseVal = Singleton.Get<MouseTarget>().Value;
+			if (mouseVal is null) {
+				MessageLog.Print($"No valid target");
+				return ActionProcessor.Result.Invalid;
+			}
+			inputPos = mouseVal;
 		}
+		var targetPos = inputPos.Value;
 		ref var grid = ref Singleton.Get<Grid>();
+
 		var target = grid.Character[targetPos.X, targetPos.Y];
 		if (target.IsNull || target == Singleton.Player) {
 			MessageLog.Print($"Not a valid target");
@@ -142,13 +148,17 @@ struct FireballConsumable : IConsumable {
 	static List<Entity> TargetsCache = new();
 	static List<Vec2I> HitTilesCache = new();
 
-	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null) {
+	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null, Vec2I? inputPos = null) {
 		// TODO check if in line of sight
-		var mouseVal = Singleton.Get<MouseTarget>().Value;
-		if (mouseVal is not Vec2I targetPos) {
-			MessageLog.Print($"No valid target");
-			return ActionProcessor.Result.Invalid;
+		if (inputPos == null) {
+			var mouseVal = Singleton.Get<MouseTarget>().Value;
+			if (mouseVal is null) {
+				MessageLog.Print($"No valid target");
+				return ActionProcessor.Result.Invalid;
+			}
+			inputPos = mouseVal;
 		}
+		var targetPos = inputPos.Value;
 		ref var grid = ref Singleton.Get<Grid>();
 
 		int hitCount = 0;
@@ -186,11 +196,8 @@ struct FireballConsumable : IConsumable {
 		return actionEntity.HasValue ? ActionProcessor.Result.Running : ActionProcessor.Result.Done;
 	}
 
-	public IEnumerable<Vec2I> AffectedTiles(Vec2I _) {
+	public IEnumerable<Vec2I> AffectedTiles(Vec2I targetPos) {
 		var grid = Singleton.Get<Grid>();
-		var mouseVal = Singleton.Get<MouseTarget>().Value;
-		if (mouseVal is not Vec2I targetPos) yield break;
-
 		for (int x = -Range + 1; x < Range; x++) {
 			for (int y = -Range + 1; y < Range; y++) {
 				var tilePos = new Vec2I(x + targetPos.X, y + targetPos.Y);
@@ -202,7 +209,7 @@ struct FireballConsumable : IConsumable {
 }
 
 struct NecromancyConsumable : IConsumable {
-	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null) {
+	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null) {
 		var mouseTarget = Singleton.Get<MouseTarget>().Value;
 
 		ref var grid = ref Singleton.Get<Grid>();
@@ -223,6 +230,7 @@ struct NecromancyConsumable : IConsumable {
 struct ConsumeItemAction : IGameAction {
 	required public Entity Target;
 	required public Entity Item;
+	public Vec2I? Pos;
 
 	// Not really the source, could cause problems
 	public Entity GetSource() => Target;
@@ -249,7 +257,7 @@ class Items : IModule {
 
 	ActionProcessor.Result ProcessConsumeItemAction(ref ConsumeItemAction action, Entity actionEntt) {
 		ref var item = ref action.Item.GetComponent<Item>();
-		var result = item.Consumable.Consume(action.Target, action.Item, actionEntt);
+		var result = item.Consumable.Consume(action.Target, action.Item, actionEntt, action.Pos);
 		switch (result) {
 			case ActionProcessor.Result.Done:
 			case ActionProcessor.Result.Running:

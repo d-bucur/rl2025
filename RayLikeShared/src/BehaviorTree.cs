@@ -38,7 +38,8 @@ public partial struct Context() {
 	public required Entity Entt;
 	public required CommandBuffer cmds;
 	public required Vec2I Pos;
-	public BTLog ExecutionLog = new(10);
+	// TODO required and cache outside
+	public BTLog ExecutionLog = new(10); // Used to collect debug data. Should be disabled for release
 }
 
 public class BehaviorTree {
@@ -101,7 +102,7 @@ public class Sequence(Behavior[] Children, Sequence.Type type = default) : Behav
 						return BTStatus.Running;
 					case Type.Reactive:
 						Counter = 0;
-						return BTStatus.Failure;
+						return BTStatus.Running;
 				}
 			}
 			if (status == BTStatus.Failure) {
@@ -119,6 +120,9 @@ public class Sequence(Behavior[] Children, Sequence.Type type = default) : Behav
 		return BTStatus.Success;
 	}
 	public Sequence(string name, Behavior[] Children) : this(Children) {
+		Name = name;
+	}
+	public Sequence(string name, Type type, Behavior[] Children) : this(Children, type) {
 		Name = name;
 	}
 }

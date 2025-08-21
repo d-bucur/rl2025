@@ -127,6 +127,11 @@ static class Prefabs {
 					new Fighter(30, new Dice(3, 3), 15),
 					new Energy() { GainPerTick = 2 }
 				);
+				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
 				break;
 			default:
 				Debug.Fail("Unhandled case");
@@ -176,6 +181,7 @@ static class Prefabs {
 		);
 	}
 
+	// TODO use types and single function instead
 	static Entity SpawnLightningScroll(Vec2I pos, int damage = 10, int range = 10) {
 		Entity entt = PrepConsumableCommon(pos);
 		entt.Add(
@@ -194,7 +200,7 @@ static class Prefabs {
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
 				TileIdx = new Vec2I(1, 19)
 			},
-			new EntityName($"Healing potion +3/4HP"),
+			new EntityName($"Healing potion 75% HP"),
 			new Item() { Consumable = new HealingConsumable { Amount = health } }
 		);
 		return entt;

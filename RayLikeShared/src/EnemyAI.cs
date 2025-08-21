@@ -21,8 +21,8 @@ class EnemyAIModule : IModule {
 	internal static void AddEnemyAI(Entity entt) {
 		BT.BehaviorTree tree = new() {
 			Root =
-			new Select("Root", [
-				new Sequence("ConfusedBranchr", [
+			new Select("Root", true, [
+				new Sequence("ConfusedBranch", [
 					new Condition(IsConfusedCond).Named("IsConfused"),
 					new Select("ConfusionChoice", [
 						new Sequence("Self hurt", [
@@ -32,17 +32,20 @@ class EnemyAIModule : IModule {
 						new Do(RandomMovement).Named("RandomMovement"),
 					]),
 				]),
-				new Force(BTStatus.Failure, new Select("GetDestination", false, [
-					// can probably unite these 2 branches
-					new Sequence("Friendlies", [
-						new Condition(IsOnPlayerSide).Named("IsOnPlayerTeam"),
-						new Do(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
-					]),
-					new Sequence("Enemies", [
-						new Condition(IsInPlayerView).Named("IsInPlayerView"),
-						new Do(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
-					]),
-				])).Named("Fail"),
+				new Force(BTStatus.Failure, 
+					new Select("ChooseDestination", false, [
+						// can probably unite these 2 branches
+						new Sequence("Enemies", [
+							new Condition(IsInPlayerView).Named("IsInPlayerView"),
+							new Do(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
+						]),
+						new Sequence("Friendlies", [
+							new Condition(IsOnPlayerSide).Named("IsOnPlayerTeam"),
+							new Do(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
+						]),
+					])
+				).Named("ForceDestinationSelection"),
+				new Do(UseAbilities).Named("UseAbilities"),
 				new Do(MoveToDestination()).Named("MoveToDestination"),
 				new Do(RandomMovement).Named("RandomMovement"),
 			]),
@@ -62,9 +65,9 @@ file class EnemyAIBehavior : QuerySystem<EnemyAI, GridPosition> {
 				cmds = CommandBuffer,
 			};
 			var status = ai.BTree.Tick(ref ctx);
-			// Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
+			Console.WriteLine($"Ticked {enemyEntt.Name.value}: {status}");
 			ai.LastExecution = ctx.ExecutionLog;
-			if (status != BTStatus.Running) CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
+			CommandBuffer.RemoveTag<CanAct>(enemyEntt.Id);
 		});
 	}
 }
@@ -240,5 +243,27 @@ static class BTExtension {
 			path.NewDestination(path.Destination.Value, newPath);
 			return BTStatus.Running;
 		};
+	}
+
+	internal static BTStatus UseAbilities(ref Context ctx) {
+		// TODO add cooldown
+		// TODO add LOS
+		var items = ctx.Entt.GetRelations<InventoryItem>();
+		var closest = EnemyMovementSystemOld.GetClosestEnemy(ctx.Entt, ctx.Pos);
+		if (closest.IsNull || items.Length < 1 || !ctx.Entt.Tags.Has<IsVisible>()) return BTStatus.Failure;
+
+		Vec2I closestPos = closest.GetComponent<GridPosition>().Value;
+		var dist = Pathfinder.DiagonalDistance(closestPos, ctx.Pos);
+		if (dist > 8 || dist < 4) return BTStatus.Failure;
+
+		TurnsManagement.QueueAction(ctx.cmds,
+			new ConsumeItemAction {
+				Target = ctx.Entt,
+				Item = items[0].Item,
+				Pos = closestPos
+			},
+			ctx.Entt
+		);
+		return BTStatus.Success;
 	}
 }
