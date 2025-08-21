@@ -127,11 +127,9 @@ static class Prefabs {
 					new Fighter(30, new Dice(3, 3), 15),
 					new Energy() { GainPerTick = 2 }
 				);
-				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
-				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
-				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
-				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
-				entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+				foreach (var i in Enumerable.Range(0, 5)) {
+					entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
+				}
 				break;
 			default:
 				Debug.Fail("Unhandled case");

@@ -27,6 +27,7 @@ struct TurnStarted : ITag;
 
 struct TurnData() : IComponent {
 	internal int CurrentTick = 1;
+	internal List<(Entity, float)> turnOrder = new(Config.TurnPredictionSteps);
 }
 
 class TurnsManagement : IModule {
@@ -134,6 +135,10 @@ file class TickEnergySystem : QuerySystem<Energy> {
 			}
 			turnData.CurrentTick++;
 			CommandBuffer.Playback();
+			
+			// Cache turns order result for current turn
+			turnData.turnOrder.Clear();
+			turnData.turnOrder = [.. TurnsManagement.SimTurns(Config.TurnPredictionSteps)];
 		}
 	}
 }

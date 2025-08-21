@@ -32,7 +32,7 @@ class EnemyAIModule : IModule {
 						new Do(RandomMovement).Named("RandomMovement"),
 					]),
 				]),
-				new Force(BTStatus.Failure, 
+				new Force(BTStatus.Failure,
 					new Select("ChooseDestination", false, [
 						// can probably unite these 2 branches
 						new Sequence("Enemies", [
@@ -146,18 +146,6 @@ file class EnemyMovementSystemOld : QuerySystem<GridPosition, EnemyAI, PathMovem
 			}
 		});
 	}
-
-	internal static Entity GetClosestEnemy(Entity sourceEntt, Vec2I sourcePos) {
-		var query = Singleton.World.Query<GridPosition, Team>().WithoutAllTags(Tags.Get<Corpse>());
-		var closest = (new Entity(), int.MaxValue);
-		var sourceTeam = sourceEntt.GetComponent<Team>().Value;
-		query.ForEachEntity((ref GridPosition targetPos, ref Team targetTeam, Entity targetEntt) => {
-			if (targetTeam.Value == sourceTeam) return;
-			int dist = Pathfinder.DiagonalDistance(sourcePos, targetPos.Value);
-			if (dist < closest.Item2) closest = (targetEntt, dist);
-		});
-		return closest.Item1;
-	}
 }
 
 static class BTExtension {
@@ -210,7 +198,7 @@ static class BTExtension {
 	}
 
 	public static BTStatus MoveToClosestEnemy(ref Context ctx) {
-		var closest = EnemyMovementSystemOld.GetClosestEnemy(ctx.Entt, ctx.Pos);
+		var closest = GetClosestEnemy(ctx.Entt, ctx.Pos);
 		if (!closest.IsNull) {
 			ref var path = ref ctx.Entt.GetComponent<PathMovement>();
 			path.Destination = closest.GetComponent<GridPosition>().Value;
@@ -249,7 +237,7 @@ static class BTExtension {
 		// TODO add cooldown
 		// TODO add LOS
 		var items = ctx.Entt.GetRelations<InventoryItem>();
-		var closest = EnemyMovementSystemOld.GetClosestEnemy(ctx.Entt, ctx.Pos);
+		var closest = GetClosestEnemy(ctx.Entt, ctx.Pos);
 		if (closest.IsNull || items.Length < 1 || !ctx.Entt.Tags.Has<IsVisible>()) return BTStatus.Failure;
 
 		Vec2I closestPos = closest.GetComponent<GridPosition>().Value;
@@ -265,5 +253,17 @@ static class BTExtension {
 			ctx.Entt
 		);
 		return BTStatus.Success;
+	}
+
+	internal static Entity GetClosestEnemy(Entity sourceEntt, Vec2I sourcePos) {
+		var query = Singleton.World.Query<GridPosition, Team>().WithoutAllTags(Tags.Get<Corpse>());
+		var closest = (new Entity(), int.MaxValue);
+		var sourceTeam = sourceEntt.GetComponent<Team>().Value;
+		query.ForEachEntity((ref GridPosition targetPos, ref Team targetTeam, Entity targetEntt) => {
+			if (targetTeam.Value == sourceTeam) return;
+			int dist = Pathfinder.DiagonalDistance(sourcePos, targetPos.Value);
+			if (dist < closest.Item2) closest = (targetEntt, dist);
+		});
+		return closest.Item1;
 	}
 }

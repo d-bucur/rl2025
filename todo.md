@@ -16,6 +16,7 @@
 - aggro nearby enemies when one is alerted (maybe generic sound system?)
 - billboard don't work on android chrome. They work on android firefox...
 - object pool and use for textures
+- bug: resurrecting on top of enemies bugged
 
 ## idea bin
 - rogue selection (at least sprite)

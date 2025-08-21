@@ -25,6 +25,7 @@ static class Config {
     internal const int CostDiagonal = 3;
 
     internal const int InventoryLimit = 5;
+    internal const int TurnPredictionSteps = 6;
 }
 
 struct Settings() : IComponent {
