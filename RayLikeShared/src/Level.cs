@@ -13,6 +13,7 @@ struct LevelData : IComponent {
 }
 
 struct LevelLifetime : ITag;
+struct NextLevelSignal;
 
 class Level : IModule {
 	public void Init(EntityStore world) {
@@ -51,6 +52,7 @@ class Level : IModule {
 		Grid grid = new(Config.MapSizeX, Config.MapSizeY);
 		Singleton.Entity.AddComponent(grid);
 
+		// TODO can these be registered twice?
 		world.OnComponentAdded += OnGridPositionAdded;
 		world.OnComponentRemoved += OnGridPositionRemoved;
 		return grid;
@@ -255,6 +257,8 @@ class Level : IModule {
 		var grid = MakeGrid(Singleton.World);
 		var startPos = GenerateNewLevel(Singleton.World, Singleton.Player);
 		PrefabTransformations.ResetPlayer(Singleton.Player, ref grid, startPos);
+		Animations.Fall(Singleton.Player);
+		Singleton.Entity.EmitSignal(new NextLevelSignal());
 	}
 }
 

@@ -34,6 +34,10 @@ class TurnsManagement : IModule {
 
 	public void Init(EntityStore world) {
 		Singleton.Entity.AddComponent(new TurnData());
+		Singleton.Entity.AddSignalHandler<NextLevelSignal>(s => {
+			ref var data = ref Singleton.Entity.GetComponent<TurnData>();
+			data.turnOrder.Clear();
+		});
 
 		UpdatePhases.ProgressTurns.Add(new TickEnergySystem());
 		UpdatePhases.ApplyActions.Add(new ProcessActionsSystem());
@@ -135,7 +139,7 @@ file class TickEnergySystem : QuerySystem<Energy> {
 			}
 			turnData.CurrentTick++;
 			CommandBuffer.Playback();
-			
+
 			// Cache turns order result for current turn
 			turnData.turnOrder.Clear();
 			turnData.turnOrder = [.. TurnsManagement.SimTurns(Config.TurnPredictionSteps)];

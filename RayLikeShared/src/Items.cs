@@ -218,6 +218,8 @@ struct NecromancyConsumable : IConsumable {
 			if (!other.Tags.Has<Corpse>()) continue;
 			if (other.IsNull) return ActionProcessor.Result.Invalid;
 			MessageLog.Print($"You resurrect {other.Name.value}. It will now fight for you");
+			var fx = Prefabs.SpawnProjectile(mouseTarget.Value, Prefabs.ConsumableType.NecromancyScroll);
+			Animations.Fall(fx, 2, true);
 			PrefabTransformations.ResurrectCorpse(other, mouseTarget.Value);
 			return ActionProcessor.Result.Done;
 		}

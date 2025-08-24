@@ -198,4 +198,16 @@ static class Animations {
 			OnEnd: (ref Position _) => onEnd()
 		).RegisterEcs();
 	}
+
+	internal static void Fall(Entity entt, float height = 2f, bool removeOnEnd = false) {
+		var duration = 0.5f;
+		new Tween(entt).With(
+			(ref Position pos, float v) => pos.value.Y = v,
+			height,
+			0,
+			duration, Ease.QuartIn,
+			Tween.LerpFloat,
+			OnEnd: (ref Position _) => { if (removeOnEnd) entt.DeleteEntity(); }
+		).RegisterEcs();
+	}
 }

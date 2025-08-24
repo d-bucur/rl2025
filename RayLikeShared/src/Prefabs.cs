@@ -271,6 +271,7 @@ static class Prefabs {
 					ConsumableType.FireballScroll => new Vec2I(2, 21),
 					ConsumableType.RagePotion => new Vec2I(4, 20),
 					ConsumableType.ConfusionScroll => new Vec2I(0, 21),
+					ConsumableType.NecromancyScroll => new Vec2I(3, 21),
 					_ => throw new("No valid texture"),
 				}
 			},
