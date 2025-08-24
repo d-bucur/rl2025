@@ -17,6 +17,8 @@ struct RotationSingle(float Value = 0f) : IComponent {
 struct BlocksPathing : ITag; // walkable in tutorial
 struct BlocksFOV : ITag; // transparent in tutorial
 struct Walkable : ITag;
+struct AboveGround : ITag; // a generic ite that exists above ground like a chest, item, door, exit etc. Should find better name
+struct Stairs : ITag;
 
 struct CameraFollowTarget() : IComponent {
 	public Entity Target;

@@ -145,12 +145,16 @@ public class Game {
 		aot.RegisterTag<Walkable>();
 		aot.RegisterTag<Projectile>();
 		aot.RegisterTag<TurnStarted>();
+		aot.RegisterTag<LevelLifetime>();
+		aot.RegisterTag<AboveGround>();
+		aot.RegisterTag<Stairs>();
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<MeleeAction>();
 		aot.RegisterComponent<RestAction>();
 		aot.RegisterComponent<ConsumeItemAction>();
 		aot.RegisterComponent<PickupAction>();
+		aot.RegisterComponent<NextLevelAction>();
 
 		aot.RegisterTag<IsActionWaiting>();
 		aot.RegisterTag<IsActionExecuting>();

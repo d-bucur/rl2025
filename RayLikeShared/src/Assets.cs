@@ -10,6 +10,7 @@ class Assets : IModule {
 	internal static Texture2D monsterTexture = Raylib.LoadTexture("Resources/sprites/monsters.png");
 	internal static Texture2D heroesTexture = Raylib.LoadTexture("Resources/sprites/rogues.png");
 	internal static Texture2D itemsTexture = Raylib.LoadTexture("Resources/sprites/items.png");
+	internal static Texture2D tilesTexture = Raylib.LoadTexture("Resources/sprites/tiles.png");
 	// internal static Texture2D rayLogoTexture = Raylib.LoadTexture("Resources/raylib_logo.png");
 
 	internal static Model wallModel = Raylib.LoadModel("Resources/bricks_A.gltf");

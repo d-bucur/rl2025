@@ -23,11 +23,9 @@ static class Prefabs {
 		NecromancyScroll,
 	};
 
-	internal static Entity SpawnPlayer(Vec2I pos) {
+	internal static Entity SpawnPlayer(Grid grid, Vec2I? pos = null) {
 		var player = Singleton.World.CreateEntity(
 			new InputReceiver(),
-			new GridPosition(pos.X, pos.Y),
-			new Position(pos.X, 0, pos.Y),
 			new RotationSingle(0f),
 			new Scale3(1, 1, 1),
 			new Billboard(), new TextureWithSource(Assets.heroesTexture) {
@@ -42,10 +40,16 @@ static class Prefabs {
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
 			new Fighter(40, new Dice(3, 2), 6),
-			new Pathfinder(Singleton.Get<Grid>()).Goal(pos),
+			new Pathfinder(grid), //.Goal(pos),
 			new PathMovement(),
 			new Team { Value = 1 }
 		);
+		if (pos is Vec2I posV) {
+			player.Add(
+				new GridPosition(posV.X, posV.Y),
+				new Position(posV.X, 0, posV.Y)
+			);
+		}
 		player.AddSignalHandler<DeathSignal>(Combat.PlayerDeath);
 		return player;
 	}
@@ -150,7 +154,7 @@ static class Prefabs {
 			new Pathfinder(Singleton.Get<Grid>()),
 			new PathMovement(),
 			new Team { Value = 2 },
-			Tags.Get<Enemy, Character, BlocksPathing>()
+			Tags.Get<Enemy, Character, BlocksPathing, LevelLifetime>()
 		);
 		entt.OnTagsChanged += Movement.OnEnemyVisibilityChange;
 		entt.AddSignalHandler<DeathSignal>(Combat.EnemyDeath);
@@ -175,7 +179,7 @@ static class Prefabs {
 			new Scale3(1, 1, 1),
 			new ColorComp(),
 			new Item() { Consumable = default }, // add default item to avoid the terrible buffer API
-			Tags.Get<ItemTag>()
+			Tags.Get<ItemTag, AboveGround>()
 		);
 	}
 
@@ -271,7 +275,23 @@ static class Prefabs {
 				}
 			},
 			new EntityName("Projectile"),
-			Tags.Get<Projectile, IsVisible>()
+			Tags.Get<Projectile, IsVisible, LevelLifetime>()
+		);
+	}
+
+	internal static Entity SpawnStairs(Vec2I pos) {
+		return Singleton.World.CreateEntity(
+			new EntityName($"Stairs"),
+			new GridPosition(pos.X, pos.Y),
+			new Position(pos.X, 0, pos.Y),
+			new RotationSingle(0f),
+			new Scale3(1, 1, 1),
+			new Billboard() { Up = -Vector3.UnitZ },
+			new TextureWithSource(Assets.tilesTexture) {
+				TileIdx = new Vec2I(7, 16)
+			},
+			new ColorComp(),
+			Tags.Get<AboveGround, Stairs, LevelLifetime>()
 		);
 	}
 }
@@ -279,6 +299,7 @@ static class Prefabs {
 static class PrefabTransformations {
 	internal static Entity PickupItem(Entity entt) {
 		entt.Remove<GridPosition, Position, RotationSingle, Scale3>();
+		entt.RemoveTag<LevelLifetime>();
 		return entt;
 	}
 
@@ -318,5 +339,15 @@ static class PrefabTransformations {
 
 		ref var name = ref entt.GetComponent<EntityName>();
 		name.value = $"Reanimated {name.value.Replace("Remains of", "")}";
+	}
+
+	internal static void ResetPlayer(Entity player, ref Grid grid, Vec2I pos) {
+		player.Add(
+			new GridPosition(pos.X, pos.Y),
+			new Position(pos.X, 0, pos.Y),
+			new Pathfinder(grid).Goal(pos),
+			Tags.Get<IsVisible>()
+		);
+		grid.Character[pos.X, pos.Y] = player;
 	}
 }

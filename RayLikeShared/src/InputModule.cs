@@ -86,9 +86,10 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
                 anyInput = true;
             }
             else if (Raylib.IsKeyPressed(KeyboardKey.F)) {
-                TurnsManagement.QueueAction(cmd, new PickupAction { Target = entt, Position = entt.GetComponent<GridPosition>().Value }, entt);
-                cmd.RemoveTag<CanAct>(entt.Id);
-                anyInput = true;
+                if (HandleInteractInput(entt, cmd)) {
+                    cmd.RemoveTag<CanAct>(entt.Id);
+                    anyInput = true;
+                }
             }
             else if (CheckInventoryInput(entt, cmd)) {
                 anyInput = true;
@@ -135,6 +136,22 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
             TurnsManagement.QueueAction(cmd, action, entt);
         }
         cmd.RemoveTag<CanAct>(entt.Id);
+    }
+
+    private static bool HandleInteractInput(Entity entt, CommandBuffer cmd) {
+        Vec2I pos = entt.GetComponent<GridPosition>().Value;
+        ref var grid = ref Singleton.Get<Grid>();
+        Grid.Other? others = grid.Others[pos.X, pos.Y];
+        if (others == null) return false;
+        if (others.Value.Value.Any(e => e.Tags.Has<ItemTag>())) {
+            TurnsManagement.QueueAction(cmd, new PickupAction { Target = entt, Position = pos }, entt);
+            return true;
+        }
+        if (others.Value.Value.Any(e => e.Tags.Has<Stairs>())) {
+            TurnsManagement.QueueAction(cmd, new NextLevelAction { Target = entt }, entt);
+            return true;
+        }
+        return false;
     }
 
     static bool IsActionPressed(KeyboardKey key) {

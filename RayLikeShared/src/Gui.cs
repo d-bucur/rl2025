@@ -125,11 +125,10 @@ file class RenderHealth : QuerySystem<Fighter> {
 
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref Fighter fighter, Entity playerEntt) => {
-			const int width = 300;
 			Rectangle r = RenderInventory.GetRect();
 			var rect = new Rectangle(r.X, r.Y - HealthHeight - GUIValues.Padding, r.Width, HealthHeight);
 			Raylib.DrawRectangleRec(rect, Color.Red);
-			rect.Width = (float)fighter.HP / fighter.MaxHP * width;
+			rect.Width = (float)fighter.HP / fighter.MaxHP * r.Width;
 			Raylib.DrawRectangleRec(rect, Color.Green);
 			GUI.RenderText($"HP {fighter.HP}/{fighter.MaxHP}", (int)rect.X + 90, (int)rect.Y + 3, 25, 3);
 		});
@@ -212,6 +211,7 @@ file class RenderMinimap : QuerySystem {
 			return Palette.Transparent;
 		var color = grid.Tile[x, y].GetComponent<ColorComp>().Value;
 		if (grid.CheckOthers<ItemTag>((x, y))) color = Color.Yellow;
+		if (grid.CheckOthers<Stairs>((x, y))) color = Color.SkyBlue;
 		Entity character = grid.Character[x, y];
 		if (!character.IsNull) {
 			if (character.Tags.Has<Player>())
@@ -348,7 +348,12 @@ file class RenderInventory : QuerySystem {
 	internal static Vec2I AncorAbove = new(0, ItemSize);
 	public RenderInventory() => Filter.AllTags(Tags.Get<Player>());
 
-	internal static Rectangle GetRect() => new Rectangle(Raylib.GetScreenWidth() - ItemSize * Config.InventoryLimit, Raylib.GetScreenHeight() - ItemSize, ItemSize * Config.InventoryLimit, ItemSize);
+	internal static Rectangle GetRect() => new Rectangle(
+		Raylib.GetScreenWidth() - ItemSize * Config.InventoryLimit,
+		Raylib.GetScreenHeight() - ItemSize,
+		ItemSize * Config.InventoryLimit,
+		ItemSize
+	);
 	protected override void OnUpdate() {
 		var inventory = Singleton.Player.GetRelations<InventoryItem>();
 		var anchor = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight())

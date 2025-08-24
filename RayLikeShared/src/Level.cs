@@ -3,20 +3,32 @@ using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
 
+struct NextLevelAction : IGameAction {
+	required public Entity Target;
+
+	public Entity GetSource() => Target;
+}
+
+struct LevelLifetime : ITag;
+
 class Level : IModule {
 	public void Init(EntityStore world) {
-		Grid grid = new(Config.MapSizeX, Config.MapSizeY);
-		Singleton.Entity.AddComponent(grid);
+		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<NextLevelAction>(NextLevelAction));
 
-		world.OnComponentAdded += OnGridPositionAdded;
-		world.OnComponentRemoved += OnGridPositionRemoved;
+		var grid = MakeGrid(world);
+		Singleton.Player = Prefabs.SpawnPlayer(grid);
+		Vec2I center = GenerateNewLevel(world, Singleton.Player);
+		Prefabs.SpawnStartingItems(center, Singleton.Player);
+	}
 
+	private static Vec2I GenerateNewLevel(EntityStore world, Entity player) {
 		var rooms = GenerateDungeon(world);
 		var center = rooms[0].Center();
 
-		Singleton.Player = Prefabs.SpawnPlayer(center);
-		Prefabs.SpawnStartingItems(center, Singleton.Player);
-
+		player.Add(
+			new GridPosition(center.X, center.Y),
+			new Position(center.X, 0, center.Y)
+		);
 
 		ref var camera = ref Singleton.Camera.GetComponent<Camera>();
 		camera.Value.Position = new Vector3(center.X, 0, center.Y);
@@ -26,6 +38,18 @@ class Level : IModule {
 		SpawnInEmptyTiles(Config.MaxItemsPerLevel, Prefabs.SpawnRandomConsumable);
 		SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Malthael));
 		SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Dragon));
+		SpawnInEmptyTiles(1, Prefabs.SpawnStairs, minDistance: 15);
+
+		return center;
+	}
+
+	private static Grid MakeGrid(EntityStore world) {
+		Grid grid = new(Config.MapSizeX, Config.MapSizeY);
+		Singleton.Entity.AddComponent(grid);
+
+		world.OnComponentAdded += OnGridPositionAdded;
+		world.OnComponentRemoved += OnGridPositionRemoved;
+		return grid;
 	}
 
 	static void OnGridPositionAdded(ComponentChanged change) {
@@ -34,13 +58,13 @@ class Level : IModule {
 		var pos = change.Component<GridPosition>().Value;
 		if (change.Entity.Tags.Has<Character>())
 			grid.Character[pos.X, pos.Y] = change.Entity;
-		else if (change.Entity.HasComponent<Item>())
+		else if (change.Entity.Tags.Has<AboveGround>())
 			grid.AddOther(change.Entity, pos);
 		else
 			grid.Tile[pos.X, pos.Y] = change.Entity;
 	}
 
-	private void OnGridPositionRemoved(ComponentChanged change) {
+	static void OnGridPositionRemoved(ComponentChanged change) {
 		if (change.Type != typeof(GridPosition) || change.Action != ComponentChangedAction.Remove) return;
 		var grid = Singleton.Get<Grid>();
 		var pos = change.OldComponent<GridPosition>().Value;
@@ -69,7 +93,7 @@ class Level : IModule {
 		}
 	}
 
-	List<Room> GenerateDungeon(EntityStore world) {
+	static List<Room> GenerateDungeon(EntityStore world) {
 		// true if tile is empty, false if walled
 		var map = new bool[Config.MapSizeX, Config.MapSizeY];
 
@@ -86,7 +110,7 @@ class Level : IModule {
 		return rooms;
 	}
 
-	List<Room> GenerateRooms(bool[,] map, int roomCount) {
+	static List<Room> GenerateRooms(bool[,] map, int roomCount) {
 		// Generate rooms and tunnels and save them to a grid
 		List<Room> rooms = new();
 		for (int i = 0; i < roomCount; i++) {
@@ -108,7 +132,7 @@ class Level : IModule {
 		return rooms;
 	}
 
-	void DigTunnelsBetweenRooms(bool[,] map, List<Room> rooms) {
+	static void DigTunnelsBetweenRooms(bool[,] map, List<Room> rooms) {
 		for (int i = 1; i < rooms.Count; i++) {
 			float r = Random.Shared.NextSingle();
 			// middle intersection of 33% will draw both high and low tunnel
@@ -138,7 +162,7 @@ class Level : IModule {
 		}
 	}
 
-	void RandomizeTiles(bool[,] map, double emptyChance) {
+	static void RandomizeTiles(bool[,] map, double emptyChance) {
 		// Randomize map for cellular automata
 		for (int i = 0; i < Config.MapSizeX; i++) {
 			for (int j = 0; j < Config.MapSizeY; j++) {
@@ -149,7 +173,7 @@ class Level : IModule {
 	}
 
 	// Single simulation step of the cellular automata
-	bool[,] CASimStep(bool[,] map) {
+	static bool[,] CASimStep(bool[,] map) {
 		var newMap = new bool[Config.MapSizeX, Config.MapSizeY];
 		for (int i = 0; i < Config.MapSizeX; i++) {
 			for (int j = 0; j < Config.MapSizeY; j++) {
@@ -165,11 +189,11 @@ class Level : IModule {
 		return newMap;
 	}
 
-	(int, int)[] _neighbors = [
+	static (int, int)[] _neighbors = [
 		(-1,-1), (0, -1), (1, -1),
 		(-1, 0), (1, 0),
 		(-1, 1), (0, 1), (1, 1)];
-	int CountEmptyNeighbors(bool[,] map, int i, int j) {
+	static int CountEmptyNeighbors(bool[,] map, int i, int j) {
 		int count = 0;
 		foreach (var (x, y) in _neighbors) {
 			bool isInBounds = i + x >= 0 && i + x < map.GetLength(0)
@@ -193,7 +217,7 @@ class Level : IModule {
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),
 						new ColorComp(Palette.Wall),
-						Tags.Get<BlocksPathing, BlocksFOV, IsSeeThrough>()
+						Tags.Get<BlocksPathing, BlocksFOV, IsSeeThrough, LevelLifetime>()
 					);
 				else
 					// spawn floor tile
@@ -204,10 +228,27 @@ class Level : IModule {
 						// new Cube() { Color = Palette.Colors[2] },
 						new Mesh(Assets.wallModel),
 						new ColorComp(Palette.Floor),
-						Tags.Get<Walkable>()
+						Tags.Get<Walkable, LevelLifetime>()
 					);
 			}
 		}
+	}
+
+	private ActionProcessor.Result NextLevelAction(ref NextLevelAction action, Entity actionEntt) {
+		NextLevel();
+		return ActionProcessor.Result.Done;
+	}
+
+	internal static void NextLevel() {
+		var query = Singleton.World.Query(new QueryFilter().AllTags(Tags.Get<LevelLifetime>()));
+		var cmds = Singleton.World.GetCommandBuffer();
+		foreach (var e in query.Entities) {
+			cmds.DeleteEntity(e.Id);
+		}
+		cmds.Playback();
+		var grid = MakeGrid(Singleton.World);
+		var startPos = GenerateNewLevel(Singleton.World, Singleton.Player);
+		PrefabTransformations.ResetPlayer(Singleton.Player, ref grid, startPos);
 	}
 }
 

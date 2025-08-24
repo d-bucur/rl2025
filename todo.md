@@ -1,8 +1,8 @@
 ## week 6
-- save/load
 - levelling
 - refactor: separate systems and components, module always at top
 - add LoS check for abilities
+- save/load
 
 ## week 5
 - fx for items, maybe projectiles too?
