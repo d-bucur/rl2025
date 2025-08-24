@@ -5,8 +5,11 @@ namespace RayLikeShared;
 
 struct NextLevelAction : IGameAction {
 	required public Entity Target;
-
 	public Entity GetSource() => Target;
+}
+
+struct LevelData : IComponent {
+	public int CurrentLevel;
 }
 
 struct LevelLifetime : ITag;
@@ -14,6 +17,7 @@ struct LevelLifetime : ITag;
 class Level : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<NextLevelAction>(NextLevelAction));
+		Singleton.Entity.Add(new LevelData());
 
 		var grid = MakeGrid(world);
 		Singleton.Player = Prefabs.SpawnPlayer(grid);
@@ -246,6 +250,8 @@ class Level : IModule {
 			cmds.DeleteEntity(e.Id);
 		}
 		cmds.Playback();
+		ref var levelData = ref Singleton.Get<LevelData>();
+		levelData.CurrentLevel += 1;
 		var grid = MakeGrid(Singleton.World);
 		var startPos = GenerateNewLevel(Singleton.World, Singleton.Player);
 		PrefabTransformations.ResetPlayer(Singleton.Player, ref grid, startPos);

@@ -130,6 +130,7 @@ public class Game {
 		aot.RegisterComponent<MouseTarget>();
 		aot.RegisterComponent<IsConfused>();
 		aot.RegisterComponent<TurnData>();
+		aot.RegisterComponent<LevelData>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();
