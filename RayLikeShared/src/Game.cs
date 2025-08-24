@@ -56,7 +56,7 @@ public class Game {
 			new Assets(),
 			new Render(),
 			new GuiModule(),
-			new Level(),
+			new LevelModule(),
 			new Main(),
 			new TurnsManagement(),
 			new PathfinderModule(),
@@ -131,6 +131,8 @@ public class Game {
 		aot.RegisterComponent<IsConfused>();
 		aot.RegisterComponent<TurnData>();
 		aot.RegisterComponent<LevelData>();
+		aot.RegisterComponent<Level>();
+		aot.RegisterComponent<XPGiven>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();

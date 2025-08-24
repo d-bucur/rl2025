@@ -15,7 +15,7 @@ struct LevelData : IComponent {
 struct LevelLifetime : ITag;
 struct NextLevelSignal;
 
-class Level : IModule {
+class LevelModule : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<NextLevelAction>(NextLevelAction));
 		Singleton.Entity.Add(new LevelData());

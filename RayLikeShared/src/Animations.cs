@@ -55,13 +55,13 @@ static class Animations {
 		// ).RegisterEcs();
 	}
 
-	internal static void DamageFx(Entity fxEntt, Position startPos, Scale3 startScale, Vector3 dir, Action? onEnd = null) {
+	internal static void DamageFx(Entity fxEntt, Position startPos, Scale3 startScale, Vector3 dir, Vector3 toScale, Action? onEnd = null) {
 		dir *= 0.75f;
 		const float halfTime = 0.25f;
 		// TODO should do parallel tween to handle all these
 		new Tween(fxEntt).With(
 			(ref Scale3 pos, Vector3 v) => pos.value = v,
-			startScale.value, new Vector3(0.5f),
+			startScale.value, toScale,
 			halfTime, Ease.QuartOut, Vector3.Lerp,
 			AutoReverse: true
 		).RegisterEcs();

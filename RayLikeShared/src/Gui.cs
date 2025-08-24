@@ -91,7 +91,7 @@ static class GUI {
 	internal static void SpawnDamageFx(int damage, Vector3 originPos, Color color, Vector3 dir) {
 		const int Size = 20;
 		// TODO use texture pool
-		var renderTex = Raylib.LoadRenderTexture(Size, Size);
+		var renderTex = Raylib.LoadRenderTexture(Size*2, Size*2);
 		// Draw text to texture
 		Raylib.BeginTextureMode(renderTex);
 		Raylib.ClearBackground(new Color(0, 0, 0, 0));
@@ -107,7 +107,7 @@ static class GUI {
 			startPos,
 			startScale
 		);
-		Animations.DamageFx(fxEntt, startPos, startScale, dir,
+		Animations.DamageFx(fxEntt, startPos, startScale, dir, Vector3.One,
 			() => Raylib.UnloadRenderTexture(fxEntt.GetComponent<TextFX>().RenderTex)
 		);
 	}

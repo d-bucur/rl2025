@@ -40,6 +40,7 @@ static class Prefabs {
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
 			new Fighter(40, new Dice(3, 2), 6),
+			new Level { },
 			new Pathfinder(grid), //.Goal(pos),
 			new PathMovement(),
 			new Team { Value = 1 }
@@ -79,6 +80,7 @@ static class Prefabs {
 						TileIdx = new Vec2I(0, 4)
 					},
 					new Fighter(6, new Dice(1, 2), 6),
+					new XPGiven { XPOnDeath = 35 },
 					new Energy() { GainPerTick = 5 }
 				);
 				break;
@@ -89,6 +91,7 @@ static class Prefabs {
 						TileIdx = new Vec2I(1, 5)
 					},
 					new Fighter(8, new Dice(0, 1), 9),
+					new XPGiven { XPOnDeath = 60 },
 					new Energy() { GainPerTick = 6 }
 				);
 				break;
@@ -99,6 +102,7 @@ static class Prefabs {
 						TileIdx = new Vec2I(3, 0)
 					},
 					new Fighter(10, new Dice(2, 2), 7),
+					new XPGiven { XPOnDeath = 50 },
 					new Energy() { GainPerTick = 4 }
 				);
 				break;
@@ -109,6 +113,7 @@ static class Prefabs {
 						TileIdx = new Vec2I(0, 1)
 					},
 					new Fighter(15, new Dice(2, 3), 9),
+					new XPGiven { XPOnDeath = 100 },
 					new Energy() { GainPerTick = 3 }
 				);
 				break;
@@ -119,6 +124,7 @@ static class Prefabs {
 						TileIdx = new Vec2I(0, 11)
 					},
 					new Fighter(15, new Dice(2, 2), 13),
+					new XPGiven { XPOnDeath = 130 },
 					new Energy() { GainPerTick = 4 }
 				);
 				break;
@@ -129,6 +135,7 @@ static class Prefabs {
 						TileIdx = new Vec2I(2, 8)
 					},
 					new Fighter(30, new Dice(3, 3), 15),
+					new XPGiven { XPOnDeath = 300 },
 					new Energy() { GainPerTick = 2 }
 				);
 				foreach (var i in Enumerable.Range(0, 5)) {

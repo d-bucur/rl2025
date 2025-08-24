@@ -10,6 +10,7 @@
 
 ## extra
 - bug: follow doesn't work very well. Enemies skipping last tile in path?
+- bug: fireball hover effect not updating
 - view status on hover
 - in game health bars
 - blood under corpses

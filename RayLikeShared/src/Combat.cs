@@ -80,12 +80,12 @@ class Combat : IModule {
 	internal static void ApplyDamage(Entity target, Entity source, int damage, Vec2I? direction = null) {
 		var desc = $"{source.GetComponent<EntityName>().value} attacks {target.GetComponent<EntityName>().value}";
 		ref var targetFighter = ref target.GetComponent<Fighter>();
-		var isTargetPlayer = target.Tags.Has<Player>();
-		var color = isTargetPlayer ? Color.Red : Color.Orange;
+		var color = target.Tags.Has<Player>() ? Color.Red : Color.Orange;
 		if (damage > 0) {
 			targetFighter.ApplyDamage(damage);
 			if (targetFighter.HP <= 0) {
 				MessageLog.Print($"{desc} for {damage} HP and killed it", color);
+				Progression.GainXP(source, target);
 				target.EmitSignal(new DeathSignal());
 			}
 			else
@@ -93,7 +93,7 @@ class Combat : IModule {
 			Vec2I fxdir = direction ?? target.GetComponent<GridPosition>().Value
 				- source.GetComponent<GridPosition>().Value;
 			GUI.SpawnDamageFx(damage, target.GetComponent<Position>().value,
-				isTargetPlayer ? Color.Red : Color.Orange, fxdir.ToWorldPos()); // TODO clamp vector
+				color, fxdir.ToWorldPos()); // TODO clamp vector
 		}
 		else
 			MessageLog.Print($"{desc} but does no damage", color);
@@ -104,7 +104,7 @@ class Combat : IModule {
 		ref var targetFighter = ref target.GetComponent<Fighter>();
 		var damage = sourceFighter.Power
 			- targetFighter.Defense.Roll();
-		Combat.ApplyDamage(target, source, damage);
+		ApplyDamage(target, source, damage);
 		return damage;
 	}
 }
