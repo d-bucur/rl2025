@@ -223,7 +223,7 @@ file class GameInputSystem : QuerySystem {
 }
 
 file class CameraInputSystem : QuerySystem<CameraFollowTarget, Camera> {
-    Vector3 prevOffset = new Vector3(0, 30, 1);
+    Vector3 prevOffset = new Vector3(0, 25, 1);
     float prevCameraTargetFollow = 1f;
     int? DragStart;
     // CameraProjection prevProjection = CameraProjection.Orthographic;

@@ -87,22 +87,20 @@ class Combat : IModule {
 				Progression.GainXP(source, target);
 				target.EmitSignal(new DeathSignal());
 			}
-			else
-				MessageLog.Print($"{desc} for {damage} HP", color);
-			Vec2I fxdir = direction ?? target.GetComponent<GridPosition>().Value
-				- source.GetComponent<GridPosition>().Value;
-			GUI.SpawnDamageFx(damage, target.GetComponent<Position>().value,
-				color, fxdir.ToWorldPos()); // TODO clamp vector
+			else MessageLog.Print($"{desc} for {damage} HP", color);
 		}
-		else
-			MessageLog.Print($"{desc} but does no damage", color);
+		else MessageLog.Print($"{desc} but does no damage", color);
+		Vec2I fxdir = direction ?? target.GetComponent<GridPosition>().Value
+			- source.GetComponent<GridPosition>().Value;
+		GUI.SpawnDamageFx(damage, target.GetComponent<Position>().value,
+			color, Vector3.Normalize(fxdir.ToWorldPos()));
 	}
 
 	internal static int RollDamage(Entity source, Entity target) {
 		ref var sourceFighter = ref source.GetComponent<Fighter>();
 		ref var targetFighter = ref target.GetComponent<Fighter>();
-		var damage = sourceFighter.Power
-			- targetFighter.Defense.Roll();
+		var damage = Math.Max(0, sourceFighter.Power
+			- targetFighter.Defense.Roll());
 		ApplyDamage(target, source, damage);
 		return damage;
 	}

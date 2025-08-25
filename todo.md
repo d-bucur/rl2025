@@ -1,10 +1,9 @@
 ## week 7
-- bug: np xp increase from spells
+- bug: np xp increase from spells??
 - difficulty increase
 - gear
 
 ## week 8 sharing phase
-- rogue selection (at least sprite)
 - tune camera distances
 - native builds?
 
@@ -16,8 +15,8 @@
 - add LoS check for abilities
 - bug: follow doesn't work very well. Enemies skipping last tile in path?
 - bug: fireball hover effect not updating
-- bug: resurrecting on top of enemies bugged
 - bug: fix camera rotation
+- bug: resurrecting on top of enemies bugged
 - biomes with different tiles
 
 ## extra

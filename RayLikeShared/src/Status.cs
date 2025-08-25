@@ -40,7 +40,7 @@ struct RageEffect : IStatusEffect, IComponent {
 
 struct IsConfused : IStatusEffect, IComponent {
 	required internal int TurnsRemaining;
-	internal const float HurtSelfChance = 0.3f;
+	internal const float HurtSelfChance = 0.5f;
 
 	public void Tick(Entity e) => TurnsRemaining--;
 	public bool EndCondition(Entity e) => TurnsRemaining <= 0;

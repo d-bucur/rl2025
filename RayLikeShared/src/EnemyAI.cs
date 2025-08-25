@@ -14,7 +14,6 @@ struct EnemyAI() : IComponent {
 
 class EnemyAIModule : IModule {
 	public void Init(EntityStore world) {
-		// UpdatePhases.Input.Add(new EnemyMovementSystem());
 		UpdatePhases.Input.Add(new EnemyAIBehavior());
 	}
 
@@ -44,7 +43,7 @@ class EnemyAIModule : IModule {
 							new Do(MoveToClosestEnemy).Named("MoveToClosestEnemy"),
 						]),
 					])
-				).Named("ForceDestinationSelection"),
+				).Named("DestinationSelection"),
 				new Do(UseAbilities).Named("UseAbilities"),
 				new Do(MoveToDestination()).Named("MoveToDestination"),
 				new Do(RandomMovement).Named("RandomMovement"),
