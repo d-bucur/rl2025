@@ -32,7 +32,7 @@ static class Prefabs {
 				TileIdx = new Vec2I(2, 2)
 			},
 			new ColorComp(),
-			Tags.Get<Player, Character, BlocksPathing>()
+			Tags.Get<Player, Character, BlocksPathing, InputEnabled>()
 		);
 		// max 10 components per method...
 		player.Add(
@@ -317,7 +317,7 @@ static class PrefabTransformations {
 		grid.RemoveCharacter(pos);
 		grid.AddOther(entt, pos);
 
-		entt.Remove<InputReceiver, Energy>(Tags.Get<BlocksPathing, Character>());
+		entt.Remove<InputReceiver, Energy>(Tags.Get<BlocksPathing, Character, InputEnabled>());
 		entt.AddTag<Corpse>();
 		ref var name = ref entt.GetComponent<EntityName>();
 		name.value = $"Remains of {name.value}";

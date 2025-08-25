@@ -5,7 +5,10 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-struct InputReceiver : IComponent;
+struct InputReceiver() : IComponent {
+    internal List<Entity> BlockedReceivers = new(1);
+}
+
 struct MouseTarget : IComponent {
     internal Vec2I? Value;
     internal Entity? Entity;
@@ -20,6 +23,25 @@ class InputModule : IModule {
         UpdatePhases.Input.Add(new PlayerInputSystem());
         UpdatePhases.Input.Add(new GameInputSystem());
         UpdatePhases.Input.Add(new UpdateMousePosition());
+    }
+
+    // Push new receiver to top. Will become the only one receiving inputs
+    internal static void PushReceiver(Entity selector, ref CommandBuffer cmds) {
+        var query = Singleton.World.Query<InputReceiver>(new QueryFilter().AllTags(Tags.Get<InputEnabled>()));
+        ref var receiver = ref selector.GetComponent<InputReceiver>();
+        receiver.BlockedReceivers = [.. query.Entities];
+        foreach (var e in receiver.BlockedReceivers) {
+            cmds.RemoveTag<InputEnabled>(e.Id);
+        }
+        cmds.AddTag<InputEnabled>(selector.Id);
+    }
+
+    // Disable receiving inputs on the receiver and restore the receivers it was blocking
+    internal static void PopReceiver(Entity selector, ref CommandBuffer cmds) {
+        ref var receiver = ref selector.GetComponent<InputReceiver>();
+        foreach (var e in receiver.BlockedReceivers) {
+            cmds.AddTag<InputEnabled>(e.Id);
+        }
     }
 }
 
@@ -50,7 +72,7 @@ file class UpdateMousePosition : QuerySystem {
 }
 
 file class PlayerInputSystem : QuerySystem<InputReceiver> {
-    public PlayerInputSystem() => Filter.AllTags(Tags.Get<CanAct>());
+    public PlayerInputSystem() => Filter.AllTags(Tags.Get<CanAct, InputEnabled>());
 
     protected override void OnUpdate() {
         var cmd = CommandBuffer;
@@ -187,6 +209,10 @@ file class GameInputSystem : QuerySystem {
         if (Raylib.IsKeyPressed(KeyboardKey.N) && IsDevKeyModifier()) {
             settings.ExplorationHack = true;
             RecalculateVisionSystem.MarkAllTiles<IsExplored>();
+        }
+        // Free XP hack
+        if (Raylib.IsKeyPressed(KeyboardKey.U) && IsDevKeyModifier()) {
+            Progression.AddXP(ref Singleton.Player.GetComponent<Level>(), 250);
         }
     }
 

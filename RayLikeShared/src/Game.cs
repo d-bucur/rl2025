@@ -67,6 +67,7 @@ public class Game {
 			new Combat(),
 			new Items(),
 			new StatusModule(),
+			new Progression(),
 		];
 		Modules.ForEach(m => m.Init(World));
 
@@ -133,6 +134,7 @@ public class Game {
 		aot.RegisterComponent<LevelData>();
 		aot.RegisterComponent<Level>();
 		aot.RegisterComponent<XPGiven>();
+		aot.RegisterComponent<PowerupSelector>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();
@@ -151,6 +153,7 @@ public class Game {
 		aot.RegisterTag<LevelLifetime>();
 		aot.RegisterTag<AboveGround>();
 		aot.RegisterTag<Stairs>();
+		aot.RegisterTag<InputEnabled>();
 
 		aot.RegisterComponent<MovementAction>();
 		aot.RegisterComponent<MeleeAction>();
