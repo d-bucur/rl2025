@@ -96,7 +96,7 @@ jobs:
     - name: dotnet workload restore
       run: dotnet workload restore
     - name: Publish
-      run: dotnet publish RayLikeDesktop -c ${{ github.event.inputs.dotnet_config }}
+      run: dotnet publish RayLikeDesktop -c ${{ github.event.inputs.dotnet_config }} -r linux-x64 -p:PublishSingleFile=true
 
     - name: Package as a zip
       working-directory: RayLikeDesktop/bin/${{ github.event.inputs.dotnet_config }}/net9.0/linux-x64/publish
