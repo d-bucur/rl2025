@@ -18,6 +18,11 @@ on:
         options:
           - Debug
           - Release
+      native_publish:
+        description: 'Publish native versions'
+        required: true
+        type: boolean
+        default: false
 
 env:
   project_name: rl2025
@@ -25,21 +30,31 @@ env:
 
 jobs:
   publish-wasm:
-
     runs-on: ubuntu-latest
-
     steps:
+    ## start common part
     - uses: actions/checkout@v4
       with:
         ref: ${{ github.event.inputs.deploy_ref }}
         lfs: true
-    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
         cache: true
         cache-dependency-path: RayLikeWasm/packages.lock.json
+    - name: dotnet workload restore
+      run: dotnet workload restore
+    - name: Install butler
+      run: |
+        curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+        unzip butler.zip
+        chmod +x butler
+        ./butler -V
+    - uses: olegtarasov/get-tag@v2.1.2
+      id: get_version
+    ## end common part
+
     - name: Install wasm-tools
       run: dotnet workload install wasm-tools wasm-tools-net8
     - name: dotnet workload restore
@@ -54,14 +69,6 @@ jobs:
       working-directory: RayLikeWasm/bin/${{ github.event.inputs.dotnet_config }}/net8.0/browser-wasm/AppBundle
       run: |
         zip --recurse-paths ${{ env.project_name }}-${{ github.sha }}.zip .
-    - name: Install butler
-      run: |
-        curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
-        unzip butler.zip
-        chmod +x butler
-        ./butler -V
-    - uses: olegtarasov/get-tag@v2.1.2
-      id: get_version
     - name: Upload to itch.io
       env:
         BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
@@ -71,3 +78,50 @@ jobs:
             --userversion="${{ steps.get_version.outputs.tag }}" \
             RayLikeWasm/bin/${{ github.event.inputs.dotnet_config }}/net8.0/browser-wasm/AppBundle/${{ env.project_name }}-${{ github.sha }}.zip \
             ${{ env.itch_target }}:wasm
+
+  publish-native:
+    if: ${{ github.event.inputs.native_publish }}
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3
+      matrix:
+        platform: ["win-x64", "linux-x64", "osx-x64"]
+    steps:
+    ## start common part
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.deploy_ref }}
+        lfs: true
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+        cache: true
+        cache-dependency-path: RayLikeWasm/packages.lock.json
+    - name: dotnet workload restore
+      run: dotnet workload restore
+    - name: Install butler
+      run: |
+        curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+        unzip butler.zip
+        chmod +x butler
+        ./butler -V
+    - uses: olegtarasov/get-tag@v2.1.2
+      id: get_version
+    ## end common part
+
+    - name: Publish
+      run: dotnet publish RayLikeDesktop -c ${{ github.event.inputs.dotnet_config }} -r ${{ matrix.platform }} -p:PublishSingleFile=true
+    - name: Package as a zip
+      working-directory: RayLikeDesktop/bin/${{ github.event.inputs.dotnet_config }}/net9.0/${{ matrix.platform }}/publish
+      run: |
+        zip --recurse-paths ${{ env.project_name }}-${{ github.sha }}.zip .
+    - name: Upload to itch.io
+      env:
+        BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
+      run: |
+        ./butler push \
+            --fix-permissions \
+            --userversion="${{ steps.get_version.outputs.tag }}" \
+            RayLikeDesktop/bin/${{ github.event.inputs.dotnet_config }}/net9.0/${{ matrix.platform }}/publish/${{ env.project_name }}-${{ github.sha }}.zip \
+            ${{ env.itch_target }}:${{ matrix.platform }}
