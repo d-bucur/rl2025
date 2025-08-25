@@ -68,6 +68,7 @@ public class Game {
 			new Items(),
 			new StatusModule(),
 			new Progression(),
+			new Menus(),
 		];
 		Modules.ForEach(m => m.Init(World));
 
@@ -135,6 +136,8 @@ public class Game {
 		aot.RegisterComponent<Level>();
 		aot.RegisterComponent<XPGiven>();
 		aot.RegisterComponent<PowerupSelector>();
+		aot.RegisterComponent<PlayerChoices>();
+		aot.RegisterComponent<CharacterSelection>();
 
 		aot.RegisterTag<Character>();
 		aot.RegisterTag<Corpse>();

@@ -35,18 +35,9 @@ class Main : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.Animations.Add(new PrgressTweens());
 		Singleton.Entity.Add(new Settings());
-
-		MessageLog.Print("You descend into the dark dungeon");
-
-		// Add camera following player
-		Singleton.Camera.AddComponent(
-			new CameraFollowTarget() {
-				Target = Singleton.Player,
-				Distance = 10f,
-				Height = 10f,
-				Offset = new Vector3(0f, 12f, 10f),
-			});
+		Prefabs.MakePlayerChoices();
 		UpdatePhases.Animations.Add(LambdaSystems.New((ref CameraFollowTarget follow, ref Camera cam, Entity e) => {
+			if (follow.Target.IsNull) return;
 			var targetPos = follow.Target.GetComponent<Position>();
 			Vector3 endPos = targetPos.value + follow.Offset;
 			endPos.Y = follow.Offset.Y;

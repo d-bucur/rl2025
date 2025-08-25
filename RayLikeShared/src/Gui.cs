@@ -185,6 +185,7 @@ file class RenderMinimap : QuerySystem {
 	}
 
 	protected override unsafe void OnUpdate() {
+		if (Query.Count == 0) return;
 		if (!Singleton.Get<Settings>().MinimapEnabled)
 			return;
 		explorationHack = Singleton.Get<Settings>().ExplorationHack;
@@ -339,7 +340,7 @@ file class RenderDamageFx : QuerySystem<TextFX, Billboard, Position, Scale3> {
 				// height has to be inverted because weird opengl stuff
 				new Rectangle(0, fx.RenderTex.Texture.Height, fx.RenderTex.Texture.Width, -fx.RenderTex.Texture.Height),
 				pos.value, camera.GetUpVec(),
-				new Vector2(scale.x, scale.z), new Vector2(0.5f, 0), 0, Color.Orange
+				new Vector2(scale.x, scale.z), new Vector2(0.5f, 0), 0, Color.White
 			);
 		});
 		Raylib.EndMode3D();
@@ -359,6 +360,7 @@ file class RenderInventory : QuerySystem {
 		ItemSize
 	);
 	protected override void OnUpdate() {
+		if (Query.Count == 0) return;
 		var inventory = Singleton.Player.GetRelations<InventoryItem>();
 		var anchor = new Vector2(Raylib.GetScreenWidth(), Raylib.GetScreenHeight())
 			- new Vector2(Config.InventoryLimit * ItemSize, ItemSize);

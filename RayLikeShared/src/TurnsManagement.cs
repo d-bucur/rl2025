@@ -119,7 +119,7 @@ file class TickEnergySystem : QuerySystem<Energy> {
 		entitiesSorted.AddRange(Query.Entities);
 		entitiesSorted.Sort((e1, e2) => e1.Id - e2.Id);
 		// If nobody can act, then progress through the energy components until someone can
-		while (canActQuery.Count == 0) {
+		while (canActQuery.Count == 0 && Query.Count > 0) {
 			foreach (var entt in entitiesSorted) {
 				ref var energy = ref entt.GetComponent<Energy>();
 				// Already processed this tick. Skip

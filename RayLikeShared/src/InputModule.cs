@@ -48,6 +48,7 @@ class InputModule : IModule {
 file class UpdateMousePosition : QuerySystem {
     public UpdateMousePosition() => Filter.AllTags(Tags.Get<Player>());
     protected override void OnUpdate() {
+        if (Query.Count == 0) return;
         ref var mouseTarget = ref Singleton.Get<MouseTarget>();
         mouseTarget.Value = null;
         mouseTarget.Entity = null;

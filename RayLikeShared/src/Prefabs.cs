@@ -21,15 +21,16 @@ static class Prefabs {
 		FireballScroll,
 		RagePotion,
 		NecromancyScroll,
+		Random,
 	};
 
-	internal static Entity SpawnPlayer(Grid grid, Vec2I? pos = null) {
+	internal static Entity SpawnPlayer(Grid grid, PlayerChoices.Choice playerData, Vec2I? pos = null) {
 		var player = Singleton.World.CreateEntity(
 			new InputReceiver(),
 			new RotationSingle(0f),
 			new Scale3(1, 1, 1),
 			new Billboard(), new TextureWithSource(Assets.heroesTexture) {
-				TileIdx = new Vec2I(2, 2)
+				TileIdx = playerData.SpriteIndex
 			},
 			new ColorComp(),
 			Tags.Get<Player, Character, BlocksPathing, InputEnabled>()
@@ -55,14 +56,17 @@ static class Prefabs {
 		return player;
 	}
 
-	internal static void SpawnStartingItems(Vec2I pos, Entity entt) {
+	internal static void SpawnStartingItems(Vec2I pos, Entity entt, PlayerChoices.Choice playerData) {
+		foreach (var item in playerData.StartingItems) {
+			entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnConsumable(pos, item)) });
+		}
+		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnFireballScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnLightningScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnConfusionScroll(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnHealingPotion(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRagePotion(pos)) });
 		// entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnNecromancyScroll(pos)) });
-		entt.AddRelation(new InventoryItem { Item = PrefabTransformations.PickupItem(SpawnRandomConsumable(pos)) });
 		// SpawnConfusionScroll(pos + (1, 1));
 		// SpawnLightningScroll(pos + (-1, 1));
 		// SpawnFireballScroll(pos + (-1, -1));
@@ -168,14 +172,27 @@ static class Prefabs {
 		return entt;
 	}
 
-	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
-		Helpers.GetRandomEnum<ConsumableType>() switch {
+	// TODO refactor item spawn methods	
+	internal static Entity SpawnConsumable(Vec2I pos, ConsumableType t) =>
+		t switch {
 			ConsumableType.HealingPotion => SpawnHealingPotion(pos),
 			ConsumableType.LightningDamageScroll => SpawnLightningScroll(pos),
 			ConsumableType.ConfusionScroll => SpawnConfusionScroll(pos),
 			ConsumableType.FireballScroll => SpawnFireballScroll(pos),
 			ConsumableType.RagePotion => SpawnRagePotion(pos),
 			ConsumableType.NecromancyScroll => SpawnNecromancyScroll(pos),
+			ConsumableType.Random => SpawnRandomConsumable(pos),
+		};
+
+	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
+		Helpers.GetRandomEnum<ConsumableType>(max: (int)ConsumableType.Random - 1) switch {
+			ConsumableType.HealingPotion => SpawnHealingPotion(pos),
+			ConsumableType.LightningDamageScroll => SpawnLightningScroll(pos),
+			ConsumableType.ConfusionScroll => SpawnConfusionScroll(pos),
+			ConsumableType.FireballScroll => SpawnFireballScroll(pos),
+			ConsumableType.RagePotion => SpawnRagePotion(pos),
+			ConsumableType.NecromancyScroll => SpawnNecromancyScroll(pos),
+			ConsumableType.Random => SpawnHealingPotion(pos), // shouldn't happen
 		};
 
 	static Entity PrepConsumableCommon(Vec2I pos) {
@@ -301,6 +318,58 @@ static class Prefabs {
 			new ColorComp(),
 			Tags.Get<AboveGround, Stairs, LevelLifetime>()
 		);
+	}
+
+	internal static void MakePlayerChoices() {
+		Singleton.Entity.AddComponent(new PlayerChoices() {
+			Values = [
+						new PlayerChoices.Choice() {
+					SpriteIndex = (2,2),
+					Name = "Andros",
+					StartingItems = [Prefabs.ConsumableType.LightningDamageScroll, Prefabs.ConsumableType.ConfusionScroll],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (4,1),
+					Name = "Banner",
+					StartingItems = [Prefabs.ConsumableType.HealingPotion, Prefabs.ConsumableType.HealingPotion],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (5,4),
+					Name = "Fortz",
+					StartingItems = [Prefabs.ConsumableType.LightningDamageScroll, Prefabs.ConsumableType.Random],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (4,2),
+					Name = "Sandor",
+					StartingItems = [Prefabs.ConsumableType.HealingPotion, Prefabs.ConsumableType.ConfusionScroll],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (5,3),
+					Name = "Sonya",
+					StartingItems = [Prefabs.ConsumableType.RagePotion, Prefabs.ConsumableType.HealingPotion],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (5,2),
+					Name = "Stregobor",
+					StartingItems = [Prefabs.ConsumableType.NecromancyScroll, Prefabs.ConsumableType.NecromancyScroll],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (2,4),
+					Name = "Fringilla",
+					StartingItems = [Prefabs.ConsumableType.FireballScroll, Prefabs.ConsumableType.Random],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (3,0),
+					Name = "@",
+					StartingItems = [Prefabs.ConsumableType.Random, Prefabs.ConsumableType.Random],
+				},
+				new PlayerChoices.Choice() {
+					SpriteIndex = (0,0),
+					Name = "Tarn",
+					StartingItems = [Prefabs.ConsumableType.HealingPotion, Prefabs.ConsumableType.ConfusionScroll],
+				},
+			]
+		});
 	}
 }
 

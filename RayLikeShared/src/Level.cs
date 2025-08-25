@@ -18,12 +18,27 @@ struct NextLevelSignal;
 class LevelModule : IModule {
 	public void Init(EntityStore world) {
 		UpdatePhases.ApplyActions.Add(ActionProcessor.FromFunc<NextLevelAction>(NextLevelAction));
+	}
+
+	public static void StartLevel(PlayerChoices.Choice playerData) {
+		var world = Singleton.World;
 		Singleton.Entity.Add(new LevelData());
 
 		var grid = MakeGrid(world);
-		Singleton.Player = Prefabs.SpawnPlayer(grid);
+		Singleton.Player = Prefabs.SpawnPlayer(grid, playerData);
 		Vec2I center = GenerateNewLevel(world, Singleton.Player);
-		Prefabs.SpawnStartingItems(center, Singleton.Player);
+		Prefabs.SpawnStartingItems(center, Singleton.Player, playerData);
+
+		MessageLog.Print("You descend into the dark dungeon");
+
+		// Add camera following player
+		Singleton.Camera.AddComponent(
+			new CameraFollowTarget() {
+				Target = Singleton.Player,
+				Distance = 10f,
+				Height = 10f,
+				Offset = new Vector3(0f, 12f, 10f),
+			});
 	}
 
 	private static Vec2I GenerateNewLevel(EntityStore world, Entity player) {
