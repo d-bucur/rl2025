@@ -29,9 +29,10 @@ env:
   itch_target: sirdorius/rayguelike-2025
 
 jobs:
-  setup-dotnet:
+  publish-wasm:
     runs-on: ubuntu-latest
     steps:
+    ## start common part
     - uses: actions/checkout@v4
       with:
         ref: ${{ github.event.inputs.deploy_ref }}
@@ -52,11 +53,8 @@ jobs:
         ./butler -V
     - uses: olegtarasov/get-tag@v2.1.2
       id: get_version
+    ## end common part
 
-  publish-wasm:
-    runs-on: ubuntu-latest
-    needs: setup-dotnet
-    steps:
     - name: Install wasm-tools
       run: dotnet workload install wasm-tools wasm-tools-net8
     - name: dotnet workload restore
@@ -84,12 +82,34 @@ jobs:
   publish-native:
     if: ${{ github.event.inputs.native_publish }}
     runs-on: ubuntu-latest
-    needs: setup-dotnet
     strategy:
       max-parallel: 3
       matrix:
         platform: ["win-x64", "linux-x64", "osx-x64"]
     steps:
+    ## start common part
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.deploy_ref }}
+        lfs: true
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+        cache: true
+        cache-dependency-path: RayLikeWasm/packages.lock.json
+    - name: dotnet workload restore
+      run: dotnet workload restore
+    - name: Install butler
+      run: |
+        curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+        unzip butler.zip
+        chmod +x butler
+        ./butler -V
+    - uses: olegtarasov/get-tag@v2.1.2
+      id: get_version
+    ## end common part
+
     - name: Publish
       run: dotnet publish RayLikeDesktop -c ${{ github.event.inputs.dotnet_config }} -r ${{ matrix.platform }} -p:PublishSingleFile=true
     - name: Package as a zip
