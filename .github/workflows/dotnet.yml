@@ -92,7 +92,7 @@ jobs:
       with:
         dotnet-version: 9.0.x
         cache: true
-        cache-dependency-path: RayLikeDesktop/packages.lock.json
+        cache-dependency-path: RayLikeWasm/packages.lock.json
     - name: dotnet workload restore
       run: dotnet workload restore
     - name: Publish
