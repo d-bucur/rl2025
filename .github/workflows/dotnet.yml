@@ -81,6 +81,10 @@ jobs:
   publish-native:
     if: ${{ github.event.inputs.native_publish }}
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        platform: ["win-x64", "linux-x64", "osx-x64"]
     steps:
     - uses: actions/checkout@v4
       with:
@@ -96,10 +100,10 @@ jobs:
     - name: dotnet workload restore
       run: dotnet workload restore
     - name: Publish
-      run: dotnet publish RayLikeDesktop -c ${{ github.event.inputs.dotnet_config }} -r linux-x64 -p:PublishSingleFile=true
+      run: dotnet publish RayLikeDesktop -c ${{ github.event.inputs.dotnet_config }} -r ${{ matrix.platform }} -p:PublishSingleFile=true
 
     - name: Package as a zip
-      working-directory: RayLikeDesktop/bin/${{ github.event.inputs.dotnet_config }}/net9.0/linux-x64/publish
+      working-directory: RayLikeDesktop/bin/${{ github.event.inputs.dotnet_config }}/net9.0/${{ matrix.platform }}/publish
       run: |
         zip --recurse-paths ${{ env.project_name }}-${{ github.sha }}.zip .
     - name: Install butler
@@ -117,5 +121,5 @@ jobs:
         ./butler push \
             --fix-permissions \
             --userversion="${{ steps.get_version.outputs.tag }}" \
-            RayLikeDesktop/bin/${{ github.event.inputs.dotnet_config }}/net9.0/linux-x64/publish/${{ env.project_name }}-${{ github.sha }}.zip \
-            ${{ env.itch_target }}:linux-x64
+            RayLikeDesktop/bin/${{ github.event.inputs.dotnet_config }}/net9.0/${{ matrix.platform }}/publish/${{ env.project_name }}-${{ github.sha }}.zip \
+            ${{ env.itch_target }}:${{ matrix.platform }}
