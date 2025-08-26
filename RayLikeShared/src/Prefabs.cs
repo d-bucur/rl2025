@@ -74,7 +74,7 @@ static class Prefabs {
 		// SpawnNecromancyScroll(pos + (1, -1));
 	}
 
-	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType) {
+	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType, int level) {
 		Entity entt = PrepEnemyCommon(pos);
 		switch (enemyType) {
 			case EnemyType.Skeleton:
@@ -83,7 +83,7 @@ static class Prefabs {
 					new TextureWithSource(Assets.monsterTexture) {
 						TileIdx = new Vec2I(0, 4)
 					},
-					new Fighter(6, new Dice(1, 2), 6),
+					new Fighter(6 + level, new Dice(1, 2), 6),
 					new XPGiven { XPOnDeath = 35 },
 					new Energy() { GainPerTick = 5 }
 				);
@@ -94,7 +94,7 @@ static class Prefabs {
 					new TextureWithSource(Assets.monsterTexture) {
 						TileIdx = new Vec2I(1, 5)
 					},
-					new Fighter(8, new Dice(0, 1), 9),
+					new Fighter(8, new Dice(0, 1), 8 + level),
 					new XPGiven { XPOnDeath = 60 },
 					new Energy() { GainPerTick = 6 }
 				);
@@ -105,7 +105,7 @@ static class Prefabs {
 					new TextureWithSource(Assets.monsterTexture) {
 						TileIdx = new Vec2I(3, 0)
 					},
-					new Fighter(10, new Dice(2, 2), 7),
+					new Fighter(10, new Dice(2, 2 + level), 7),
 					new XPGiven { XPOnDeath = 50 },
 					new Energy() { GainPerTick = 4 }
 				);
@@ -116,7 +116,7 @@ static class Prefabs {
 					new TextureWithSource(Assets.monsterTexture) {
 						TileIdx = new Vec2I(0, 1)
 					},
-					new Fighter(15, new Dice(2, 3), 9),
+					new Fighter(15 + level, new Dice(2, 3), 9 + level),
 					new XPGiven { XPOnDeath = 100 },
 					new Energy() { GainPerTick = 3 }
 				);
@@ -185,7 +185,7 @@ static class Prefabs {
 		};
 
 	internal static Entity SpawnRandomConsumable(Vec2I pos) =>
-		Helpers.GetRandomEnum<ConsumableType>(max: (int)ConsumableType.Random - 1) switch {
+		Helpers.GetRandomEnum<ConsumableType>(max: (int)ConsumableType.Random) switch {
 			ConsumableType.HealingPotion => SpawnHealingPotion(pos),
 			ConsumableType.LightningDamageScroll => SpawnLightningScroll(pos),
 			ConsumableType.ConfusionScroll => SpawnConfusionScroll(pos),

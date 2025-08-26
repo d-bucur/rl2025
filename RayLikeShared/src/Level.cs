@@ -63,12 +63,12 @@ class LevelModule : IModule {
 		SpawnInEmptyTiles(
 			LevelConfig.GetMaxValuePerFloor(LevelConfig.MaxEnemiesPerFloor, floor),
 			// old uniform distribution
-			(pos) => Prefabs.SpawnEnemy(pos, Helpers.GetRandomEnum<Prefabs.EnemyType>(0, 4))
-			// new weighted distribution
-			// (pos) => Prefabs.SpawnEnemy(pos, (Prefabs.EnemyType)Helpers.GetRandomWeighted(enemyWeights))
+			(pos) => Prefabs.SpawnEnemy(pos, Helpers.GetRandomEnum<Prefabs.EnemyType>(0, 4), floor)
+		// new weighted distribution
+		// (pos) => Prefabs.SpawnEnemy(pos, (Prefabs.EnemyType)Helpers.GetRandomWeighted(enemyWeights))
 		);
-		if (floor >= 1) SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Malthael));
-		if (floor >= 2) SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Dragon));
+		if (floor >= 1) SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Malthael, floor));
+		if (floor >= 2) SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Dragon, floor));
 		SpawnInEmptyTiles(1, Prefabs.SpawnStairs, minDistance: 15);
 
 		return center;
@@ -325,14 +325,14 @@ struct Room {
 static class LevelConfig {
 	// First int is the floor number, second number is the value
 	public static (int, int)[] MaxItemsPerFloor = [
-		(0, 1),
-		(1, 2),
-		(2, 3),
-		(3, 4),
+		(0, 2),
+		(1, 3),
+		(2, 4),
+		(3, 5),
 	];
 	public static (int, int)[] MaxEnemiesPerFloor = [
-		(0, 5),
-		(1, 7),
+		(0, 6),
+		(1, 8),
 		(2, 9),
 		(3, 10),
 	];

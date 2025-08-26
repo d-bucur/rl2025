@@ -1,6 +1,4 @@
 ## week 7
-- bug: np xp increase from spells??
-- difficulty increase
 - gear
 
 ## week 8 sharing phase

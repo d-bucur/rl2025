@@ -4,6 +4,7 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
+// https://anydice.com/
 record struct Dice(int Count = 1, int Faces = 6) {
 	public int Roll() {
 		int total = 0;
