@@ -7,9 +7,9 @@ namespace RayLikeShared;
 static class Prefabs {
 	internal enum EnemyType {
 		Skeleton,
+		Orc,
 		Banshee,
 		Ogre,
-		Orc,
 		Malthael,
 		Dragon,
 	};

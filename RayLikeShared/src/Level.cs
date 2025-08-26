@@ -26,7 +26,7 @@ class LevelModule : IModule {
 
 		var grid = MakeGrid(world);
 		Singleton.Player = Prefabs.SpawnPlayer(grid, playerData);
-		Vec2I center = GenerateNewLevel(world, Singleton.Player);
+		Vec2I center = GenerateNewLevel(world, Singleton.Player, 0);
 		Prefabs.SpawnStartingItems(center, Singleton.Player, playerData);
 
 		MessageLog.Print("You descend into the dark dungeon");
@@ -41,7 +41,7 @@ class LevelModule : IModule {
 			});
 	}
 
-	private static Vec2I GenerateNewLevel(EntityStore world, Entity player) {
+	private static Vec2I GenerateNewLevel(EntityStore world, Entity player, int floor) {
 		var rooms = GenerateDungeon(world);
 		var center = rooms[0].Center();
 
@@ -54,10 +54,21 @@ class LevelModule : IModule {
 		camera.Value.Position = new Vector3(center.X, 0, center.Y);
 		camera.Value.Target = new Vector3(center.X, 0, center.Y);
 
-		SpawnInEmptyTiles(Config.MaxEnemiesPerLevel, (pos) => Prefabs.SpawnEnemy(pos, Helpers.GetRandomEnum<Prefabs.EnemyType>(0, 4)));
-		SpawnInEmptyTiles(Config.MaxItemsPerLevel, Prefabs.SpawnRandomConsumable);
-		SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Malthael));
-		SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Dragon));
+		// Spawn items and enemies
+		SpawnInEmptyTiles(
+			LevelConfig.GetMaxValuePerFloor(LevelConfig.MaxItemsPerFloor, floor),
+			Prefabs.SpawnRandomConsumable
+		);
+		var enemyWeights = Helpers.MakeWeights(4, floor + 1);
+		SpawnInEmptyTiles(
+			LevelConfig.GetMaxValuePerFloor(LevelConfig.MaxEnemiesPerFloor, floor),
+			// old uniform distribution
+			(pos) => Prefabs.SpawnEnemy(pos, Helpers.GetRandomEnum<Prefabs.EnemyType>(0, 4))
+			// new weighted distribution
+			// (pos) => Prefabs.SpawnEnemy(pos, (Prefabs.EnemyType)Helpers.GetRandomWeighted(enemyWeights))
+		);
+		if (floor >= 1) SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Malthael));
+		if (floor >= 2) SpawnInEmptyTiles(1, pos => Prefabs.SpawnEnemy(pos, Prefabs.EnemyType.Dragon));
 		SpawnInEmptyTiles(1, Prefabs.SpawnStairs, minDistance: 15);
 
 		return center;
@@ -116,6 +127,7 @@ class LevelModule : IModule {
 
 	static List<Room> GenerateDungeon(EntityStore world) {
 		// true if tile is empty, false if walled
+		// Map size const hardcoded in some places, can't make variable
 		var map = new bool[Config.MapSizeX, Config.MapSizeY];
 
 		RandomizeTiles(map, 0.7);
@@ -124,6 +136,7 @@ class LevelModule : IModule {
 		for (int i = 0; i < Config.CASimSteps; i++) {
 			map = CASimStep(map);
 		}
+		// Small room count might lead to exit not being pathable
 		GenerateRooms(map, Config.MaxRoomCount);
 		DigTunnelsBetweenRooms(map, rooms);
 
@@ -270,7 +283,7 @@ class LevelModule : IModule {
 		ref var levelData = ref Singleton.Get<LevelData>();
 		levelData.CurrentLevel += 1;
 		var grid = MakeGrid(Singleton.World);
-		var startPos = GenerateNewLevel(Singleton.World, Singleton.Player);
+		var startPos = GenerateNewLevel(Singleton.World, Singleton.Player, levelData.CurrentLevel);
 		PrefabTransformations.ResetPlayer(Singleton.Player, ref grid, startPos);
 		Animations.Fall(Singleton.Player);
 		Singleton.Entity.EmitSignal(new NextLevelSignal());
@@ -306,5 +319,41 @@ struct Room {
 
 	public override string ToString() {
 		return $"Room({StartX}, {StartY}, {EndX},  {EndY})";
+	}
+}
+
+static class LevelConfig {
+	// First int is the floor number, second number is the value
+	public static (int, int)[] MaxItemsPerFloor = [
+		(0, 1),
+		(1, 2),
+		(2, 3),
+		(3, 4),
+	];
+	public static (int, int)[] MaxEnemiesPerFloor = [
+		(0, 5),
+		(1, 7),
+		(2, 9),
+		(3, 10),
+	];
+	// public static (int, int)[] MaxRoomsPerFloor = [
+	// 	(0, 3),
+	// 	(1, 4),
+	// 	(2, 5),
+	// 	(3, Config.MaxRoomCount),
+	// ];
+
+	/// <summary>
+	/// The value from the last, highest floor will be used, so the array can have gaps in floors
+	/// </summary>
+	public static T GetMaxValuePerFloor<T>((int, T)[] values, int floor) {
+		T value = default;
+		for (int i = 0; i < values.Length; i++) {
+			if (values[i].Item1 > floor) {
+				break;
+			}
+			value = values[i].Item2;
+		}
+		return value;
 	}
 }

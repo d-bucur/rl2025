@@ -111,7 +111,6 @@ internal class ProgressScreenRender : QuerySystem<InputReceiver, PowerupSelector
 
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref InputReceiver receiver, ref PowerupSelector selector, Entity e) => {
-			// Should connect description to powerup
 			// horrible layout code
 			const int fontSize = 20;
 			const int anchorX = 200;
