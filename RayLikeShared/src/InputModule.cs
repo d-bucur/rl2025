@@ -170,6 +170,10 @@ file class PlayerInputSystem : QuerySystem<InputReceiver> {
             TurnsManagement.QueueAction(cmd, new PickupAction { Target = entt, Position = pos }, entt);
             return true;
         }
+        if (others.Value.Value.Any(e => e.HasComponent<Gear>())) {
+            TurnsManagement.QueueAction(cmd, new EquipAction { Target = entt }, entt);
+            return true;
+        }
         if (others.Value.Value.Any(e => e.Tags.Has<Stairs>())) {
             TurnsManagement.QueueAction(cmd, new NextLevelAction { Target = entt }, entt);
             return true;

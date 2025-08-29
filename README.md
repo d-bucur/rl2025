@@ -17,6 +17,8 @@ dotnet serve --mime .wasm=application/wasm --mime .js=text/javascript --mime .js
 ```
 
 ## Credits
-- https://github.com/Kiriller12/RaylibWasm for wasm project template
 - https://sethbb.itch.io/32rogues for the sprites
-- https://kaylousberg.itch.io/block-bits for the tiles
+- https://kaylousberg.itch.io/block-bits for the 3D tiles
+- https://github.com/friflo/Friflo.Engine.ECS for the ECS framework
+- https://github.com/raysan5/raylib - for the cross platform graphics library
+- https://github.com/Kiriller12/RaylibWasm for wasm project template

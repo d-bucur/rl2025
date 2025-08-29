@@ -211,12 +211,13 @@ struct FireballConsumable : IConsumable {
 struct NecromancyConsumable : IConsumable {
 	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null) {
 		var mouseTarget = Singleton.Get<MouseTarget>().Value;
-
 		ref var grid = ref Singleton.Get<Grid>();
 		if (mouseTarget == null || !grid.IsInside(mouseTarget.Value)) return ActionProcessor.Result.Invalid;
+
 		foreach (var other in grid.Others[mouseTarget.Value.X, mouseTarget.Value.Y]?.Value ?? []) {
 			if (!other.Tags.Has<Corpse>()) continue;
 			if (other.IsNull) return ActionProcessor.Result.Invalid;
+			
 			MessageLog.Print($"You resurrect {other.Name.value}. It will now fight for you");
 			var fx = Prefabs.SpawnProjectile(mouseTarget.Value, Prefabs.ConsumableType.NecromancyScroll);
 			Animations.Fall(fx, 2, true);

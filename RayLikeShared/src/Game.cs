@@ -66,6 +66,7 @@ public class Game {
 			new Vision(),
 			new Combat(),
 			new Items(),
+			new GearModule(),
 			new StatusModule(),
 			new Progression(),
 			new Menus(),

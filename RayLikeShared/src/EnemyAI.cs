@@ -188,6 +188,7 @@ static class BTExtension {
 
 	// public static bool HasDestination(ref Context c) =>
 	// 	c.Entt.GetComponent<PathMovement>().Destination.HasValue;
+	
 	public static ActionFunc SetDestination(Entity target) {
 		return (ref Context ctx) => {
 			ref var path = ref ctx.Entt.GetComponent<PathMovement>();
@@ -235,6 +236,7 @@ static class BTExtension {
 	internal static BTStatus UseAbilities(ref Context ctx) {
 		// TODO add cooldown
 		// TODO add LOS
+		// Currently only works for dragon, who has a bunch of fireball items equipped
 		var items = ctx.Entt.GetRelations<InventoryItem>();
 		var closest = GetClosestEnemy(ctx.Entt, ctx.Pos);
 		if (closest.IsNull || items.Length < 1 || !ctx.Entt.Tags.Has<IsVisible>()) return BTStatus.Failure;

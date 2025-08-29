@@ -24,8 +24,16 @@ static class Prefabs {
 		Random,
 	};
 
+	internal enum GearItems {
+		Dagger,
+		Axe,
+		LeatherArmor,
+		ChainMail,
+	}
+
 	internal static Entity SpawnPlayer(Grid grid, PlayerChoices.Choice playerData, Vec2I? pos = null) {
 		var player = Singleton.World.CreateEntity(
+			new EntityName { value = "Hero" },
 			new InputReceiver(),
 			new RotationSingle(0f),
 			new Scale3(1, 1, 1),
@@ -37,7 +45,6 @@ static class Prefabs {
 		);
 		// max 10 components per method...
 		player.Add(
-			new EntityName { value = "Hero" },
 			new Energy() { GainPerTick = 5 },
 			new VisionSource() { Range = 6 },
 			new Fighter(40, new Dice(3, 2), 6),
@@ -72,6 +79,10 @@ static class Prefabs {
 		// SpawnFireballScroll(pos + (-1, -1));
 		// SpawnHealingPotion(pos + (1, -1));
 		// SpawnNecromancyScroll(pos + (1, -1));
+		// SpawnGear(pos + (1, -1), GearItems.LeatherArmor);
+		// SpawnGear(pos + (1, 1), GearItems.ChainMail);
+		// SpawnGear(pos + (-1, -1), GearItems.Axe);
+		// SpawnGear(pos + (-1, 1), GearItems.Dagger);
 	}
 
 	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType, int level) {
@@ -320,53 +331,109 @@ static class Prefabs {
 		);
 	}
 
+	internal static Entity SpawnGear(Vec2I pos, GearItems type) {
+		var entt = Singleton.World.CreateEntity(
+			new GridPosition(pos.X, pos.Y),
+			new Position(pos.X, 0, pos.Y),
+			new RotationSingle(0f),
+			new Scale3(1, 1, 1),
+			new ColorComp(),
+			new Billboard(),
+			Tags.Get<AboveGround>()
+		);
+		switch (type) {
+			case GearItems.LeatherArmor:
+				entt.Add(
+					new EntityName($"Leather Armor"),
+					new Gear { GearType = GearType.Armor, DefenseDelta = 1 },
+					new TextureWithSource(Assets.itemsTexture) {
+						TileIdx = (1, 12)
+					}
+				);
+				break;
+			case GearItems.ChainMail:
+				entt.Add(
+					new EntityName($"Chain Mail"),
+					new Gear { GearType = GearType.Armor, DefenseDelta = 2 },
+					new TextureWithSource(Assets.itemsTexture) {
+						TileIdx = (5, 12)
+					}
+				);
+				break;
+			case GearItems.Dagger:
+				entt.Add(
+					new EntityName($"Dagger"),
+					new Gear { GearType = GearType.Weapon, PowerDelta = 1 },
+					new TextureWithSource(Assets.itemsTexture) {
+						TileIdx = (0, 0)
+					}
+				);
+				break;
+			case GearItems.Axe:
+				entt.Add(
+					new EntityName($"Axe"),
+					new Gear { GearType = GearType.Weapon, PowerDelta = 2 },
+					new TextureWithSource(Assets.itemsTexture) {
+						TileIdx = (1, 3)
+					}
+				);
+				break;
+		}
+		return entt;
+	}
+
 	internal static void MakePlayerChoices() {
 		Singleton.Entity.AddComponent(new PlayerChoices() {
 			Values = [
-						new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (2,2),
 					Name = "Andros",
-					StartingItems = [Prefabs.ConsumableType.LightningDamageScroll, Prefabs.ConsumableType.ConfusionScroll],
+					StartingItems = [ConsumableType.LightningDamageScroll, ConsumableType.ConfusionScroll],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (4,1),
 					Name = "Banner",
-					StartingItems = [Prefabs.ConsumableType.HealingPotion, Prefabs.ConsumableType.HealingPotion],
+					StartingItems = [ConsumableType.HealingPotion, ConsumableType.HealingPotion],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (5,4),
 					Name = "Fortz",
-					StartingItems = [Prefabs.ConsumableType.LightningDamageScroll, Prefabs.ConsumableType.Random],
+					StartingItems = [ConsumableType.LightningDamageScroll, ConsumableType.Random],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (4,2),
 					Name = "Sandor",
-					StartingItems = [Prefabs.ConsumableType.HealingPotion, Prefabs.ConsumableType.ConfusionScroll],
+					StartingItems = [ConsumableType.HealingPotion, ConsumableType.ConfusionScroll],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (5,3),
 					Name = "Sonya",
-					StartingItems = [Prefabs.ConsumableType.RagePotion, Prefabs.ConsumableType.HealingPotion],
+					StartingItems = [ConsumableType.RagePotion, ConsumableType.HealingPotion],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (5,2),
 					Name = "Stregobor",
-					StartingItems = [Prefabs.ConsumableType.NecromancyScroll, Prefabs.ConsumableType.NecromancyScroll],
+					StartingItems = [ConsumableType.NecromancyScroll, ConsumableType.NecromancyScroll],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (2,4),
 					Name = "Fringilla",
-					StartingItems = [Prefabs.ConsumableType.FireballScroll, Prefabs.ConsumableType.Random],
+					StartingItems = [ConsumableType.FireballScroll, ConsumableType.Random],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (3,0),
 					Name = "@",
-					StartingItems = [Prefabs.ConsumableType.Random, Prefabs.ConsumableType.Random],
+					StartingItems = [ConsumableType.Random, ConsumableType.Random],
 				},
-				new PlayerChoices.Choice() {
+				new PlayerChoices.Choice {
 					SpriteIndex = (0,0),
 					Name = "Tarn",
-					StartingItems = [Prefabs.ConsumableType.HealingPotion, Prefabs.ConsumableType.ConfusionScroll],
+					StartingItems = [ConsumableType.HealingPotion, ConsumableType.ConfusionScroll],
+				},
+				new PlayerChoices.Choice {
+					SpriteIndex = (5,6),
+					Name = "@",
+					StartingItems = [ConsumableType.Random, ConsumableType.Random],
 				},
 			]
 		});
@@ -378,6 +445,17 @@ static class PrefabTransformations {
 		entt.Remove<GridPosition, Position, RotationSingle, Scale3>();
 		entt.RemoveTag<LevelLifetime>();
 		return entt;
+	}
+
+	internal static Entity DropItem(Entity itemEntt, Vec2I pos) {
+		itemEntt.Add(
+			new GridPosition(pos.X, pos.Y),
+			new Position(pos.X, 0, pos.Y),
+			new RotationSingle(),
+			new Scale3(1, 1, 1)
+		);
+		itemEntt.AddTag<LevelLifetime>();
+		return itemEntt;
 	}
 
 	internal static Entity TurnCharacterToCorpse(Entity entt) {

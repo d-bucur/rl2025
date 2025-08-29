@@ -100,7 +100,7 @@ class LevelModule : IModule {
 		if (change.Type != typeof(GridPosition) || change.Action != ComponentChangedAction.Remove) return;
 		var grid = Singleton.Get<Grid>();
 		var pos = change.OldComponent<GridPosition>().Value;
-		if (change.Entity.HasComponent<Item>()) {
+		if (change.Entity.HasComponent<Item>() || change.Entity.HasComponent<Gear>()) {
 			grid.Others[pos.X, pos.Y].GetValueOrDefault().Value.Remove(change.Entity);
 		}
 	}

@@ -1,16 +1,17 @@
 ## week 7
-- gear
+- spawn gear in level
+- display character and enemy stats
 
 ## week 8 sharing phase
 - tune camera distances
-- native builds?
+- visualize player stats, like xp to next level, and UI overhaul
+- view status on hover
 
 ## public itch release
 - proper intro menu, restart after death
-- visualize player stats, like xp to next level, and UI overhaul
-- view status on hover
 - fx for items, maybe projectiles too?
 - add LoS check for abilities
+- bug: sometimes exit is not pathable
 - bug: follow doesn't work very well. Enemies skipping last tile in path?
 - bug: fireball hover effect not updating
 - bug: fix camera rotation
@@ -20,6 +21,7 @@
 ## extra
 - blood under corpses
 - in game health bars
+- avoid overly long corridors in procgen
 - aggro nearby enemies when one is alerted (maybe generic sound system?)
 - character shaders:
   - render wall tiles with partial alpha when overlapping characters

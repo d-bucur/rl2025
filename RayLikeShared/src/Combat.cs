@@ -39,6 +39,13 @@ struct Fighter : IComponent {
 		HP = Math.Min(MaxHP, HP + amount);
 		return HP - oldHP;
 	}
+
+	public void ApplyGear(in Gear gear, int mult = 1) {
+		Power += gear.PowerDelta * mult;
+		Defense.Faces += gear.DefenseDelta * mult;
+		HP = Math.Max(1, HP + gear.HPDelta * mult);
+		MaxHP += gear.HPDelta * mult;
+	}
 }
 record struct MeleeAction(Entity Source, Entity Target, int Dx, int Dy) : IGameAction {
 	public Entity GetSource() => Source;
