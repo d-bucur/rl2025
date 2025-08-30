@@ -26,8 +26,8 @@ static class Prefabs {
 
 	internal enum GearItems {
 		Dagger,
-		Axe,
 		LeatherArmor,
+		Axe,
 		ChainMail,
 	}
 
@@ -339,7 +339,7 @@ static class Prefabs {
 			new Scale3(1, 1, 1),
 			new ColorComp(),
 			new Billboard(),
-			Tags.Get<AboveGround>()
+			Tags.Get<AboveGround, GearTag>()
 		);
 		switch (type) {
 			case GearItems.LeatherArmor:

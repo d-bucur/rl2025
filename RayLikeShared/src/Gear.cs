@@ -66,3 +66,5 @@ struct Gear : IComponent {
 	public int DefenseDelta;
 	public int HPDelta;
 }
+
+struct GearTag : ITag;

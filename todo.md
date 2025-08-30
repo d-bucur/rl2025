@@ -1,5 +1,4 @@
 ## week 7
-- spawn gear in level
 - display character and enemy stats
 
 ## week 8 sharing phase

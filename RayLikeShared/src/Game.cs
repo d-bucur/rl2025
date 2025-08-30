@@ -130,6 +130,7 @@ public class Game {
 		aot.RegisterComponent<PathMovement>();
 		aot.RegisterComponent<Team>();
 		aot.RegisterComponent<Item>();
+		aot.RegisterComponent<Gear>();
 		aot.RegisterComponent<MouseTarget>();
 		aot.RegisterComponent<IsConfused>();
 		aot.RegisterComponent<TurnData>();
@@ -151,6 +152,7 @@ public class Game {
 		aot.RegisterTag<IsVisible>();
 		aot.RegisterTag<IsExplored>();
 		aot.RegisterTag<ItemTag>();
+		aot.RegisterTag<GearTag>();
 		aot.RegisterTag<Walkable>();
 		aot.RegisterTag<Projectile>();
 		aot.RegisterTag<TurnStarted>();
@@ -165,6 +167,7 @@ public class Game {
 		aot.RegisterComponent<ConsumeItemAction>();
 		aot.RegisterComponent<PickupAction>();
 		aot.RegisterComponent<NextLevelAction>();
+		aot.RegisterComponent<EquipAction>();
 
 		aot.RegisterTag<IsActionWaiting>();
 		aot.RegisterTag<IsActionExecuting>();
@@ -172,6 +175,7 @@ public class Game {
 		aot.RegisterTag<IsActionBlocking>();
 
 		aot.RegisterLinkRelation<InventoryItem>();
+		aot.RegisterLinkRelation<WornGear>();
 		
 		aot.RegisterRelation<StatusEffect, Type>();
 

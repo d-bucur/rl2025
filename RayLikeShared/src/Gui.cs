@@ -216,6 +216,7 @@ file class RenderMinimap : QuerySystem {
 			return Palette.Transparent;
 		var color = grid.Tile[x, y].GetComponent<ColorComp>().Value;
 		if (grid.CheckOthers<ItemTag>((x, y))) color = Color.Yellow;
+		if (grid.CheckOthers<GearTag>((x, y))) color = Color.Yellow;
 		if (grid.CheckOthers<Stairs>((x, y))) color = Color.SkyBlue;
 		Entity character = grid.Character[x, y];
 		if (!character.IsNull) {

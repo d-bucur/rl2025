@@ -41,6 +41,7 @@ class LevelModule : IModule {
 			});
 	}
 
+	// floor starts from 0
 	private static Vec2I GenerateNewLevel(EntityStore world, Entity player, int floor) {
 		var rooms = GenerateDungeon(world);
 		var center = rooms[0].Center();
@@ -59,6 +60,7 @@ class LevelModule : IModule {
 			LevelConfig.GetMaxValuePerFloor(LevelConfig.MaxItemsPerFloor, floor),
 			Prefabs.SpawnRandomConsumable
 		);
+		SpawnInEmptyTiles(1, pos => Prefabs.SpawnGear(pos, Helpers.GetRandomEnum<Prefabs.GearItems>(0, (floor + 1) * 2)));
 		var enemyWeights = Helpers.MakeWeights(4, floor + 1);
 		SpawnInEmptyTiles(
 			LevelConfig.GetMaxValuePerFloor(LevelConfig.MaxEnemiesPerFloor, floor),
@@ -268,6 +270,7 @@ class LevelModule : IModule {
 		}
 	}
 
+	// Overkill to use an action to just call a function?
 	private ActionProcessor.Result NextLevelAction(ref NextLevelAction action, Entity actionEntt) {
 		NextLevel();
 		return ActionProcessor.Result.Done;
