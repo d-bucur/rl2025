@@ -327,6 +327,8 @@ file class TileInspect : QuerySystem {
 		var isTileVisible = grid.CheckTile<IsVisible>(mousePosI);
 		var character = grid.Character[mousePosI.X, mousePosI.Y];
 
+		// strings have to be added in reverse order of display
+
 		// Display characters
 		InspectStrings.Clear();
 		if (!character.IsNull && isTileVisible) {
@@ -352,6 +354,10 @@ file class TileInspect : QuerySystem {
 			foreach (var other in others?.Value ?? []) {
 				if (other.TryGetComponent<Gear>(out var gear)) {
 					InspectStrings.Add($"{other.Name.value}: {gear}");
+				}
+				else if (other.TryGetComponent<Item>(out var item)) {
+					InspectStrings.Add($"  {item.Consumable.Description()}");
+					InspectStrings.Add($"{other.Name.value}");
 				}
 				else {
 					InspectStrings.Add($"{other.GetComponent<EntityName>().value}");

@@ -11,12 +11,14 @@ struct Item : IComponent {
 struct ItemTag : ITag;
 
 internal interface IConsumable {
-	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null);
-	public IEnumerable<Vec2I> AffectedTiles(Vec2I source) => [Vec2I.Zero];
+	string Description();
+	ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null);
+	IEnumerable<Vec2I> AffectedTiles(Vec2I source) => [Vec2I.Zero];
 }
 
 struct HealingConsumable : IConsumable {
-	required public int Amount;
+	public string Description() => "Heals 75% of missing health";
+	required public int Amount; // TODO not used
 
 	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null) {
 		ref var fighter = ref target.GetComponent<Fighter>();
@@ -24,7 +26,7 @@ struct HealingConsumable : IConsumable {
 		int recovered = fighter.Heal((int)amount);
 		if (recovered > 0) {
 			MessageLog.Print($"You consume the {itemEntt.Name.value} and healed for {recovered} HP");
-			GUI.SpawnDamageFx(Amount, target.GetComponent<Position>().value, Raylib_cs.Color.Green, Vector3.Zero);
+			GUI.SpawnDamageFx(recovered, target.GetComponent<Position>().value, Raylib_cs.Color.Green, Vector3.Zero);
 			return ActionProcessor.Result.Done;
 		}
 		else {
@@ -35,6 +37,8 @@ struct HealingConsumable : IConsumable {
 }
 
 struct RageConsumable : IConsumable {
+	// TODO descriptions should be cached in ctor to avoid allocations
+	public string Description() => $"Makes you act faster for {Duration} turns";
 	required public Func<Energy, int> GainCalc;
 	public int Duration;
 
@@ -59,6 +63,7 @@ struct RageConsumable : IConsumable {
 }
 
 struct LightningDamageConsumable : IConsumable {
+	public string Description() => "Damages the closest enemy";
 	required public int Damage;
 	required public int MaximumRange;
 	static ArchetypeQuery<GridPosition>? cachedQuery;
@@ -109,6 +114,7 @@ struct LightningDamageConsumable : IConsumable {
 }
 
 struct ConfusionConsumable : IConsumable {
+	public string Description() => $"Makes target harmless for {Turns} turns";
 	required public int Turns;
 
 	public ActionProcessor.Result Consume(Entity source, Entity itemEntt, Entity? actionEntity = null, Vec2I? inputPos = null) {
@@ -143,6 +149,7 @@ struct ConfusionConsumable : IConsumable {
 }
 
 struct FireballConsumable : IConsumable {
+	public string Description() => "Damages all targets around target location";
 	required public int Damage;
 	required public int Range;
 	static List<Entity> TargetsCache = new();
@@ -209,6 +216,7 @@ struct FireballConsumable : IConsumable {
 }
 
 struct NecromancyConsumable : IConsumable {
+	public string Description() => "Resurrects target corpse to fight for you";
 	public ActionProcessor.Result Consume(Entity target, Entity itemEntt, Entity? actionEntity = null, Vec2I? targetPos = null) {
 		var mouseTarget = Singleton.Get<MouseTarget>().Value;
 		ref var grid = ref Singleton.Get<Grid>();

@@ -78,11 +78,11 @@ static class Prefabs {
 		// SpawnLightningScroll(pos + (-1, 1));
 		// SpawnFireballScroll(pos + (-1, -1));
 		// SpawnHealingPotion(pos + (1, -1));
-		// SpawnNecromancyScroll(pos + (1, -1));
-		// SpawnGear(pos + (1, -1), GearItems.LeatherArmor);
-		// SpawnGear(pos + (1, 1), GearItems.ChainMail);
-		// SpawnGear(pos + (-1, -1), GearItems.Axe);
-		// SpawnGear(pos + (-1, 1), GearItems.Dagger);
+		// SpawnNecromancyScroll(pos + (1, 0));
+		// SpawnGear(pos + (1, 0), GearItems.LeatherArmor);
+		// SpawnGear(pos + (0, 1), GearItems.ChainMail);
+		// SpawnGear(pos + (-1, 0), GearItems.Axe);
+		// SpawnGear(pos + (0, -1), GearItems.Dagger);
 	}
 
 	internal static Entity SpawnEnemy(Vec2I pos, EnemyType enemyType, int level) {
@@ -237,7 +237,7 @@ static class Prefabs {
 			new Billboard(), new TextureWithSource(Assets.itemsTexture) {
 				TileIdx = new Vec2I(1, 19)
 			},
-			new EntityName($"Healing potion 75% HP"),
+			new EntityName($"Healing potion"),
 			new Item() { Consumable = new HealingConsumable { Amount = health } }
 		);
 		return entt;
