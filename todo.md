@@ -1,10 +1,7 @@
-## week 7
-- visualize player stats, like xp to next level
-
 ## week 8 sharing phase
 - weapon animation
 - tune camera distances
-- UI overhaul
+- UI overhaul?
 
 ## public itch release
 - proper intro menu, restart after death
@@ -15,9 +12,9 @@
 - bug: fireball hover effect not updating
 - bug: fix camera rotation
 - bug: resurrecting on top of enemies bugged
-- biomes with different tiles
 
 ## extra
+- biomes with different tiles
 - blood under corpses
 - in game health bars
 - avoid overly long corridors in procgen

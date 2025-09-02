@@ -63,6 +63,7 @@ class GuiModule : IModule {
 		RenderPhases.Render.Add(new RenderInventory());
 		RenderPhases.Render.Add(new RenderTurnOrder());
 		RenderPhases.Render.Add(new RenderHealth());
+		RenderPhases.Render.Add(new RenderXP());
 		RenderPhases.Render.Add(new RenderGameOver());
 		RenderPhases.Render.Add(new RenderMessageLog());
 		RenderPhases.Render.Add(new DrawPathToTarget()); // should be in input phase
@@ -121,17 +122,33 @@ file static class GUIValues {
 }
 
 file class RenderHealth : QuerySystem<Fighter> {
-	public const int HealthHeight = 30;
+	public const int Height = 30;
 	public RenderHealth() => Filter.AllTags(Tags.Get<Player>());
 
 	protected override void OnUpdate() {
 		Query.ForEachEntity((ref Fighter fighter, Entity playerEntt) => {
 			Rectangle r = RenderInventory.GetRect();
-			var rect = new Rectangle(r.X, r.Y - HealthHeight - GUIValues.Padding, r.Width, HealthHeight);
+			var rect = new Rectangle(r.X, r.Y - Height - GUIValues.Padding, r.Width, Height);
 			Raylib.DrawRectangleRec(rect, Color.Red);
 			rect.Width = (float)fighter.HP / fighter.MaxHP * r.Width;
 			Raylib.DrawRectangleRec(rect, Color.Green);
 			GUI.RenderText($"HP {fighter.HP}/{fighter.MaxHP}", (int)rect.X + 90, (int)rect.Y + 3, 25, 3);
+		});
+	}
+}
+
+file class RenderXP : QuerySystem<Level> {
+	public const int Height = 25;
+	public RenderXP() => Filter.AllTags(Tags.Get<Player>());
+
+	protected override void OnUpdate() {
+		Query.ForEachEntity((ref Level level, Entity playerEntt) => {
+			Rectangle r = RenderInventory.GetRect();
+			var rect = new Rectangle(r.X, r.Y - Height - RenderHealth.Height - GUIValues.Padding * 2, r.Width, Height);
+			Raylib.DrawRectangleRec(rect, Color.DarkGray);
+			rect.Width = (float)level.CurrentXP / level.XPToNextLevel() * r.Width;
+			Raylib.DrawRectangleRec(rect, Color.Blue);
+			GUI.RenderText($"Lvl {level.CurrentLevel} XP {level.CurrentXP}/{level.XPToNextLevel()}", (int)rect.X + 90, (int)rect.Y + 3, 20, 3);
 		});
 	}
 }
