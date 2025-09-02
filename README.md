@@ -1,9 +1,14 @@
 # RaygueLike Challenge 2025
 ![](/Resources//challenge_logo.png)
 
-WIP project for the r/roguelikedev 2025 complete tutorial: https://old.reddit.com/r/roguelikedev/wiki/python_tutorial_series
+WIP project for the [r/roguelikedev 2025 complete tutorial](https://old.reddit.com/r/roguelikedev/wiki/python_tutorial_series)
 
-Playable web version and devlog: https://sirdorius.itch.io/rayguelike-2025
+Playable versions and devlog: https://sirdorius.itch.io/rayguelike-2025
+
+## Demo
+![](https://img.itch.zone/aW1nLzIzMDEyMjQ3LnBuZw==/original/us69f5.png)
+
+https://i.imgur.com/xxgOjiD.mp4
 
 ## Dev
 ### Desktop version

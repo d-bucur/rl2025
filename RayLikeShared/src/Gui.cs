@@ -223,7 +223,7 @@ file class RenderMinimap : QuerySystem {
 			Raylib.Fade(Color.White, 0.5f)
 		);
 
-		Raylib.DrawText($"Level {Singleton.Get<LevelData>().CurrentLevel + 1}",
+		Raylib.DrawText($"Floor {Singleton.Get<LevelData>().CurrentLevel + 1}",
 			Raylib.GetScreenWidth() - MinimapImage.Width * SCALE + GUIValues.Padding,
 			GUIValues.Padding, 17, Raylib.Fade(Color.White, 0.7f));
 	}
