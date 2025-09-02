@@ -130,7 +130,7 @@ struct ConfusionConsumable : IConsumable {
 			return ActionProcessor.Result.Invalid;
 		}
 
-		target.AddRelation(new StatusEffect { Value = new IsConfused { TurnsRemaining = Turns } });
+		target.AddRelation(new StatusEffect { Value = new IsConfused { Duration = Turns } });
 		MessageLog.Print($"{target.Name.value} is confused");
 
 		Animations.ExplosionFX(Prefabs.SpawnProjectile(

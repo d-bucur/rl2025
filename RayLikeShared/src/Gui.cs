@@ -65,7 +65,8 @@ class GuiModule : IModule {
 		RenderPhases.Render.Add(new RenderHealth());
 		RenderPhases.Render.Add(new RenderGameOver());
 		RenderPhases.Render.Add(new RenderMessageLog());
-		RenderPhases.Render.Add(new MouseSelect()); // should be in input phase
+		RenderPhases.Render.Add(new DrawPathToTarget()); // should be in input phase
+		RenderPhases.Render.Add(new TileInspect());
 		RenderPhases.Render.Add(new RenderDamageFx());
 		RenderPhases.Render.Add(new DebugBehaviorTree());
 	}
@@ -91,7 +92,7 @@ static class GUI {
 	internal static void SpawnDamageFx(int damage, Vector3 originPos, Color color, Vector3 dir) {
 		const int Size = 20;
 		// TODO use texture pool
-		var renderTex = Raylib.LoadRenderTexture(Size*2, Size*2);
+		var renderTex = Raylib.LoadRenderTexture(Size * 2, Size * 2);
 		// Draw text to texture
 		Raylib.BeginTextureMode(renderTex);
 		Raylib.ClearBackground(new Color(0, 0, 0, 0));
@@ -229,10 +230,8 @@ file class RenderMinimap : QuerySystem {
 	}
 }
 
-// A lot of cross cutting concerns here: input, rendering and gui. Should break up
-file class MouseSelect : QuerySystem {
-	public MouseSelect() => Filter.AllTags(Tags.Get<Player>());
-	List<string> InspectStrings = new();
+file class DrawPathToTarget : QuerySystem {
+	public DrawPathToTarget() => Filter.AllTags(Tags.Get<Player>());
 
 	protected override void OnUpdate() {
 		var mouseTarget = Singleton.Get<MouseTarget>();
@@ -260,37 +259,6 @@ file class MouseSelect : QuerySystem {
 			DrawPathTo(mousePosI, color);
 			Raylib.EndMode3D();
 		}
-
-		// Get all entities at position
-		InspectStrings.Clear();
-		if (!charAtPos.IsNull && isTileVisible) {
-			string name = charAtPos.GetComponent<EntityName>().value;
-			var fighter = charAtPos.GetComponent<Fighter>();
-			InspectStrings.Add($"{name} {fighter.HP}/{fighter.MaxHP} HP");
-		}
-
-		if (isTileVisible) {
-			var others = grid.Others[mousePosI.X, mousePosI.Y];
-			foreach (var other in others?.Value ?? [])
-				InspectStrings.Add($"{other.GetComponent<EntityName>().value}");
-		}
-
-		// Render text of objects at position
-		for (int i = 0; i < InspectStrings.Count; i++) {
-			// align with turn order
-			int posY = Raylib.GetScreenHeight()
-				- RenderTurnOrder.AncorAbove.Y
-				- GUIValues.TextHeight
-				- GUIValues.Padding
-				- i * GUIValues.LineHeight;
-			GUI.RenderText(
-				InspectStrings[i],
-				RenderTurnOrder.AncorAbove.X + GUIValues.Padding,
-				posY,
-				GUIValues.TextHeight,
-				3
-			);
-		}
 	}
 
 	private static void DrawTargetTiles() {
@@ -311,6 +279,7 @@ file class MouseSelect : QuerySystem {
 
 	private void DrawPathTo(Vec2I posI, Color color) {
 		ref var pathfinder = ref Singleton.Player.GetComponent<Pathfinder>();
+		// TODO input should not be here
 		if (Raylib.IsMouseButtonPressed(MouseButton.Right))
 			pathfinder.Reset();
 		var path = pathfinder
@@ -325,6 +294,69 @@ file class MouseSelect : QuerySystem {
 			// move player to target destination
 			ref var movement = ref Singleton.Player.GetComponent<PathMovement>();
 			if (!Singleton.Get<Grid>().CheckTile<BlocksPathing>(posI)) movement.NewDestination(posI, path);
+		}
+	}
+}
+
+file class TileInspect : QuerySystem {
+	public TileInspect() => Filter.AllTags(Tags.Get<Player>());
+	List<string> InspectStrings = new();
+
+	protected override void OnUpdate() {
+		var mouseTarget = Singleton.Get<MouseTarget>();
+		if (!mouseTarget.Value.HasValue) return;
+		var mousePosI = mouseTarget.Value.Value;
+		ref Grid grid = ref Singleton.Get<Grid>();
+		var isTileVisible = grid.CheckTile<IsVisible>(mousePosI);
+		var character = grid.Character[mousePosI.X, mousePosI.Y];
+
+		// Display characters
+		InspectStrings.Clear();
+		if (!character.IsNull && isTileVisible) {
+			// status effects
+			foreach (var effect in character.GetRelations<StatusEffect>()) {
+				InspectStrings.Add($"  {effect.Value.Name()}: {effect.Value.TurnsRemaining()} turns");
+			}
+			// gear
+			foreach (var gear in character.GetRelations<WornGear>()) {
+				var gearData = gear.Gear.GetComponent<Gear>();
+				InspectStrings.Add($"  {gear.Gear.Name.value}: {gearData}");
+			}
+			// stats
+			string name = character.GetComponent<EntityName>().value;
+			var fighter = character.GetComponent<Fighter>();
+			InspectStrings.Add($"  Pow: {fighter.Power}  Def: {fighter.Defense}");
+			InspectStrings.Add($"{name} {fighter.HP}/{fighter.MaxHP} HP");
+		}
+
+		// Display others
+		if (isTileVisible) {
+			var others = grid.Others[mousePosI.X, mousePosI.Y];
+			foreach (var other in others?.Value ?? []) {
+				if (other.TryGetComponent<Gear>(out var gear)) {
+					InspectStrings.Add($"{other.Name.value}: {gear}");
+				}
+				else {
+					InspectStrings.Add($"{other.GetComponent<EntityName>().value}");
+				}
+			}
+		}
+
+		// Render text of objects at position
+		for (int i = 0; i < InspectStrings.Count; i++) {
+			// align with turn order
+			int posY = Raylib.GetScreenHeight()
+				- RenderTurnOrder.AncorAbove.Y
+				- GUIValues.TextHeight
+				- GUIValues.Padding
+				- i * GUIValues.LineHeight;
+			GUI.RenderText(
+				InspectStrings[i],
+				RenderTurnOrder.AncorAbove.X + GUIValues.Padding,
+				posY,
+				GUIValues.TextHeight,
+				3
+			);
 		}
 	}
 }
@@ -437,7 +469,7 @@ file class DebugBehaviorTree : QuerySystem<EnemyAI> {
 	protected override void OnUpdate() {
 		if (!Singleton.Get<Settings>().DebugAI) return;
 
-		Entity? targeted = Singleton.Get<MouseTarget>().Entity;
+		Entity? targeted = Singleton.Get<MouseTarget>().ChatAtEntt;
 		if (targeted.HasValue && targeted.Value.HasComponent<EnemyAI>()) Displayed = targeted;
 		var entt = Displayed ?? Query.Entities.First(); // TODO can crash when no enemies
 

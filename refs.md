@@ -6,6 +6,7 @@
 - cave gen: https://code.tutsplus.com/generate-random-cave-levels-using-cellular-automata--gamedev-9664t
 - https://tutsplus.github.io/jsfiddle-demos/generate_random_cave_levels_using_cellular_automata_example_1/index.html
 - more: https://www.gridsagegames.com/blog/2014/06/mapgen-tunneling-algorithm/
+- https://darkeclipz.blogspot.com/2021/02/dungeon-generation-with-newtons-law-of.html
 
 ## FOV
 - https://www.roguebasin.com/index.php?title=Field_of_Vision

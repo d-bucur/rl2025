@@ -11,7 +11,7 @@ struct InputReceiver() : IComponent {
 
 struct MouseTarget : IComponent {
     internal Vec2I? Value;
-    internal Entity? Entity;
+    internal Entity? ChatAtEntt;
     internal static readonly Vector3 tileOffset = new(0.5f, -0.5f, 0.5f);
 }
 
@@ -51,7 +51,7 @@ file class UpdateMousePosition : QuerySystem {
         if (Query.Count == 0) return;
         ref var mouseTarget = ref Singleton.Get<MouseTarget>();
         mouseTarget.Value = null;
-        mouseTarget.Entity = null;
+        mouseTarget.ChatAtEntt = null;
         Camera3D camera = Singleton.Camera.GetComponent<Camera>().Value;
         var ray = Raylib.GetScreenToWorldRay(Raylib.GetMousePosition(), camera);
 
@@ -68,7 +68,7 @@ file class UpdateMousePosition : QuerySystem {
             return;
         mouseTarget.Value = mousePosI;
         Entity charAt = grid.Character[mousePosI.X, mousePosI.Y];
-        mouseTarget.Entity = charAt.IsNull ? null : charAt;
+        mouseTarget.ChatAtEntt = charAt.IsNull ? null : charAt;
     }
 }
 

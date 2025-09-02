@@ -1,10 +1,10 @@
 ## week 7
-- display character and enemy stats
+- visualize player stats, like xp to next level
 
 ## week 8 sharing phase
+- weapon animation
 - tune camera distances
-- visualize player stats, like xp to next level, and UI overhaul
-- view status on hover
+- UI overhaul
 
 ## public itch release
 - proper intro menu, restart after death

@@ -107,7 +107,6 @@ public class Game {
 		aot.RegisterComponent<EntityName>();
 		aot.RegisterComponent<Position>();
 		aot.RegisterComponent<Scale3>();
-		aot.RegisterComponent<Cube>();
 		aot.RegisterComponent<InputReceiver>();
 		aot.RegisterComponent<Camera>();
 		aot.RegisterComponent<Tween>();

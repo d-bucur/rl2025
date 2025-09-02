@@ -13,6 +13,10 @@ record struct Dice(int Count = 1, int Faces = 6) {
 		}
 		return total;
 	}
+
+	public override string ToString() {
+		return $"{Count}d{Faces}";
+	}
 }
 
 struct Fighter : IComponent {

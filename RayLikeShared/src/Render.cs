@@ -5,7 +5,6 @@ using Raylib_cs;
 
 namespace RayLikeShared;
 
-struct Cube() : IComponent { }
 struct Billboard() : IComponent {
 	public Vector3? Up;
 	public Vector2 Origin = new(0.5f, 0);
@@ -81,7 +80,6 @@ class Render : IModule {
 	public void Init(EntityStore world) {
 		InitCamera(world);
 		// RenderPhases.Render.Add(new FadeScenery()); // Disabled, using shaders now
-		RenderPhases.Render.Add(new RenderCubes());
 		RenderPhases.Render.Add(new RenderBillboards());
 		RenderPhases.Render.Add(new RenderMeshes());
 		// disabled for now. can fix later and use for health as well
@@ -102,20 +100,6 @@ class Render : IModule {
 				// CameraProjection.Orthographic
 				)
 			});
-	}
-}
-
-file class RenderCubes : QuerySystem<Position, Scale3, Cube, ColorComp> {
-	protected override void OnUpdate() {
-		Raylib.BeginMode3D(Singleton.Camera.GetComponent<Camera>().Value);
-
-		Query.ForEachEntity((ref Position pos, ref Scale3 scale, ref Cube cube, ref ColorComp color, Entity e) => {
-			var posWithOffset = pos.value + new Vector3(Config.GridSize) / 2;
-			Raylib.DrawCubeV(posWithOffset, scale.value, color.Value);
-			Raylib.DrawCubeWiresV(posWithOffset, scale.value, Raylib.Fade(Color.Black, 0.2f));
-		});
-
-		Raylib.EndMode3D();
 	}
 }
 

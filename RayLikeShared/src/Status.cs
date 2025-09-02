@@ -14,6 +14,8 @@ interface IStatusEffect {
 	void Tick(Entity e);
 	void OnEnd(Entity e);
 	bool EndCondition(Entity e);
+	string Name();
+	int TurnsRemaining(); // TODO merge with EndCondition?
 }
 
 // Single value per IStatusEffect, non fragmenting
@@ -24,6 +26,7 @@ struct StatusEffect() : IRelation<Type> {
 }
 
 struct RageEffect : IStatusEffect, IComponent {
+	public string Name() => "Rage";
 	public required int OldGain;
 	public required int Duration;
 	public int Elapsed;
@@ -36,19 +39,24 @@ struct RageEffect : IStatusEffect, IComponent {
 		energy.GainPerTick = OldGain;
 		MessageLog.Print($"The rage effect has worn off");
 	}
+
+	public int TurnsRemaining() => Duration - Elapsed;
 }
 
 struct IsConfused : IStatusEffect, IComponent {
-	required internal int TurnsRemaining;
+	public string Name() => "Confusion";
+	required internal int Duration;
 	internal const float HurtSelfChance = 0.5f;
 
-	public void Tick(Entity e) => TurnsRemaining--;
-	public bool EndCondition(Entity e) => TurnsRemaining <= 0;
+	public void Tick(Entity e) => Duration--;
+	public bool EndCondition(Entity e) => Duration <= 0;
 
 	public void OnEnd(Entity e) {
 		ref var t = ref e.GetComponent<Team>();
 		MessageLog.Print($"{e.Name.value} is no longer confused");
 	}
+
+	public int TurnsRemaining() => Duration;
 }
 
 class ApplyStatusEffects : QuerySystem {

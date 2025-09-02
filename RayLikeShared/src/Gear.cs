@@ -1,3 +1,4 @@
+using System.Text;
 using Friflo.Engine.ECS;
 
 namespace RayLikeShared;
@@ -65,6 +66,15 @@ struct Gear : IComponent {
 	public int PowerDelta;
 	public int DefenseDelta;
 	public int HPDelta;
+
+	public override string ToString() {
+		// better cache this to avoid gc
+		var sb = new StringBuilder();
+		if (PowerDelta != 0) sb.Append($" {(PowerDelta > 0 ? "+" : "-")}{PowerDelta} Pow");
+		if (DefenseDelta != 0) sb.Append($" {(DefenseDelta > 0 ? "+" : "-")}{DefenseDelta} Def");
+		if (HPDelta != 0) sb.Append($" {(HPDelta > 0 ? "+" : "-")}{HPDelta} HP");
+		return sb.ToString();
+	}
 }
 
 struct GearTag : ITag;
