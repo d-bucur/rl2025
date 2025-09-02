@@ -8,7 +8,7 @@ Playable versions and devlog: https://sirdorius.itch.io/rayguelike-2025
 ## Demo
 ![](https://img.itch.zone/aW1nLzIzMDEyMjQ3LnBuZw==/original/us69f5.png)
 
-https://i.imgur.com/xxgOjiD.mp4
+[Screencast from 26-08-25 20:02:12.webm](https://github.com/user-attachments/assets/a435c675-6d40-40d2-91c6-ef19cfa5752f)
 
 ## Dev
 ### Desktop version
